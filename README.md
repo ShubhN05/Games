@@ -20,7 +20,7 @@ A growing collection of small browser games. Every game is a self-contained fold
 ## Run a game locally
 
 ```bash
-git clone https://github.com/NegiShubh05/Games.git
+git clone https://github.com/ShubhN05/Games.git
 cd Games
 python -m http.server 8000
 # open http://localhost:8000/mario/
