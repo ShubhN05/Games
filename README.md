@@ -8,7 +8,7 @@ A growing collection of small browser games. Every game is a self-contained fold
 
 | Game | Genre | Play | Source |
 |---|---|---|---|
-| 🌙 **Nightrunner — Missile Hero** | Dark-theme platformer, shoot missiles | [Play](https://negishubh05.github.io/Games/mario/) | [`/mario`](./mario) |
+| 🌙 **Nightrunner — Missile Hero** | 5-level dark platformer: night, underwater, fire, sky, 4-dragon boss. Shoot missiles | [Play](https://negishubh05.github.io/Games/mario/) | [`/mario`](./mario) |
 
 *More folders are coming — each new game gets its own directory with its own README.*
 
