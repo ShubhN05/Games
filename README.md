@@ -2,13 +2,13 @@
 
 A growing collection of small browser games. Every game is a self-contained folder: open it, play it, no installs.
 
-**Play online:** https://negishubh05.github.io/Games/
+**Play online:** https://shubhn05.github.io/Games/
 
 ## Games
 
 | Game | Genre | Play | Source |
 |---|---|---|---|
-| 🌙 **Nightrunner — Missile Hero** | 5-level dark platformer: night, underwater, fire, sky, 4-dragon boss. Shoot missiles | [Play](https://negishubh05.github.io/Games/mario/) | [`/mario`](./mario) |
+| 🌙 **Nightrunner — Missile Hero** | 5-level dark platformer: night, underwater, fire, sky, 4-dragon boss. Shoot missiles | [Play](https://shubhn05.github.io/Games/mario/) | [`/mario`](./mario) |
 
 *More folders are coming — each new game gets its own directory with its own README.*
 
