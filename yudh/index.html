@@ -48,13 +48,13 @@
     <div class="side left"><div class="bar"><span>ARJUN</span><i id="hp1" style="width:100%"></i></div>
       <div class="info"><span class="pips" id="pips1">○○</span><span id="rng1">ARROW READY</span><span id="sp1">FIRE ARROW READY</span><span class="sup" id="sup1">SUPER READY — D</span></div></div>
     <div class="mid"><div id="timer">90</div><div class="pips" id="rnd">ROUND 1</div></div>
-    <div class="side right"><div class="bar"><span>RAVAN</span><i id="hp2" style="width:100%"></i></div>
+    <div class="side right"><div class="bar"><span id="name2">RAVAN</span><i id="hp2" style="width:100%"></i></div>
       <div class="info"><span class="burning" id="burn2">🔥 BURNING</span><span class="sup" id="sup2">SUPER READY</span><span id="rng2">RANGED READY</span><span class="pips" id="pips2">○○</span></div></div>
   </div>
   <div id="move"></div><div id="msg"></div><div id="flash"></div><div id="lasthit"></div>
   <div id="help"><b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s (test)</div>
 </div>
-<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><small>Fight: 90-second rounds, Ravan attacks.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small></div></div>
+<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  ARJUN vs ARJUN  (press 3)</button><small>Fight: 90-second rounds, Ravan attacks.<br>Arjun vs Arjun: a second Arjun stands in front of you — test every Arjun move, block and arrow.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small></div></div>
 <script src="arenas.js"></script>
 <script type="module">
 import * as THREE from 'three';
@@ -112,6 +112,7 @@ async function makeFighter({ scale, skin, eyeGlow }){
 }
 const P = await makeFighter({ scale: 1.0, skin: 'arjun', eyeGlow: false });
 const R = await makeFighter({ scale: 1.65, skin: 'ravan', eyeGlow: true });
+const A2 = await makeFighter({ scale: 1.0, skin: 'arjun', eyeGlow: false }); A2.root.visible = false; A2.shadow.visible = false;   // opponent in Arjun-vs-Arjun mode
 const bow = makeBow(); scene.add(bow.group);
 const nockArrow = makeArrow(false), nockFire = makeArrow(true); nockArrow.visible = nockFire.visible = false; scene.add(nockArrow, nockFire);
 
@@ -163,9 +164,12 @@ function pollFace(){
 
 /* ---------------- tuning numbers (damage = % of the victim's full health) ---------------- */
 const ROUND_TIME = 90, SUPER_TIME = 30, RANGED_CD = 5, SPECIAL_CD = 5, MIN_X = -20, MAX_X = 20, MAX_SEP = 14;
-let MODE = null;                                                  // null = menu, 'fight' or 'train' (training ground: Ravan stands still)
-const maxSep = () => MODE === 'train' ? 1e9 : MAX_SEP;
+let MODE = null;
+const FREE = () => MODE === 'train' || MODE === 'duel';   // free modes: no rounds, no KO, super any time
+const OPP = () => MODE === 'duel' ? A2 : R;               // the visible opponent                                                  // null = menu, 'fight' or 'train' (training ground: Ravan stands still)
+const maxSep = () => FREE() ? 1e9 : MAX_SEP;
 const FIGHT_HELP = '<b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s · Esc menu';
+const DUEL_HELP = '<b>ARJUN vs ARJUN — test ground for Arjun</b><br>Arrows move · hold BACK = block (crossed arms) · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>Opponent Arjun: B = he blocks on/off · 1 = he jabs · 2 = he shoots an arrow · G = he fights back on/off<br>H = heal both · R reset · Esc menu';
 const TRAIN_HELP = '<b>TRAINING GROUND — Ravan stands still</b><br>Arrows move · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>1 = Ravan fire throw · 2 = clap · 3 = jump slam · 4 = super slam (practice dodging)<br>G = Ravan fights back on/off · H = heal both · R reset · Esc menu';
 const DMG = { LP: 4, RP: 4, LK: 7, RK: 7, arrow: 15, fireHit: 2, burnTotal: 3, jumpkick: 10, super: 65, rvFire: 8, clap: 8, slam: 12 };   // Arjun's fire arrow = 2 on impact + 3 burn over 5 s = 5 total
 const BURN_TIME = 5;
@@ -191,22 +195,23 @@ function pips(){ $('pips1').textContent = (M.pw >= 1 ? '●' : '○') + (M.pw >=
 /* damage kinds: fire/ranged = blockable, clap/slam = block cuts, jumpkick + super = UNBLOCKABLE */
 function hurtP1(dmg, kind, srcX){
   if (!fighting() || p1.inv > 0 || p1.state === 'ko') return;
-  const canBlock = p1.block && p1.y <= 0.01 && kind !== 'jumpkick' && kind !== 'super';
+  const canBlock = p1.block && p1.y <= 0.01 && kind !== 'jumpkick' && kind !== 'super'; if (canBlock) p1.shieldPulse = 1;
   const cut = canBlock ? ({ fire: 1, ranged: 1, wave: 0.75, slam: 0.5 }[kind] ?? 1) : 0; dmg = Math.round(dmg * (1 - cut));
-  p1.hp = Math.max(0, p1.hp - dmg); if (MODE === 'train' && p1.hp <= 0) p1.hp = 100; $('hp1').style.width = (100 * p1.hp / p1.max) + '%';
+  p1.hp = Math.max(0, p1.hp - dmg); if (FREE() && p1.hp <= 0) p1.hp = 100; $('hp1').style.width = (100 * p1.hp / p1.max) + '%';
   burst(p1.x, 1.1, canBlock ? 6 : 12, canBlock ? 0x9fe8ff : 0xffb347, 3, 0.5, 0.16);
   shake = Math.max(shake, canBlock ? 0.05 : (kind === 'super' ? 0.3 : 0.14));
   if (p1.hp <= 0) { p1.state = 'ko'; P.play('Death01', { loop: false }); endRound('ko'); return; }
   if (!canBlock) { p1.state = 'hit'; p1.t = 0.45; p1.inv = 0.55; p1.atk = null; p1.shoot = null; p1.kickU = -1; if (p1.y > 0) { p1.vy = Math.min(p1.vy, 0); } P.play('Hit_Chest', { loop: false, speed: 0.7 }); p1.x += Math.sign(p1.x - srcX || -1) * (kind === 'super' ? 0.9 : 0.5); }
   else p1.x += Math.sign(p1.x - srcX || -1) * 0.12;
 }
-function koRavanCheck(){ if (MODE === 'train' && rv.hp <= 0) { rv.hp = 100; $('hp2').style.width = '100%'; moveLabel('RAVAN HEALED'); return; }
+function koRavanCheck(){ if (FREE() && rv.hp <= 0) { rv.hp = 100; $('hp2').style.width = '100%'; moveLabel('RAVAN HEALED'); return; }
   if (rv.hp <= 0 && rv.state !== 'ko') { rv.hp = 0; rv.state = 'ko'; rv.mv = null; rv.burn = 0; R.play('Death01', { loop: false }); endRound('ko'); } }
 const HIT_NAMES = { hit: 'PUNCH/KICK', ranged: 'ARROW', fire: 'FIRE ARROW', super: 'SUPER', jumpkick: 'JUMP KICK' };
 function hurtRavan(dmg, kind){
-  if (!fighting() || rv.state === 'ko') return; if (MODE === 'train') $('lasthit').textContent = 'LAST HIT: ' + (HIT_NAMES[kind] || kind) + '  -' + (+dmg.toFixed(1)) + '%'; rv.hp = Math.max(0, rv.hp - dmg); $('hp2').style.width = (100 * rv.hp / rv.max) + '%'; rv.flash = 0.12;
+  if (!fighting() || rv.state === 'ko') return;
+  if (MODE === 'duel' && rv.block && kind !== 'super' && kind !== 'jumpkick') { $('lasthit').textContent = 'LAST HIT: BLOCKED (' + (HIT_NAMES[kind] || kind) + ')'; rv.shieldPulse = 1; burst(rv.x - rv.face * 0.5, 1.3, 8, 0x9fe8ff, 3, 0.5, 0.16); shake = Math.max(shake, 0.04); return; } if (FREE()) $('lasthit').textContent = 'LAST HIT: ' + (HIT_NAMES[kind] || kind) + '  -' + (+dmg.toFixed(1)) + '%'; rv.hp = Math.max(0, rv.hp - dmg); $('hp2').style.width = (100 * rv.hp / rv.max) + '%'; rv.flash = 0.12;
   burst(rv.x - rv.face * 0.3, 1.5, kind === 'super' ? 30 : 10, 0xff7a40, 3, 0.5, 0.16); shake = Math.max(shake, kind === 'super' ? 0.3 : 0.05);
-  if (rv.hp <= 0) koRavanCheck(); else if (rv.state === 'idle' && kind !== 'fire') R.play('Hit_Chest', { loop: false, speed: 0.8 });
+  if (rv.hp <= 0) koRavanCheck(); else if (rv.state === 'idle' && kind !== 'fire') OPP().play('Hit_Chest', { loop: false, speed: 0.8 });
 }
 
 /* ---------------- rounds ---------------- */
@@ -234,7 +239,7 @@ function startAttack(def){ p1.state = 'attack'; p1.atk = { def, t: 0, done: fals
 function startShoot(fire){ p1.state = 'shoot'; p1.shoot = { fire, t: 0, released: false }; if (fire) p1.specialCd = SPECIAL_CD; else p1.rangedCd = RANGED_CD; P.play('Idle_Loop'); moveLabel(fire ? 'FIRE ARROW!' : 'ARROW!'); }
 function startSuper(){ p1.state = 'shoot'; p1.shoot = { fire: true, sup: true, t: 0, released: false }; p1.superUsed = true; P.play('Idle_Loop'); moveLabel("SUPER - ARJUN'S FIRE ARROW!"); }
 function updateP1(dt){
-  if (MODE === 'train' && p1.superUsed) { p1.superRe = (p1.superRe ?? 3) - dt; if (p1.superRe <= 0) { p1.superUsed = false; p1.superRe = 3; } }
+  if (FREE() && p1.superUsed) { p1.superRe = (p1.superRe ?? 3) - dt; if (p1.superRe <= 0) { p1.superUsed = false; p1.superRe = 3; } }
   p1.inv = Math.max(0, p1.inv - dt); p1.rangedCd = Math.max(0, p1.rangedCd - dt); p1.specialCd = Math.max(0, p1.specialCd - dt);
   const acts = pollFace(), L = down('ArrowLeft'), Rr = down('ArrowRight'), grounded = p1.y <= 0.001 && p1.vy <= 0, backKey = p1.face > 0 ? L : Rr;
   if (p1.state === 'ko') { p1.kickU = -1; p1.aimW = 0; return; }
@@ -266,7 +271,7 @@ function updateP1(dt){
       else if (act.single && grounded && !p1.crouch) startAttack(ATTACKS[act.single]);
     }
     if (p1.state === 'attack' && p1.atk.def.clip) P.play(p1.atk.def.clip, { loop: false, speed: p1.atk.def.speed, fade: 0.06 });
-    if (hit('KeyD') && grounded && !p1.superUsed && (MODE === 'train' || M.time <= SUPER_TIME) && p1.state === 'idle') { startSuper(); }
+    if (hit('KeyD') && grounded && !p1.superUsed && (FREE() || M.time <= SUPER_TIME) && p1.state === 'idle') { startSuper(); }
     if (p1.state === 'idle') {
       if (hit('ArrowUp') && grounded) p1.vy = 7.0;
       const dir = (Rr ? 1 : 0) - (L ? 1 : 0);
@@ -302,6 +307,20 @@ function applyKickIK(){
   const ch = P.bones.spine_03.getWorldPosition(V()), g = 0.85 * w;
   solveLimb(P, 'upperarm_l', 'lowerarm_l', 'hand_l', ch.clone().addScaledVector(fwd, 0.30).addScaledVector(side, 0.17).addScaledVector(up, 0.12), side.clone().addScaledVector(up, -1.0), g);
   solveLimb(P, 'upperarm_r', 'lowerarm_r', 'hand_r', ch.clone().addScaledVector(fwd, 0.30).addScaledVector(side, -0.17).addScaledVector(up, 0.12), side.clone().multiplyScalar(-1).addScaledVector(up, -1.0), g);
+}
+/* BLOCK pose: both forearms cross in an X in front of the face/chest + a soft blue shield glow, so everybody can SEE he is blocking */
+function applyBlockIK(F, st, face, w){
+  if (!st.shield) { st.shield = sprite(0x6ad8ff, 1.9, 0); }
+  const pulse = st.shieldPulse || 0; st.shield.material.opacity = Math.min(1, 0.6 * w + 0.5 * pulse);
+  let c0 = F.bones.spine_03.getWorldPosition(V());
+  st.shield.position.set(c0.x + face * 0.62, c0.y + 0.08, 0.3); st.shield.scale.setScalar(1.7 + 0.6 * pulse);
+  if (w < 0.02) return;
+  const up = V(0, 1, 0), th = -face * 1.05 * w;                    // turn the chest toward the camera so the crossed arms are seen from the front
+  rotateWorld(F.bones.spine_01, up, th);
+  const fwd = V(face, 0, 0).applyAxisAngle(up, th), right = fwd.clone().cross(up); c0 = F.bones.spine_03.getWorldPosition(V());
+  st.shield.position.set(c0.x + face * 0.55, c0.y + 0.05, 0.4);
+  solveLimb(F, 'upperarm_l', 'lowerarm_l', 'hand_l', c0.clone().addScaledVector(fwd, 0.36).addScaledVector(up, 0.12).addScaledVector(right, 0.13), up.clone().multiplyScalar(-1).addScaledVector(right, -0.6), w);
+  solveLimb(F, 'upperarm_r', 'lowerarm_r', 'hand_r', c0.clone().addScaledVector(fwd, 0.30).addScaledVector(up, 0.12).addScaledVector(right, -0.13), up.clone().multiplyScalar(-1).addScaledVector(right, 0.6), w);
 }
 /* Arjun's bow: left arm out holding the bow, right hand pulls the string back; the bow always follows his left hand */
 const easeOut = t => 1 - (1 - t) * (1 - t);
@@ -341,7 +360,7 @@ function applyBowIK(dt){
 
 /* ---------------- projectiles: Ravan's fireball, Arjun's arrows ---------------- */
 function spawnShot(owner, x, y, vx, color, o = {}){
-  const f = { owner, x, y, y0: y, vx, t: 0, x0: x, r: o.r ?? 0.15, color, kind: o.kind || 'ball', range: o.range ?? 7.2, dir: Math.sign(vx) || 1 };
+  const f = { owner, x, y, y0: y, vx, t: 0, x0: x, r: o.r ?? 0.15, color, kind: o.kind || 'ball', range: o.range ?? 7.2, dmg: o.dmg, dir: Math.sign(vx) || 1 };
   if (f.kind === 'ball') { f.s = sprite(color, 1.0); f.core = sprite(0xffffff, 0.5); f.light = new THREE.PointLight(color, 4, 6); scene.add(f.light); }
   else { const sup = f.kind === 'super', fire = f.kind === 'fire' || sup; f.sc = sup ? 1.6 : 1; f.mesh = makeArrow(fire); f.mesh.scale.setScalar(f.sc); f.mesh.rotation.y = f.dir > 0 ? 0 : Math.PI; scene.add(f.mesh); f.s = sprite(fire ? 0xff8a1a : 0xbfe8ff, sup ? 1.3 : fire ? 0.9 : 0.45); if (fire) { f.light = new THREE.PointLight(0xff7a1a, sup ? 7 : 3, sup ? 9 : 5); scene.add(f.light); } }
   shots.push(f); shake = Math.max(shake, 0.04); return f;
@@ -401,11 +420,35 @@ function chooseMove(){
 }
 function endMove(){ slamMark.visible = false; rv.state = 'idle'; rv.mv = null; rv.t = 1.8 + Math.random() * 1.4; R.curName = ''; handFlame.material.opacity = 0; handLight.intensity = 0; clapW = 0; }
 let clapW = 0, clapGap = 0.9;
+/* ---------------- Arjun vs Arjun: the second Arjun is a training partner (stands still, can block, jab, shoot) ---------------- */
+function updateDuel(dt){
+  const O = A2, d = Math.abs(p1.x - rv.x); rv.t = Math.max(0, (rv.t || 0) - dt);
+  if (hit('KeyB')) { rv.block = !rv.block; moveLabel(rv.block ? 'ARJUN-2 BLOCKS' : 'ARJUN-2 STOPS BLOCKING'); }
+  if (hit('KeyG')) { rv.aggro = !rv.aggro; moveLabel(rv.aggro ? 'ARJUN-2 FIGHTS BACK' : 'ARJUN-2 STANDS STILL'); }
+  if (rv.state === 'move') {
+    const m = rv.mv; m.t += dt;
+    if (m.name === 'jab' && !m.fired && m.t >= 0.16) { m.fired = true; if (d < 2.0 && p1.y < 0.6) hurtP1(DMG.LP, 'hit', rv.x); }
+    if (m.name === 'arrow' && !m.fired && m.t >= 0.42) { m.fired = true; spawnShot('r', rv.x + rv.face * 0.8, 1.25, rv.face * 14, 0xbfe8ff, { kind: 'arrow', range: 18, dmg: DMG.arrow }); }
+    if (m.t >= m.dur) { rv.state = 'idle'; rv.mv = null; O.curName = ''; rv.t = 0.4; }
+  } else if (rv.state === 'idle') {
+    if (!rv.block && hit('Digit1')) { rv.state = 'move'; rv.mv = { name: 'jab', t: 0, dur: 0.55 }; O.play('Punch_Jab', { loop: false, speed: 1.6, fade: 0.06 }); }
+    else if (!rv.block && hit('Digit2')) { rv.state = 'move'; rv.mv = { name: 'arrow', t: 0, dur: 0.9 }; O.play('OverhandThrow', { loop: false, speed: 1.4, fade: 0.06 }); moveLabel('ARJUN-2 ARROW'); }
+    else if (rv.aggro && !rv.block && rv.t <= 0) {
+      if (d > 2.0 && d < 5.5 && Math.random() < 0.012) { rv.state = 'move'; rv.mv = { name: 'arrow', t: 0, dur: 0.9 }; O.play('OverhandThrow', { loop: false, speed: 1.4, fade: 0.06 }); }
+      else if (d > 1.9) { rv.x += Math.sign(p1.x - rv.x) * 2.4 * dt; O.play('Walk_Loop', { speed: 1.2 }); }
+      else { rv.state = 'move'; rv.mv = { name: 'jab', t: 0, dur: 0.55 }; O.play('Punch_Jab', { loop: false, speed: 1.6, fade: 0.06 }); }
+    } else O.play(rv.block ? 'Idle_Shield_Loop' : 'Idle_Loop');
+  }
+  rv.x = clamp(rv.x, MIN_X + 0.6, MAX_X);
+  O.root.position.set(rv.x, 0, 0); O.root.rotation.y += (rv.face * Math.PI / 2 - O.root.rotation.y) * Math.min(1, dt * 12);
+  O.shadow.position.x = rv.x;
+}
 function updateRavan(dt){
   rv.flash = Math.max(0, rv.flash - dt); rv.fireCd = Math.max(0, rv.fireCd - dt); rv.face = Math.sign(p1.x - rv.x) || -1;
+  if (MODE === 'duel') { if (fighting()) updateDuel(dt); return; }
   if (rv.state === 'ko') { R.root.position.set(rv.x, 0, 0); return; }
   if (!fighting()) { if (rv.state === 'idle') R.play('Idle_Loop'); R.root.position.set(rv.x, rv.y, 0); R.root.rotation.y += (rv.face * Math.PI / 2 - R.root.rotation.y) * Math.min(1, dt * 10); return; }
-  if (MODE === 'train' && !rv.aggro && rv.state === 'idle') {                                  // training ground: Ravan stands still
+  if (FREE() && !rv.aggro && rv.state === 'idle') {                                  // training ground: Ravan stands still
     R.play('Idle_Loop'); R.root.position.set(rv.x, rv.y, 0); R.root.rotation.y += (rv.face * Math.PI / 2 - R.root.rotation.y) * Math.min(1, dt * 10); R.shadow.position.x = rv.x; R.shadow.scale.setScalar(1.8 * 1.3);
     if (hit('Digit1')) startMove('fire'); else if (hit('Digit2')) startMove('clap'); else if (hit('Digit3')) startMove('slam'); else if (hit('Digit4')) startMove('super');
     return; }
@@ -466,10 +509,10 @@ function updateFX(dt){
     if (Math.random() < (f.kind === 'arrow' ? 0.5 : 0.7)) burst(f.x - (f.kind === 'ball' ? 0 : f.dir * 0.5), f.y, 1, f.color, 0.6, 0.35, f.kind === 'arrow' ? 0.14 : 0.28, 0.3);
     let dead = false;
     if (f.owner === 'r') { const ph = p1.crouch ? 0.8 : 1.75;
-      if (Math.abs(f.x - p1.x) < 0.3 + f.r && f.y + f.r > p1.y && f.y - f.r < p1.y + ph && fighting()) { hurtP1(DMG.rvFire, 'fire', f.x); burst(f.x, f.y, 18, 0xff8a1a, 4, 0.5, 0.22); dead = true; } }
+      if (Math.abs(f.x - p1.x) < 0.3 + f.r && f.y + f.r > p1.y && f.y - f.r < p1.y + ph && fighting()) { hurtP1(f.dmg ?? DMG.rvFire, f.kind === 'arrow' ? 'ranged' : 'fire', f.x); burst(f.x, f.y, 18, 0xff8a1a, 4, 0.5, 0.22); dead = true; } }
     else { if (Math.abs(f.x - rv.x) < 0.85 && f.y > 0.2 && f.y < 2.7 && fighting() && rv.state !== 'ko') {
       if (f.kind === 'super') { hurtRavan(DMG.super, 'super'); fireStorm(rv.x, 1); rv.fireVis = 4; moveLabel('FIRE STORM!'); }
-      else if (f.kind === 'fire') { hurtRavan(DMG.fireHit, 'fire'); ignite(); burst(f.x, f.y, 26, 0xff8a1a, 5, 0.7, 0.3); moveLabel('RAVAN IS BURNING!'); }
+      else if (f.kind === 'fire') { hurtRavan(DMG.fireHit, 'fire'); if (!(MODE === 'duel' && rv.block)) ignite(); burst(f.x, f.y, 26, 0xff8a1a, 5, 0.7, 0.3); moveLabel('RAVAN IS BURNING!'); }
       else { hurtRavan(DMG.arrow, 'ranged'); burst(f.x, f.y, 18, 0xbfe8ff, 4, 0.5, 0.22); }
       dead = true; } }
     if (!dead) for (const o of shots) if (o !== f && o.owner !== f.owner && Math.abs(o.x - f.x) < 0.55 && Math.abs(o.y - f.y) < 0.5) { burst((o.x + f.x) / 2, f.y, 26, 0xffffff, 5, 0.6, 0.3); o.dead = true; dead = true; }   // two ranged attacks cancel each other
@@ -494,7 +537,7 @@ const CAMH = 0.1646, cam = { x: 0, z: 8.2 }, CAM = new THREE.Vector3(0, 1.35, 8.
 function updateCamera(dt, snap){
   const sep = Math.abs(p1.x - rv.x), tz = clamp((sep + 3.4) / 0.886, 8.2, 20.0), half = 0.443 * tz;
   let tx = clamp((p1.x + rv.x) / 2, MIN_X + half * 0.6, MAX_X - half * 0.6);
-  if (MODE === 'train' && sep > MAX_SEP) tx = clamp(p1.x + Math.sign(rv.x - p1.x || 1) * 5, MIN_X + 6, MAX_X - 6);   // training: follow Arjun when he is far from Ravan
+  if (FREE() && sep > MAX_SEP) tx = clamp(p1.x + Math.sign(rv.x - p1.x || 1) * 5, MIN_X + 6, MAX_X - 6);   // training: follow Arjun when he is far from Ravan
   const k = snap ? 1 : 1; cam.x += (tx - cam.x) * (snap ? 1 : Math.min(1, dt * 5)); cam.z += (tz - cam.z) * (snap ? 1 : Math.min(1, dt * 3.5)); void k;
   const h = CAMH * cam.z; CAM.set(cam.x, h, cam.z);
   camera.position.set(CAM.x + (Math.random() - 0.5) * shake, CAM.y + (Math.random() - 0.5) * shake, CAM.z); camera.lookAt(CAM.x, h, 0);
@@ -505,31 +548,35 @@ function updateCamera(dt, snap){
 
 /* ---------------- HUD + round flow ---------------- */
 function updateHUD(){
-  $('timer').textContent = MODE === 'train' ? '∞' : Math.max(0, Math.ceil(M.time)); $('timer').classList.toggle('low', MODE !== 'train' && M.time <= 10);
-  const sup = (MODE === 'train' || M.time <= SUPER_TIME) && fighting();
-  $('sup1').style.visibility = sup && !p1.superUsed ? 'visible' : 'hidden'; $('sup2').style.visibility = sup && !rv.superUsed && MODE !== 'train' ? 'visible' : 'hidden';
+  $('timer').textContent = FREE() ? '∞' : Math.max(0, Math.ceil(M.time)); $('timer').classList.toggle('low', !FREE() && M.time <= 10);
+  const sup = (FREE() || M.time <= SUPER_TIME) && fighting();
+  $('sup1').style.visibility = sup && !p1.superUsed ? 'visible' : 'hidden'; $('sup2').style.visibility = sup && !rv.superUsed && !FREE() ? 'visible' : 'hidden';
   $('rng1').textContent = p1.rangedCd > 0 ? 'ARROW ' + p1.rangedCd.toFixed(1) + 's' : 'ARROW READY'; $('sp1').textContent = p1.specialCd > 0 ? 'FIRE ARROW ' + p1.specialCd.toFixed(1) + 's' : 'FIRE ARROW READY';
-  $('rng2').textContent = rv.fireCd > 0 ? 'RANGED ' + rv.fireCd.toFixed(1) + 's' : 'RANGED READY';
+  $('rng2').textContent = MODE === 'duel' ? (rv.block ? '🛡 BLOCKING' : '') : rv.fireCd > 0 ? 'RANGED ' + rv.fireCd.toFixed(1) + 's' : 'RANGED READY';
 }
 function updateRound(dt){
   if (M.phase === 'menu') return;
-  if (MODE === 'train') { M.phase = 'fight'; M.time = ROUND_TIME; return; }
+  if (FREE()) { M.phase = 'fight'; M.time = ROUND_TIME; return; }
   if (M.phase === 'intro') { M.phaseT -= dt; if (M.phaseT <= 0) { M.phase = 'fight'; say('FIGHT!'); setTimeout(() => { if (fighting()) say(''); }, 700); } }
   else if (M.phase === 'fight') { M.time -= dt; if (M.time <= 0) { M.time = 0; endRound('time'); } }
   else if (M.phase === 'roundEnd') { M.phaseT -= dt;
     if (M.phaseT <= 0) { if (M.pw >= 2 || M.rw >= 2) { M.phase = 'matchEnd'; say(M.pw > M.rw ? 'YOU WIN THE MATCH!  (R = play again)' : M.pw < M.rw ? 'RAVAN WINS THE MATCH  (R = play again)' : 'DRAW  (R = play again)'); } else { M.round++; startRound(); } } }
 }
 /* debug / testing hooks */
-window.__y = { p1, rv, M, cam, bow, storms, startMode, showMenu, getMode: () => MODE, startMove, restartMatch, hurtP1, hurtRavan, shots, KEYS, PRESSED, setTime: s => { M.time = s; }, state: () => ({ shots: shots.length, waves: waves.length, rings: rings.length, phase: M.phase }) };
+window.__y = { p1, rv, M, cam, camera, renderer, scene, A2, P, bow, storms, startMode, showMenu, getMode: () => MODE, startMove, restartMatch, hurtP1, hurtRavan, shots, KEYS, PRESSED, setTime: s => { M.time = s; }, state: () => ({ shots: shots.length, waves: waves.length, rings: rings.length, phase: M.phase }) };
 const clock = new THREE.Clock();
 function frame(dt, draw = true){
   gt += dt;
-  if (M.phase === 'menu') { if (hit('Digit1')) startMode('fight'); if (hit('Digit2')) startMode('train'); delete PRESSED.Digit1; delete PRESSED.Digit2; }   // the menu key must not also trigger a training move
-  else { if (hit('Escape')) showMenu(); if (hit('KeyR') && MODE) { if (MODE === 'train') startMode('train'); else restartMatch(); }
-    if (MODE === 'train') { if (hit('KeyG')) { rv.aggro = !rv.aggro; moveLabel(rv.aggro ? 'RAVAN FIGHTS BACK' : 'RAVAN STANDS STILL'); } if (hit('KeyH')) { p1.hp = 100; rv.hp = 100; $('hp1').style.width = '100%'; $('hp2').style.width = '100%'; rv.burn = 0; rv.fireVis = 0; } } }
+  if (M.phase === 'menu') { if (hit('Digit1')) startMode('fight'); if (hit('Digit2')) startMode('train'); if (hit('Digit3')) startMode('duel'); delete PRESSED.Digit1; delete PRESSED.Digit2; delete PRESSED.Digit3; }   // the menu key must not also trigger a training move
+  else { if (hit('Escape')) showMenu(); if (hit('KeyR') && MODE) { if (FREE()) startMode(MODE); else restartMatch(); }
+    if (FREE()) { if (MODE === 'train' && hit('KeyG')) { rv.aggro = !rv.aggro; moveLabel(rv.aggro ? 'RAVAN FIGHTS BACK' : 'RAVAN STANDS STILL'); } if (hit('KeyH')) { p1.hp = 100; rv.hp = 100; $('hp1').style.width = '100%'; $('hp2').style.width = '100%'; rv.burn = 0; rv.fireVis = 0; } } }
    if (hit('KeyT') && fighting()) M.time = Math.min(M.time, SUPER_TIME);   // T = jump to the last 30 s (to test the super)
   updateRound(dt); updateP1(dt); updateRavan(dt); updateFX(dt); updateStorms(dt); updateBurn(dt); updateHUD();
-  P.mixer.update(dt); R.mixer.update(dt); applyClapIK(); applyKickIK(); applyBowIK(dt);
+  P.mixer.update(dt); R.mixer.update(dt); A2.mixer.update(dt); applyClapIK(); applyKickIK(); applyBowIK(dt);
+  const pb = p1.block && p1.state === 'idle' && fighting() ? 1 : 0, ob = MODE === 'duel' && rv.block && rv.state === 'idle' && fighting() ? 1 : 0;
+  p1.blockW = (p1.blockW || 0) + (pb - (p1.blockW || 0)) * Math.min(1, dt * 18); rv.blockW = (rv.blockW || 0) + (ob - (rv.blockW || 0)) * Math.min(1, dt * 18);
+  p1.shieldPulse = Math.max(0, (p1.shieldPulse || 0) - dt * 3); rv.shieldPulse = Math.max(0, (rv.shieldPulse || 0) - dt * 3);
+  applyBlockIK(P, p1, p1.face, p1.blockW); if (MODE === 'duel') applyBlockIK(A2, rv, rv.face, rv.blockW); else if (rv.shield) rv.shield.material.opacity = 0;
   if (moveLabelT > 0) { moveLabelT -= dt; if (moveLabelT <= 0) $('move').style.opacity = 0; }
   shake = Math.max(0, shake - dt * 0.5); updateCamera(dt);
   if (draw) renderer.render(scene, camera); for (const k in PRESSED) delete PRESSED[k];
@@ -537,11 +584,13 @@ function frame(dt, draw = true){
 window.__y.step = (n, dt = 1/60, draw = false) => { for (let i = 0; i < n; i++) frame(dt, draw && i === n - 1); if (draw) renderer.render(scene, camera); };
 function startMode(m){
   MODE = m; $('menu').style.display = 'none'; $('lasthit').textContent = '';
-  if (m === 'train') { restartMatch(); M.phase = 'fight'; rv.x = 4; p1.x = -2; rv.aggro = false; $('rnd').textContent = 'TRAINING'; $('pips1').textContent = ''; $('pips2').textContent = ''; say(''); $('help').innerHTML = TRAIN_HELP; }
+  const ravan = m !== 'duel'; R.root.visible = R.shadow.visible = ravan; A2.root.visible = A2.shadow.visible = !ravan; $('name2').textContent = ravan ? 'RAVAN' : 'ARJUN';
+  if (m === 'duel') { restartMatch(); M.phase = 'fight'; rv.x = 3; p1.x = -1.5; rv.aggro = false; rv.block = false; rv.state = 'idle'; rv.mv = null; $('rnd').textContent = 'ARJUN vs ARJUN'; $('pips1').textContent = ''; $('pips2').textContent = ''; say(''); $('help').innerHTML = DUEL_HELP; }
+  else if (m === 'train') { restartMatch(); M.phase = 'fight'; rv.x = 4; p1.x = -2; rv.aggro = false; $('rnd').textContent = 'TRAINING'; $('pips1').textContent = ''; $('pips2').textContent = ''; say(''); $('help').innerHTML = TRAIN_HELP; }
   else { M.round = 1; M.pw = 0; M.rw = 0; restartMatch(); $('help').innerHTML = FIGHT_HELP; }
 }
-function showMenu(){ MODE = null; M.phase = 'menu'; resetFighters(); $('menu').style.display = 'flex'; say(''); }
-$('bFight').onclick = () => startMode('fight'); $('bTrain').onclick = () => startMode('train');
+function showMenu(){ MODE = null; R.root.visible = R.shadow.visible = true; A2.root.visible = A2.shadow.visible = false; $('name2').textContent = 'RAVAN'; M.phase = 'menu'; resetFighters(); $('menu').style.display = 'flex'; say(''); }
+$('bFight').onclick = () => startMode('fight'); $('bTrain').onclick = () => startMode('train'); $('bDuel').onclick = () => startMode('duel');
 restartMatch(); showMenu(); updateCamera(0, true);
 (function loop(){ frame(Math.min(0.05, clock.getDelta())); requestAnimationFrame(loop); })();
 </script>

@@ -2,12 +2,13 @@
 
 A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**, the archer-warrior, against the dark giant **Ravan**.
 
-**▶ Play:** https://shubhn05.github.io/Games/fighter/ &nbsp;(desktop Chrome, keyboard. Phone controls are coming.)
+**▶ Play:** https://shubhn05.github.io/Games/yudh/ &nbsp;(desktop Chrome, keyboard. Phone controls are coming.)
 
 > Work in progress — the game grows with every update. Right now it is a first playable: one hero, one boss, rounds, a training ground.
 
 ## Modes
 - **⚔ Fight** — best-of-3 rounds (first to 2 wins, 3rd round if 1–1), **90 seconds** each. Ravan attacks.
+- **🏹 Arjun vs Arjun** — a second Arjun stands in front of you (a test ground for Arjun's moves): `B` he blocks, `1` he jabs, `2` he shoots an arrow, `G` he fights back.
 - **🎯 Training ground** — Ravan **stands still**. Practice every move, use your super any time, and trigger Ravan's moves one by one to learn how to dodge them.
 
 ## Controls
@@ -15,7 +16,7 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 |---|---|
 | `←` `→` | move (walk as far as you like — the camera follows and zooms out) |
 | `↑` / `↓` | jump / crouch |
-| hold **BACK** (away from the enemy) | block |
+| hold **BACK** (away from the enemy) | block — Arjun **crosses his arms in an X** and a blue shield glows |
 | `A` `X` | left punch / right punch |
 | `Z` `S` | left kick / right kick |
 | `A` + `X` | **long-range arrow** (15 %, 5 s cooldown) |
@@ -46,6 +47,6 @@ Browsers block 3D files opened straight from disk, so use a tiny local server:
 git clone https://github.com/ShubhN05/Games.git
 cd Games
 python -m http.server 8010
-# open http://localhost:8010/fighter/
+# open http://localhost:8010/yudh/
 ```
 Developer pages: `arenas-preview.html` (the 7 arenas), `arjun-look.html?view=front|side` (Arjun's look), `test-3d.html` (first 3D test).

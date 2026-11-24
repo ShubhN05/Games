@@ -9,7 +9,7 @@ A growing collection of small browser games. Every game is a self-contained fold
 | Game | Genre | Play | Source |
 |---|---|---|---|
 | 🌙 **Nightrunner — Missile Hero** | 5-level dark platformer: night, underwater, fire, sky, 4-dragon boss. Shoot missiles | [Play](https://shubhn05.github.io/Games/mario/) | [`/mario`](./mario) |
-| ⚔️ **YUDH — Part 1: Arjun vs Ravan** | Tekken-style 3D fighter: bow & arrows, fire super, boss fight, training ground | [Play](https://shubhn05.github.io/Games/fighter/) | [`/fighter`](./fighter) |
+| ⚔️ **YUDH — Part 1: Arjun vs Ravan** | Tekken-style 3D fighter: bow & arrows, fire super, boss fight, training ground | [Play](https://shubhn05.github.io/Games/yudh/) | [`/yudh`](./yudh) |
 
 *More folders are coming — each new game gets its own directory with its own README.*
 
@@ -38,7 +38,7 @@ Games/
 ├── mario/          # Nightrunner — Missile Hero
 │   ├── index.html
 │   └── README.md
-└── fighter/        # YUDH Part 1 — Arjun vs Ravan (3D)
+└── yudh/           # YUDH Part 1 — Arjun vs Ravan (3D)
     ├── index.html
     ├── README.md
     ├── lib/ assets/ arenas.js …
