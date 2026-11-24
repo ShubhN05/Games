@@ -25,6 +25,7 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 | `X` then `A` | **Fire rain** (15 % + burn) — block it |
 | `S` then `A` | **Fire blast** (12 %) |
 | `X` `S` `A` | **Ground attack** (18 %) — jump over it |
+| `X` `A` `Z` `A` `A` `A` | **FATALITY** — an arrow that can't be blocked or dodged; instant kill, the opponent is beheaded. Super window only (last 30 s), once per round, uses your super |
 | `D` | **SUPER** — burning arrow + fire storm (65 %). Only in the **last 30 s** of a round, **once per round**. Cannot be blocked — get away! |
 | `R` / `Esc` | restart / back to the menu |
 | `T` | (fight) jump to the last 30 s to try the super |
