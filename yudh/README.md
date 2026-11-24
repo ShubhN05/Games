@@ -6,6 +6,10 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 
 > Work in progress — the game grows with every update. Right now it is a first playable: one hero, one boss, rounds, a training ground.
 
+## 👥 Fighters
+- **Arjun** — archer hero (bow, fire arrows).
+- **Choo** — Chinese kung-fu master (Tekken-3 / Bruce-Lee style). Pick him on the menu (`C`). Same combo keys, different powers: `A+X` chi wave · `Z+S` flying kick · `D` Dragon Rush (super) · `A A A` Hundred Fists · `X A` Heavenly Thunder · `S A` Spinning Dragon Kick · `X S A` Earth Shatter · `X A Z A A A` fatality.
+
 ## Modes
 - **⚔ Fight** — best-of-3 rounds (first to 2 wins, 3rd round if 1–1), **90 seconds** each. Ravan attacks.
 - **🏹 Arjun vs Arjun** — a second Arjun stands in front of you (a test ground for Arjun's moves): `B` he blocks, `1` he jabs, `2` he shoots an arrow, `G` he fights back.
