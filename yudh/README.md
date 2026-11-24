@@ -8,7 +8,7 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 
 ## 👥 Fighters
 - **Arjun** — archer hero (bow, fire arrows).
-- **Choo** — Chinese kung-fu master (Tekken-3 / Bruce-Lee style). Pick him on the menu (`C`). Same combo keys, different powers: `A+X` chi wave · `Z+S` flying kick · `D` Dragon Rush (super) · `A A A` Hundred Fists · `X A` Heavenly Thunder · `S A` Spinning Dragon Kick · `X S A` Earth Shatter · `X A Z A A A` fatality.
+- **Choo** — Chinese kung-fu master (Tekken-3 / Bruce-Lee style). Pick him on the **character select** screen (after choosing a mode: ← → to choose, Enter to confirm, Esc to go back). Same combo keys, different powers: `A+X` chi wave · `Z+S` flying kick · `D` Dragon Rush (super) · `A A A` Hundred Fists · `X A` Heavenly Thunder · `S A` Spinning Dragon Kick · `X S A` Earth Shatter · `X A Z A A A` fatality.
 
 ## Modes
 - **⚔ Fight** — best-of-3 rounds (first to 2 wins, 3rd round if 1–1), **90 seconds** each. Ravan attacks.
