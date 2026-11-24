@@ -178,10 +178,10 @@ let MODE = null;
 const FREE = () => MODE === 'train' || MODE === 'duel';   // free modes: no rounds, no KO, super any time
 const OPP = () => MODE === 'duel' ? A2 : R;               // the visible opponent                                                  // null = menu, 'fight' or 'train' (training ground: Ravan stands still)
 const maxSep = () => FREE() ? 1e9 : MAX_SEP;
-const FIGHT_HELP = '<b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)';
-const DUEL_HELP = '<b>ARJUN vs ARJUN — test ground for Arjun</b><br>Arrows move · hold BACK = block (crossed arms) · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>Opponent Arjun: B = he blocks on/off · 1 = he jabs · 2 = he shoots an arrow · G = he fights back on/off<br>H = heal both · R reset · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)';
-const TRAIN_HELP = '<b>TRAINING GROUND — Ravan stands still</b><br>Arrows move · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>1 = Ravan fire throw · 2 = clap · 3 = jump slam · 4 = super slam (practice dodging)<br>G = Ravan fights back on/off · H = heal both · R reset · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)';
-const DMG = { LP: 4, RP: 4, LK: 7, RK: 7, arrow: 15, fireHit: 2, burnTotal: 3, jumpkick: 10, super: 65, rain: 20, fireRain: 15, blast: 12, ground: 18, rvFire: 8, clap: 8, slam: 12 };   // Arjun's fire arrow = 2 on impact + 3 burn over 5 s = 5 total
+const FIGHT_HELP = '<b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)<br>Double-tap FORWARD = run + slam punch (10 %, hold BACK to block)';
+const DUEL_HELP = '<b>ARJUN vs ARJUN — test ground for Arjun</b><br>Arrows move · hold BACK = block (crossed arms) · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>Opponent Arjun: B = he blocks on/off · 1 = he jabs · 2 = he shoots an arrow · G = he fights back on/off<br>H = heal both · R reset · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)<br>Double-tap FORWARD = run + slam punch (10 %, hold BACK to block)';
+const TRAIN_HELP = '<b>TRAINING GROUND — Ravan stands still</b><br>Arrows move · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>1 = Ravan fire throw · 2 = clap · 3 = jump slam · 4 = super slam (practice dodging)<br>G = Ravan fights back on/off · H = heal both · R reset · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)<br>Double-tap FORWARD = run + slam punch (10 %, hold BACK to block)';
+const DMG = { LP: 4, RP: 4, LK: 7, RK: 7, arrow: 15, fireHit: 2, burnTotal: 3, jumpkick: 10, super: 65, dash: 10, rain: 20, fireRain: 15, blast: 12, ground: 18, rvFire: 8, clap: 8, slam: 12 };   // Arjun's fire arrow = 2 on impact + 3 burn over 5 s = 5 total
 const BURN_TIME = 5;
 const FIGHTER = { special: 'firearrow' };                       // Arjun: Z+S = fire arrow (other fighters keep the jump kick)
 const ATTACKS = {
@@ -231,14 +231,14 @@ function hurtP1(dmg, kind, srcX){
 }
 function koRavanCheck(){ if (FREE() && rv.hp <= 0) { rv.hp = 100; $('hp2').style.width = '100%'; moveLabel('RAVAN HEALED'); return; }
   if (rv.hp <= 0 && rv.state !== 'ko') { rv.hp = 0; rv.state = 'ko'; rv.mv = null; rv.burn = 0; R.play('Death01', { loop: false }); endRound('ko'); } }
-const HIT_NAMES = { hit: 'PUNCH/KICK', ranged: 'ARROW', fire: 'FIRE ARROW', super: 'SUPER', jumpkick: 'JUMP KICK', rain: 'ARROW RAIN', fireRain: 'FIRE RAIN', blast: 'FIRE BLAST', ground: 'GROUND ATTACK' };
+const HIT_NAMES = { hit: 'PUNCH/KICK', ranged: 'ARROW', fire: 'FIRE ARROW', super: 'SUPER', jumpkick: 'JUMP KICK', rain: 'ARROW RAIN', fireRain: 'FIRE RAIN', blast: 'FIRE BLAST', ground: 'GROUND ATTACK', dash: 'RUN SLAM' };
 function hurtRavan(dmg, kind, id){
   if (!fighting() || rv.state === 'ko' || rv.state === 'down' || rv.state === 'fatal') return false;
   if (MODE === 'duel' && rv.block && kind !== 'super' && kind !== 'jumpkick') { $('lasthit').textContent = 'LAST HIT: BLOCKED (' + (HIT_NAMES[kind] || kind) + ')'; rv.shieldPulse = 1; burst(rv.x - rv.face * 0.5, 1.3, 8, 0x9fe8ff, 3, 0.5, 0.16); shake = Math.max(shake, 0.04); return false; } if (FREE()) $('lasthit').textContent = 'LAST HIT: ' + (HIT_NAMES[kind] || kind) + '  -' + (+dmg.toFixed(1)) + '%'; rv.hp = Math.max(0, rv.hp - dmg); $('hp2').style.width = (100 * rv.hp / rv.max) + '%'; rv.flash = 0.12;
   burst(rv.x - rv.face * 0.3, 1.5, kind === 'super' ? 30 : 10, 0xff7a40, 3, 0.5, 0.16); shake = Math.max(shake, kind === 'super' ? 0.3 : 0.05);
   if (rv.hp <= 0) { koRavanCheck(); return true; }
   const away = Math.sign(rv.x - p1.x) || 1, big = MODE === 'duel' ? 1 : 0.55, O = OPP();
-  const KD = kind === 'jumpkick' || kind === 'super' || kind === 'rain' || kind === 'fireRain' || kind === 'ground';
+  const KD = kind === 'jumpkick' || kind === 'super' || kind === 'rain' || kind === 'fireRain' || kind === 'ground' || kind === 'dash';
   const PUSH = { LP: 0.35, RP: 0.35, LK: 0.9, RK: 0.9, ranged: 1.0, fire: 0.4, blast: 1.1 }[id || kind] ?? 0.3;
   if (KD && (MODE === 'duel' || rv.state === 'idle')) knockDown(away);                        // heavy hits: he falls down and gets up
   else if (rv.state === 'idle' || (MODE === 'duel' && rv.state !== 'ko')) { rv.kvx = away * PUSH * 6 * big; if (kind !== 'fire') { O.play(PUSH >= 0.8 ? 'Hit_Knockback' : 'Hit_Chest', { loop: false, speed: 0.9, force: true }); O.lockT = gt + 0.45; } }   // light hits: he is pushed back
@@ -282,7 +282,7 @@ const HEADS = { arjun: makeHead(true, 1), ravan: makeHead(false, 1.65) };
 const bloodPool = new THREE.Mesh(new THREE.CircleGeometry(1, 32), new THREE.MeshBasicMaterial({ color: 0x5a0508, transparent: true, opacity: 0.9, depthWrite: false }));
 bloodPool.rotation.x = -Math.PI / 2; bloodPool.visible = false; scene.add(bloodPool);
 function startFatal(){
-  const O = OPP(); cbuf = []; p1.superUsed = true; p1.comboCd = COMBO_CD; p1.atk = null; p1.queued = null; p1.kickU = -1; p1.inv = 99; p1.crouch = false; p1.pend = null;
+  const O = OPP(); cbuf = []; p1.superUsed = true; p1.comboCd = COMBO_CD; p1.atk = null; p1.queued = null; p1.kickU = -1; p1.inv = 99; p1.crouch = false; p1.pend = null; p1.dash = null;
   timers.length = 0; falls.splice(0).forEach(f => { scene.remove(f.o); if (f.o.material) f.o.material.dispose(); });
   p1.state = 'shoot'; p1.shoot = { fire: true, sup: true, fatal: true, t: 0, released: false }; P.curName = ''; P.play('Idle_Loop');
   rv.state = 'fatal'; rv.mv = null; rv.kvx = 0; rv.y = 0; rv.burn = 0; slamMark.visible = false; handFlame.material.opacity = 0; handLight.intensity = 0; clapW = 0; O.lockT = 0; O.curName = ''; O.play('Idle_Loop', { force: true });
@@ -390,11 +390,17 @@ function updateP1(dt){
       else if (sh.sup) { spawnShot('p', tip.x, tip.y, p1.face * 20, 0xffa030, { kind: 'super', range: 4.0, r: 0.3 }); flashScreen(); shake = Math.max(shake, 0.3); }
       else spawnShot('p', tip.x, tip.y, p1.face * (sh.fire ? 6.5 : 14), sh.fire ? 0xff8a1a : 0xbfe8ff, { kind: sh.fire ? 'fire' : 'arrow', range: sh.fire ? 12 : 18 }); shake = Math.max(shake, 0.05); }
     if (sh.t >= T.end) { p1.state = 'idle'; p1.shoot = null; p1.aimW = 0; P.curName = ''; } }
+  else if (p1.state === 'dash') { const d = p1.dash; d.t += dt; const dist = Math.abs(rv.x - p1.x);
+    if (d.phase === 'run') { p1.x += p1.face * 9 * dt; P.play('Sprint_Loop', { speed: 1.2 }); if (dist < 1.7 || d.t > 0.9) { d.phase = 'slam'; d.t = 0; P.play('Punch_Cross', { loop: false, speed: 1.3, fade: 0.05, force: true }); } }
+    else { if (!d.done && d.t >= 0.2) { d.done = true; shake = Math.max(shake, 0.2); if (dist < 2.4 && p1.face === Math.sign(rv.x - p1.x)) hurtRavan(DMG.dash, 'dash'); }
+      if (d.t >= 0.6) { p1.state = 'idle'; p1.dash = null; P.curName = ''; } } }
   else if (p1.state === 'jumpkick') { p1.t += dt; p1.kickU = Math.min(0.6, 0.12 + p1.t * 1.4); p1.kickSide = 'both'; p1.x += p1.vx * dt;
     if (!p1.jkHit && Math.abs(rv.x - p1.x) < 1.35 && p1.y > 0.2 && p1.face === Math.sign(rv.x - p1.x)) { p1.jkHit = true; hurtRavan(DMG.jumpkick, 'jumpkick'); }
     if (p1.y <= 0 && p1.vy <= 0 && p1.t > 0.1) { p1.state = 'idle'; p1.vx = 0; P.curName = ''; } }
   else if (fighting() && !cine) {
-    p1.crouch = down('ArrowDown') && grounded; p1.block = backKey && grounded;
+    p1.crouch = down('ArrowDown') && grounded; p1.block = backKey && grounded; p1.dashCd = Math.max(0, (p1.dashCd || 0) - dt);
+    const fwdKey = p1.face > 0 ? 'ArrowRight' : 'ArrowLeft';
+    if (hit(fwdKey) && p1.state === 'idle') { if (gt - (p1.tapT ?? -9) < 0.28 && p1.dashCd <= 0 && grounded && !p1.crouch) { p1.tapT = -9; p1.dashCd = 3; p1.state = 'dash'; p1.dash = { t: 0, phase: 'run', done: false }; p1.block = false; moveLabel('RUN SLAM!  (hold BACK to block)'); } else p1.tapT = gt; }
     const act = acts[0];
     if (act) {
       if (act.chord === 'KeyAKeyX') { if (p1.rangedCd <= 0 && grounded) startShoot(false); }
