@@ -86,7 +86,7 @@
   <div id="cine"><i class="cb t"></i><i class="cb b"></i><div id="vig"></div><b id="fatal">FATALITY</b></div><div id="move"></div><div id="msg"></div><div id="flash"></div><div id="lasthit"></div>
   <div id="help"><b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s (test)</div>
 </div>
-<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><small>Fight: 90-second rounds, Ravan attacks.<br>Mirror duel: a copy of your fighter stands in front of you — test every move and block.<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v11 - Choo + Kaze fatalities  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
+<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><small>Fight: 90-second rounds, Ravan attacks.<br>Mirror duel: a copy of your fighter stands in front of you — test every move and block.<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v12 - own punches and kicks for Choo and Kaze  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
 <div id="select"><div class="top">SELECT YOUR FIGHTER</div><div class="info"><b id="selName">ARJUN</b><em id="selTag"></em><span id="selInfo"></span></div><div><div class="cards" id="cards"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bGo">CONFIRM</button></div></div></div>
 <div id="stage"><div class="top">SELECT STAGE</div><div class="prev"><canvas id="stPrev" width="640" height="360"></canvas><b id="stName">RANDOM</b></div><div id="stGrid"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bStGo">CONFIRM</button></div></div>
 <script src="arenas.js"></script>
@@ -228,6 +228,24 @@ const ATTACKS = {
   KeyS: { id: 'RK', kick: 'r', dmg: DMG.RK, hitAt: 0.34, dur: 0.62, reach: 2.25 } };
 const T_FATAL = { draw: 0.40, rel: 1.0, end: 1.8 };
 const T_RAIN = { draw: 0.26, rel: 0.40, end: 0.80 };
+/* each fighter has his own punches and kicks (same keys A X Z S, same damage, different style) */
+const ATTACKS_CHAR = {
+  choo: {   // kung-fu: very fast straight jab, palm strike, snap kick, high side kick
+    KeyA: { id: 'LP', clip: 'Punch_Jab', dmg: DMG.LP, hitAt: 0.10, dur: 0.38, reach: 2.1, speed: 2.4, fxc: 0xffd24a },
+    KeyX: { id: 'RP', clip: 'Spell_Simple_Shoot', dmg: DMG.RP, hitAt: 0.14, dur: 0.42, reach: 2.2, speed: 1.5, fxc: 0xffd24a },
+    KeyZ: { id: 'LK', kick: 'l', dmg: DMG.LK, hitAt: 0.20, dur: 0.42, reach: 2.3, fxc: 0xffd24a },
+    KeyS: { id: 'RK', kick: 'r', dmg: DMG.RK, hitAt: 0.26, dur: 0.52, reach: 2.55, fxc: 0xffd24a } },
+  kaze: {   // ninja: low crouching slashes, low sweep, spinning back kick
+    KeyA: { id: 'LP', clip: 'Sword_Regular_A', dmg: DMG.LP, hitAt: 0.14, dur: 0.44, reach: 2.1, speed: 1.0, fxc: 0xffffff },
+    KeyX: { id: 'RP', clip: 'Melee_Hook', dmg: DMG.RP, hitAt: 0.17, dur: 0.50, reach: 2.05, speed: 1.0, fxc: 0xffffff },
+    KeyZ: { id: 'LK', kick: 'l', dmg: DMG.LK, hitAt: 0.26, dur: 0.50, reach: 2.1, fxc: 0xffffff },
+    KeyS: { id: 'RK', kick: 'r', spin: true, dmg: DMG.RK, hitAt: 0.30, dur: 0.62, reach: 2.3, fxc: 0xffffff } } };
+/* leg style per fighter: lean = how far the body leans back, lift = strike height, reach = how far the foot goes, yaw = body turn (side kick) */
+const KS = {
+  arjun: { l: { lean: 0.34, lift: 0.0, reach: 1.05, yaw: 0 }, r: { lean: 0.34, lift: 0.25, reach: 1.05, yaw: 0 } },
+  choo:  { l: { lean: 0.22, lift: 0.30, reach: 1.15, yaw: 0 }, r: { lean: 0.50, lift: 0.75, reach: 1.20, yaw: -1.25 } },
+  kaze:  { l: { lean: -0.15, lift: -0.42, reach: 1.0, yaw: 0 }, r: { lean: 0.30, lift: 0.35, reach: 1.10, yaw: 0 } } };
+const kickStyle = () => { const k = KS[CHAR] || KS.arjun; return k[p1.kickSide] || k.l; };
 const T_ARROW = { draw: 0.32, rel: 0.44, end: 0.80 }, T_FIRE = { draw: 0.45, rel: 0.68, end: 1.0 }, T_SUPER = { draw: 0.45, rel: 1.0, end: 1.5 };   // super: the arrow burns for 1 full second BEFORE it flies
 
 /* ---------------- match state ---------------- */
@@ -544,7 +562,7 @@ function updateP1(dt){
   else if (p1.state === 'attack') { const a = p1.atk; a.t += dt; const u = a.t / a.def.dur;
     if (a.def.charge && a.t < a.def.hitAt) { const g = a.t / a.def.hitAt; chiAura.material.color.set(a.def.aura || 0xffd24a); chiAura.position.set(p1.x + p1.face * 0.1, 1.2, 0.3); chiAura.scale.setScalar(0.6 + 1.6 * g + Math.sin(gt * 40) * 0.1); chiAura.material.opacity = 0.3 + 0.5 * g; if (Math.random() < 0.7) burst(p1.x + (Math.random() - 0.5) * 0.8, 0.3 + Math.random() * 1.5, 1, a.def.aura || 0xffd24a, 0.6, 0.5, 0.2, 1.6); shake = Math.max(shake, 0.015 * g); }
     if (a.def.kick) p1.kickU = u;
-    if (!a.done && a.t >= a.def.hitAt) { a.done = true; if (a.def.fn) a.def.fn(); else if (Math.abs(rv.x - p1.x) < a.def.reach && p1.face === Math.sign(rv.x - p1.x)) hurtRavan(a.def.dmg, 'hit', a.def.id); }
+    if (!a.done && a.t >= a.def.hitAt) { a.done = true; if (a.def.fn) a.def.fn(); else if (Math.abs(rv.x - p1.x) < a.def.reach && p1.face === Math.sign(rv.x - p1.x)) { hurtRavan(a.def.dmg, 'hit', a.def.id); if (a.def.fxc) burst(rv.x - p1.face * 0.4, 1.3, 7, a.def.fxc, 3, 0.3, 0.22); } }
     if (a.t >= a.def.dur) { p1.state = 'idle'; p1.atk = null; P.curName = ''; } }
   else if (p1.state === 'shoot') { const sh = p1.shoot, T = sh.fatal ? T_FATAL : sh.sup ? T_SUPER : sh.rain ? T_RAIN : sh.fire ? T_FIRE : T_ARROW; sh.t += dt;
     p1.aimDraw = clamp(sh.t / T.draw, 0, 1); p1.aimW = clamp(sh.t / (T.draw * 0.6), 0, 1) * (sh.t < T.rel ? 1 : clamp(1 - (sh.t - T.rel) / 0.2, 0, 1));
@@ -571,7 +589,7 @@ function updateP1(dt){
       else if (act.chord === 'KeySKeyZ') {
         if (CHAR === 'arjun') { if (p1.specialCd <= 0 && grounded) startShoot(true); }
         else if (grounded) { p1.state = 'jumpkick'; p1.t = 0; p1.jkHit = false; p1.vy = 5.2; p1.vx = p1.face * 3.4; p1.crouch = false; P.play('Jump_Loop'); } }
-      else if (act.single && grounded && !p1.crouch) { if (comboHit) startCombo(comboHit); else startAttack(ATTACKS[act.single]); }
+      else if (act.single && grounded && !p1.crouch) { if (comboHit) startCombo(comboHit); else startAttack((ATTACKS_CHAR[CHAR] || ATTACKS)[act.single]); }
     }
     if (p1.state === 'attack' && p1.atk.def.clip) P.play(p1.atk.def.clip, { loop: false, speed: p1.atk.def.speed, fade: 0.06 });
     if (hit('KeyD') && grounded && !p1.superUsed && (FREE() || M.time <= SUPER_TIME) && p1.state === 'idle') { if (CHAR === 'choo') startChooSuper(); else if (CHAR === 'kaze') startKazeSuper(); else startSuper(); }
@@ -586,6 +604,7 @@ function updateP1(dt){
   p1.x = clamp(p1.x, MIN_X, MAX_X); if (Math.abs(p1.x - rv.x) > maxSep()) p1.x = rv.x - Math.sign(rv.x - p1.x || 1) * maxSep();    // both fighters always stay on screen
   const gap = 0.95; if (Math.abs(p1.x - rv.x) < gap && rv.y < 0.3 && p1.state !== 'jumpkick') p1.x = rv.x - Math.sign(rv.x - p1.x || 1) * gap;
   P.root.position.set(p1.x, p1.y, 0); P.root.rotation.y += (p1.face * Math.PI / 2 - P.root.rotation.y) * Math.min(1, dt * 14);
+  if (p1.kickU >= 0 && p1.state === 'attack') { const ky = kickStyle().yaw; if (ky) P.root.rotation.y = p1.face * Math.PI / 2 + ky * kickCurve(p1.kickU).w * p1.face; }
   if (p1.state === 'attack' && p1.atk && p1.atk.def.spin) { const su = clamp(p1.atk.t / p1.atk.def.dur, 0, 1); P.root.rotation.y = su >= 0.97 ? p1.face * Math.PI / 2 : p1.face * Math.PI / 2 + su * Math.PI * 2 * p1.face; }
   P.shadow.position.x = p1.x; P.shadow.scale.setScalar(Math.max(0.4, 1 - p1.y * 0.35));
 }
@@ -601,11 +620,12 @@ function applyKickIK(){
   if (p1.kickU < 0) return; const { w, s } = kickCurve(p1.kickU); if (w < 0.01) return;
   const pel = P.bones.pelvis.getWorldPosition(V()), fwd = V(p1.face, 0, 0), both = p1.kickSide === 'both', up = V(0, 1, 0);
   const hl = P.bones.hand_l.getWorldPosition(V()), hr = P.bones.hand_r.getWorldPosition(V()), side = hl.clone().sub(hr); side.y = 0; side.normalize();
-  rotateWorld(P.bones.spine_01, V(0, 0, 1), 0.34 * w * (0.3 + 0.7 * s) * p1.face);
+  const ks = both ? KS.arjun.l : kickStyle();
+  rotateWorld(P.bones.spine_01, V(0, 0, 1), ks.lean * w * (0.3 + 0.7 * s) * p1.face);
   for (const sd of (both ? ['l', 'r'] : [p1.kickSide])) {
     const chamber = pel.clone().addScaledVector(fwd, 0.30).addScaledVector(up, -0.16);
-    const lift = both ? (sd === 'l' ? 0.40 : 0.02) : (sd === 'l' ? 0.0 : 0.25);
-    const strike = pel.clone().addScaledVector(fwd, 1.05).addScaledVector(up, lift);
+    const lift = both ? (sd === 'l' ? 0.40 : 0.02) : ks.lift;
+    const strike = pel.clone().addScaledVector(fwd, ks.reach).addScaledVector(up, lift);
     solveLimb(P, 'thigh_' + sd, 'calf_' + sd, 'foot_' + sd, chamber.lerp(strike, s), fwd.clone().addScaledVector(up, 0.5), w);
   }
   const ch = P.bones.spine_03.getWorldPosition(V()), g = 0.85 * w;
