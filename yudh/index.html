@@ -44,6 +44,18 @@
   .card img{width:100%;height:calc(100% - 28px);object-fit:cover;display:block;background:#1a2244}
   .card .nm{position:absolute;bottom:0;left:0;right:0;text-align:center;font:bold 14px system-ui;background:#000b;color:#fff;padding:4px 2px;letter-spacing:1px}
   .card.lock{filter:grayscale(1);opacity:.55} .card .q{font:900 56px system-ui;color:#5a6690;text-align:center;line-height:min(108px,11vw)}
+  #stage{position:fixed;inset:0;z-index:21;display:none;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,#14306a,#050a1c 75%);gap:14px}
+  #stage .top{font:900 30px system-ui;color:#ffd24a;letter-spacing:7px;text-shadow:0 0 18px #ff5a1a,0 3px 6px #000}
+  #stage .prev{position:relative;width:min(46vw,calc(62vh * 1.78));border:4px solid #cfe3ff;border-radius:6px;box-shadow:0 0 30px #37e2d588;background:#000;overflow:hidden}
+  #stage canvas#stPrev{position:static;width:100%;height:auto;display:block}
+  #stage .prev b{position:absolute;left:0;right:0;bottom:8px;text-align:center;font:900 28px system-ui;color:#fff;letter-spacing:4px;text-shadow:0 2px 8px #000}
+  #stGrid{display:flex;gap:1vw;justify-content:center;flex-wrap:wrap;padding:0 14px}
+  #stGrid div{width:min(120px,10.6vw);height:min(68px,6vw);border:3px solid #34508a;border-radius:4px;cursor:pointer;overflow:hidden;background:#0e1430;position:relative;flex:none}
+  #stGrid div.sel{border-color:#ffd24a;box-shadow:0 0 20px #ffd24a;transform:scale(1.1)}
+  #stGrid canvas{position:static;width:100%;height:100%;display:block}
+  #stGrid .rnd{background:#b81d1d;color:#ffd24a;font-weight:900;font-size:min(40px,4vw);font-family:system-ui;text-align:center;line-height:min(68px,6vw)}
+  #stage .hint{color:#8fa0c8;font-size:13px}
+  #stage .hint button{margin-left:14px;padding:8px 22px;font:bold 16px system-ui;color:#05060d;background:#ffd24a;border:0;border-radius:8px;cursor:pointer}
   #select .hint{text-align:center;color:#8fa0c8;font-size:13px;padding-bottom:14px}
   #select .hint button{margin-left:14px;padding:8px 22px;font:bold 16px system-ui;color:#05060d;background:#ffd24a;border:0;border-radius:8px;cursor:pointer}
   #menu button:hover{background:#37e2d5;color:#05060d}
@@ -74,8 +86,9 @@
   <div id="cine"><i class="cb t"></i><i class="cb b"></i><div id="vig"></div><b id="fatal">FATALITY</b></div><div id="move"></div><div id="msg"></div><div id="flash"></div><div id="lasthit"></div>
   <div id="help"><b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s (test)</div>
 </div>
-<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><small>Fight: 90-second rounds, Ravan attacks.<br>Mirror duel: a copy of your fighter stands in front of you — test every move and block.<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small></div></div>
+<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><small>Fight: 90-second rounds, Ravan attacks.<br>Mirror duel: a copy of your fighter stands in front of you — test every move and block.<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v9 - fighter select + stage select  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
 <div id="select"><div class="top">SELECT YOUR FIGHTER</div><div class="info"><b id="selName">ARJUN</b><em id="selTag"></em><span id="selInfo"></span></div><div><div class="cards" id="cards"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bGo">CONFIRM</button></div></div></div>
+<div id="stage"><div class="top">SELECT STAGE</div><div class="prev"><canvas id="stPrev" width="640" height="360"></canvas><b id="stName">RANDOM</b></div><div id="stGrid"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bStGo">CONFIRM</button></div></div>
 <script src="arenas.js"></script>
 <script type="module">
 import * as THREE from 'three';
@@ -780,11 +793,12 @@ function updateRound(dt){
     if (M.phaseT <= 0) { if (M.pw >= 2 || M.rw >= 2) { M.phase = 'matchEnd'; say(M.pw > M.rw ? 'YOU WIN THE MATCH!  (R = play again)' : M.pw < M.rw ? 'RAVAN WINS THE MATCH  (R = play again)' : 'DRAW  (R = play again)'); } else { M.round++; startRound(); } } }
 }
 /* debug / testing hooks */
-window.__y = { openSelect, confirmSel, moveSel, getSel: () => selIdx, get P() { return P; }, get A2() { return A2; }, pickChar, getChar: () => CHAR, fatalOk, startFatal, getCine: () => cine, getTS: () => TS, FAT, p1, rv, M, cam, camera, renderer, scene, bow, storms, startMode, showMenu, getMode: () => MODE, startMove, restartMatch, hurtP1, hurtRavan, shots, KEYS, PRESSED, setTime: s => { M.time = s; }, state: () => ({ shots: shots.length, waves: waves.length, rings: rings.length, phase: M.phase }) };
+window.__y = { openSelect, confirmSel, confirmStage, moveStage, setArena, getStage: () => stIdx, moveSel, getSel: () => selIdx, get P() { return P; }, get A2() { return A2; }, pickChar, getChar: () => CHAR, fatalOk, startFatal, getCine: () => cine, getTS: () => TS, FAT, p1, rv, M, cam, camera, renderer, scene, bow, storms, startMode, showMenu, getMode: () => MODE, startMove, restartMatch, hurtP1, hurtRavan, shots, KEYS, PRESSED, setTime: s => { M.time = s; }, state: () => ({ shots: shots.length, waves: waves.length, rings: rings.length, phase: M.phase }) };
 const clock = new THREE.Clock();
 function frame(dtReal, draw = true){
   const dt = dtReal * TS; gt += dtReal;
   if (M.phase === 'select') { frameSelect(dtReal, draw); return; }
+  if (M.phase === 'stage') { frameStage(); if (draw) renderer.render(scene, camera); return; }
   if (M.phase === 'menu') { if (hit('Digit1')) openSelect('fight'); if (hit('Digit2')) openSelect('train'); if (hit('Digit3')) openSelect('duel'); delete PRESSED.Digit1; delete PRESSED.Digit2; delete PRESSED.Digit3; }   // the menu key must not also trigger a training move
   else { if (hit('Escape')) showMenu(); if (hit('KeyR') && MODE) { if (FREE()) startMode(MODE); else restartMatch(); }
     if (FREE()) { if (MODE === 'train' && hit('KeyG')) { rv.aggro = !rv.aggro; moveLabel(rv.aggro ? 'RAVAN FIGHTS BACK' : 'RAVAN STANDS STILL'); } if (hit('KeyH')) { p1.hp = 100; rv.hp = 100; $('hp1').style.width = '100%'; $('hp2').style.width = '100%'; rv.burn = 0; rv.fireVis = 0; } } }
@@ -841,7 +855,34 @@ function openSelect(m){
   pendingMode = m; MODE = null; M.phase = 'select'; $('menu').style.display = 'none'; $('select').style.display = 'flex'; $('hud').style.display = 'none'; say('');
   if (!ROSTER[0].el) buildCards(); moveSel(CHAR === 'choo' ? 1 : 0);
 }
-function confirmSel(){ const r = ROSTER[selIdx]; if (!r.id || loadingChar || !pendingMode) return; $('select').style.display = 'none'; $('hud').style.display = ''; const m = pendingMode; pendingMode = null; P.root.rotation.y = Math.PI / 2; startMode(m); }
+/* ---------------- stage select (7 arenas + RANDOM) ---------------- */
+let stIdx = 7, stBuilt = false;                                   // 0 = RANDOM, 1..7 = arenas (starts on Blood Moon Coliseum)
+function setArena(i){ FIGHTER_ARENAS[i].draw(bgCanvas.getContext('2d'), 3); bg.needsUpdate = true; }
+function buildStages(){
+  const g = $('stGrid'); g.innerHTML = ''; const tmp = document.createElement('canvas'); tmp.width = 960; tmp.height = 540;
+  for (let i = 0; i <= FIGHTER_ARENAS.length; i++) { const d = document.createElement('div');
+    if (i === 0) { d.className = 'rnd'; d.textContent = '?'; } else { FIGHTER_ARENAS[i - 1].draw(tmp.getContext('2d'), 3); const c = document.createElement('canvas'); c.width = 240; c.height = 135; c.getContext('2d').drawImage(tmp, 0, 0, 240, 135); d.appendChild(c); }
+    d.onclick = () => { if (stIdx === i) confirmStage(); else moveStage(i); }; g.appendChild(d); }
+  stBuilt = true;
+}
+function moveStage(i){
+  stIdx = (i + FIGHTER_ARENAS.length + 1) % (FIGHTER_ARENAS.length + 1); [...$('stGrid').children].forEach((d, k) => d.classList.toggle('sel', k === stIdx));
+  const c = $('stPrev').getContext('2d');
+  if (stIdx === 0) { c.fillStyle = '#10204a'; c.fillRect(0, 0, 640, 360); c.fillStyle = '#ff9a1a'; c.font = '900 220px system-ui'; c.textAlign = 'center'; c.fillText('?', 320, 270); $('stName').textContent = 'RANDOM'; }
+  else { const tmp = document.createElement('canvas'); tmp.width = 960; tmp.height = 540; FIGHTER_ARENAS[stIdx - 1].draw(tmp.getContext('2d'), 3); c.drawImage(tmp, 0, 0, 640, 360); $('stName').textContent = FIGHTER_ARENAS[stIdx - 1].name.toUpperCase(); }
+}
+function openStage(){ M.phase = 'stage'; $('select').style.display = 'none'; $('stage').style.display = 'flex'; if (!stBuilt) buildStages(); moveStage(stIdx); }
+function confirmStage(){
+  const m = pendingMode; if (!m) return; pendingMode = null; setArena(stIdx === 0 ? Math.floor(Math.random() * FIGHTER_ARENAS.length) : stIdx - 1);
+  $('stage').style.display = 'none'; $('hud').style.display = ''; P.root.rotation.y = Math.PI / 2; startMode(m);
+}
+function frameStage(){
+  if (hit('ArrowLeft', 'ArrowUp')) moveStage(stIdx - 1); if (hit('ArrowRight', 'ArrowDown')) moveStage(stIdx + 1);
+  if (hit('Enter', 'Space')) confirmStage();
+  if (hit('Escape')) { $('stage').style.display = 'none'; $('select').style.display = 'flex'; M.phase = 'select'; }
+  for (const k in PRESSED) delete PRESSED[k];
+}
+function confirmSel(){ const r = ROSTER[selIdx]; if (!r.id || loadingChar || !pendingMode) return; openStage(); }
 function frameSelect(dt, draw){
   if (hit('ArrowLeft')) moveSel((selIdx + ROSTER.length - 1) % ROSTER.length); if (hit('ArrowRight')) moveSel((selIdx + 1) % ROSTER.length);
   if (hit('Enter', 'Space')) confirmSel(); if (hit('Escape')) { showMenu(); for (const k in PRESSED) delete PRESSED[k]; return; }
@@ -856,8 +897,8 @@ function startMode(m){
   else if (m === 'train') { restartMatch(); M.phase = 'fight'; rv.x = 4; p1.x = -2; rv.aggro = false; $('rnd').textContent = 'TRAINING'; $('pips1').textContent = ''; $('pips2').textContent = ''; say(''); $('help').innerHTML = TRAIN_HELP; }
   else { M.round = 1; M.pw = 0; M.rw = 0; restartMatch(); $('help').innerHTML = FIGHT_HELP; }
 }
-function showMenu(){ MODE = null; M.phase = 'menu'; $('select').style.display = 'none'; $('hud').style.display = ''; pendingMode = null; applyVis(); M.phase = 'menu'; resetFighters(); $('menu').style.display = 'flex'; say(''); }
-$('bFight').onclick = () => openSelect('fight'); $('bTrain').onclick = () => openSelect('train'); $('bDuel').onclick = () => openSelect('duel'); $('bGo').onclick = () => confirmSel();
+function showMenu(){ MODE = null; M.phase = 'menu'; $('select').style.display = 'none'; $('stage').style.display = 'none'; $('hud').style.display = ''; pendingMode = null; applyVis(); M.phase = 'menu'; resetFighters(); $('menu').style.display = 'flex'; say(''); }
+$('bFight').onclick = () => openSelect('fight'); $('bTrain').onclick = () => openSelect('train'); $('bDuel').onclick = () => openSelect('duel'); $('bGo').onclick = () => confirmSel(); $('bStGo').onclick = () => confirmStage();
 (function warmUp(){   // compile every shader once at start, so nothing stutters later
   for (const kind of ['ball', 'arrow', 'fire', 'super', 'ground', 'fatal']) spawnShot('p', 0, 1, 1, 0xffffff, { kind });
   HEADS.arjun.visible = HEADS.ravan.visible = HEADS.choo.visible = bloodPool.visible = true; const a = makeArrow(false); scene.add(a);
