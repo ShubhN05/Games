@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fighter Game - Arenas</title>
+<style>
+  body{margin:0;background:#07080f;color:#cfe3ff;font-family:system-ui,sans-serif;padding:16px}
+  h1{margin:0 0 4px;font-size:22px;color:#37e2d5}
+  p{margin:0 0 14px;color:#7f8bb8;font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px}
+  .card{background:#10163a;border:1px solid #2a357a;border-radius:10px;padding:8px}
+  .card canvas{width:100%;display:block;border-radius:6px;background:#000}
+  .card b{display:block;margin:8px 4px 0}
+  .card span{color:#7f8bb8;font-size:13px;margin-left:4px}
+</style>
+</head>
+<body>
+<h1>Fighter Game — Arenas</h1>
+<p>Seven original arenas drawn in code. Fighters stand on the same floor line (y = 450) in every arena. Press 1–7 for full-screen.</p>
+<div class="grid" id="grid"></div>
+<script src="arenas.js"></script>
+<script>
+const grid = document.getElementById('grid'), cards = [];
+FIGHTER_ARENAS.forEach(a => {
+  const d = document.createElement('div'); d.className = 'card';
+  const c = document.createElement('canvas'); c.width = 960; c.height = 540; c.id = 'arena-' + a.index;
+  d.appendChild(c); d.insertAdjacentHTML('beforeend', '<b>' + a.index + '. ' + a.name + '</b><span>' + a.mood + '</span>');
+  grid.appendChild(d); cards.push([a, c.getContext('2d')]);
+});
+let t = 0; function frame(){ t += 1/60; cards.forEach(([a,ctx]) => a.draw(ctx, t)); requestAnimationFrame(frame); }
+frame();
+</script>
+</body>
+</html>

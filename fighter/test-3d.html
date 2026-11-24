@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YUDH - 3D fighter test</title>
+<style>
+  html,body{margin:0;height:100%;background:#05060d;overflow:hidden;font-family:system-ui,sans-serif}
+  canvas{position:fixed;display:block}
+  #hud{position:fixed;left:12px;top:10px;color:#cfe3ff;font-size:13px;text-shadow:0 1px 4px #000;pointer-events:none}
+  #hud b{color:#37e2d5}
+</style>
+<script type="importmap">
+{ "imports": { "three": "./lib/three/three.module.js", "three/addons/": "./lib/three/addons/" } }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><b>YUDH 3D test</b> &nbsp; J = jab &nbsp; K = cross &nbsp; L = hook &nbsp; H = hit reaction &nbsp; A/D = walk &nbsp; <span id="status">loading…</span></div>
+<script src="arenas.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* ---------- Ravan's look: black skin, brown pants (painted onto the texture), long curly hair ---------- */
+function rand(seed){ let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function findBody(root){ let best = null; root.traverse(o => { if (o.isSkinnedMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; if (ms.some(m => m.name === 'MI_Superhero_Male')) best = o; } }); return best; }
+function dominantBones(body){
+  const g = body.geometry, names = body.skeleton.bones.map(b => b.name), si = g.attributes.skinIndex, sw = g.attributes.skinWeight, out = new Array(g.attributes.position.count);
+  for (let i = 0; i < out.length; i++) { let bi = si.getX(i), bw = sw.getX(i);
+    [[si.getY(i), sw.getY(i)], [si.getZ(i), sw.getZ(i)], [si.getW(i), sw.getW(i)]].forEach(([a, b]) => { if (b > bw) { bw = b; bi = a; } }); out[i] = names[bi]; }
+  return out;
+}
+function paintRavanTexture(body, opts){
+  const mats = Array.isArray(body.material) ? body.material : [body.material], m = mats.find(x => x.name === 'MI_Superhero_Male');
+  const img = m.map.image, w = img.width, h = img.height, g = body.geometry, uv = g.attributes.uv, dom = dominantBones(body);
+  const base = document.createElement('canvas'); base.width = w; base.height = h; const bc = base.getContext('2d'); bc.drawImage(img, 0, 0, w, h);
+  const src = bc.getImageData(0, 0, w, h);
+  // mask = triangles whose three vertices belong to the legs (thighs + calves) -> pants
+  const mk = document.createElement('canvas'); mk.width = w; mk.height = h; const mc = mk.getContext('2d'); mc.fillStyle = '#fff'; mc.strokeStyle = '#fff'; mc.lineWidth = 3; mc.lineJoin = 'round';
+  const isLeg = n => /^(thigh|calf)_/.test(n) || n === 'pelvis', idx = g.index.array;
+  for (let t = 0; t < idx.length; t += 3) { const a = idx[t], b = idx[t+1], c = idx[t+2];
+    if (isLeg(dom[a]) && isLeg(dom[b]) && isLeg(dom[c])) { mc.beginPath(); mc.moveTo(uv.getX(a)*w, uv.getY(a)*h); mc.lineTo(uv.getX(b)*w, uv.getY(b)*h); mc.lineTo(uv.getX(c)*w, uv.getY(c)*h); mc.closePath(); mc.fill(); mc.stroke(); } }
+  const mask = mc.getImageData(0, 0, w, h).data, d = src.data, [pr, pg, pb] = opts.pants, [sr, sg, sb] = opts.skin;
+  for (let p = 0; p < d.length; p += 4) {
+    const r = d[p], gg = d[p+1], b = d[p+2], lum = (r + gg + b) / 765, sat = Math.max(r, gg, b) - Math.min(r, gg, b);
+    const grey = sat < 22 && lum > 0.12;                                   // the original grey shorts
+    if (mask[p] > 100 || grey) {
+      const px = (p >> 2) % w, py = (p >> 2) / w | 0, weave = ((px * 7 + py * 13) % 5) / 5 * 0.10 + (((px >> 1) + (py >> 1)) & 1) * 0.05;   // fabric weave
+      const k = 0.80 + 0.30 * Math.min(1, lum * 1.5) + weave - 0.06; d[p] = pr * k; d[p+1] = pg * k; d[p+2] = pb * k; }
+    else { d[p] = r * sr; d[p+1] = gg * sg; d[p+2] = b * sb; }              // darken skin -> black
+  }
+  bc.putImageData(src, 0, 0);
+  const tex = new THREE.CanvasTexture(base); tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  m.map = tex; m.color = new THREE.Color(0xffffff); m.roughnessMap = null; m.roughness = 0.9; m.metalness = 0; m.needsUpdate = true;
+}
+/* real trousers: a slightly inflated copy of the hip+leg triangles, skinned to the same skeleton (so they move with the legs) */
+function addPants(body, opts){
+  const g = body.geometry, dom = dominantBones(body), idx = g.index.array, ng = new THREE.BufferGeometry();
+  const isCalf = n => /^calf_/.test(n), isThigh = n => /^thigh_/.test(n), isLeg = n => isCalf(n) || isThigh(n) || n === 'pelvis';
+  const pos = g.attributes.position, nor = g.attributes.normal, p = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) { const k = isCalf(dom[i]) ? opts.calf : isThigh(dom[i]) ? opts.thigh : opts.hip;
+    p[i*3] = pos.getX(i) + nor.getX(i) * k; p[i*3+1] = pos.getY(i) + nor.getY(i) * k; p[i*3+2] = pos.getZ(i) + nor.getZ(i) * k; }
+  const keep = []; for (let t = 0; t < idx.length; t += 3) if (isLeg(dom[idx[t]]) && isLeg(dom[idx[t+1]]) && isLeg(dom[idx[t+2]])) keep.push(idx[t], idx[t+1], idx[t+2]);
+  ng.setAttribute('position', new THREE.BufferAttribute(p, 3)); ng.setAttribute('normal', nor); ng.setAttribute('uv', g.attributes.uv);
+  ng.setAttribute('skinIndex', g.attributes.skinIndex); ng.setAttribute('skinWeight', g.attributes.skinWeight); ng.setIndex(keep);
+  const mat = new THREE.MeshStandardMaterial({ color: opts.color, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
+  const pants = new THREE.SkinnedMesh(ng, mat); pants.name = 'RavanPants'; pants.frustumCulled = false;
+  pants.position.copy(body.position); pants.quaternion.copy(body.quaternion); pants.scale.copy(body.scale);
+  body.parent.add(pants); pants.bind(body.skeleton, body.bindMatrix);
+}
+function addCurlyHair(root, body, opts){
+  const dom = dominantBones(body), g = body.geometry, pos = g.attributes.position, box = new THREE.Box3(), v = new THREE.Vector3();
+  root.updateMatrixWorld(true);
+  for (let i = 0; i < pos.count; i++) if (dom[i] === 'Head') { v.fromBufferAttribute(pos, i); body.localToWorld(v); root.worldToLocal(v); box.expandByPoint(v); }
+  const size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3()), R = Math.max(size.x, size.z) * 0.5 * 1.06;
+  const hc = new THREE.Vector3(ctr.x, box.max.y - size.y * 0.42, ctr.z), rn = rand(opts.seed || 7), geos = [];
+  // shoulder height (root space): the hair ends here, nothing hangs below the shoulders
+  const shoulderY = (() => { const b = root.getObjectByName('upperarm_l'), w = new THREE.Vector3(); b.getWorldPosition(w); root.worldToLocal(w); return w.y + 0.03; })();
+  const mat = new THREE.MeshStandardMaterial({ color: 0x0c0a0b, roughness: 0.55, metalness: 0.05 });
+  const group = new THREE.Group(); group.name = 'RavanHair';
+  const cap = (th0, thLen, ph0, phLen) => { const m = new THREE.Mesh(new THREE.SphereGeometry(R, 30, 20, ph0, phLen, th0, thLen), mat); m.position.copy(hc); group.add(m); };
+  const FRONT = Math.PI / 2;                                      // +Z is the face direction
+  cap(0, 1.0, 0, Math.PI * 2);                                    // top of the head
+  cap(0.95, 0.95, FRONT + 0.95, Math.PI * 2 - 1.9);               // sides + back (face stays open)
+  const up = new THREE.Vector3(0, 1, 0);
+  for (let s = 0; s < opts.strands; s++) {
+    // long curls start only on the BACK of the head (within ~50 deg of straight behind), so the face / side view stays clear
+    const th = 0.6 + rn() * 1.25, ph = FRONT + Math.PI + (rn() * 2 - 1) * 0.95;
+    const dir = new THREE.Vector3(-Math.cos(ph) * Math.sin(th), Math.cos(th), Math.sin(ph) * Math.sin(th));
+    const p0 = hc.clone().addScaledVector(dir, R * 0.98), o = new THREE.Vector3(dir.x, 0, dir.z).normalize();
+    const e1 = new THREE.Vector3().crossVectors(up, o).normalize(), L = opts.toShoulder ? Math.max(0.08, p0.y - (shoulderY + (rn() - 0.5) * 0.04)) : opts.length * (0.7 + rn() * 0.6), rc = R * (0.16 + rn() * 0.14), turns = 4 + rn() * 3, p = rn() * 6.28, pts = [];
+    for (let i = 0; i <= 44; i++) { const t = i / 44, ang = t * turns * 6.2832 + p, grow = Math.min(1, t * 4);
+      const q = p0.clone().addScaledVector(up, -L * t).addScaledVector(o, R * 0.12 * Math.sin(Math.PI * Math.min(1, t * 1.3)) + R * 0.1 * t)
+        .addScaledVector(e1, rc * Math.cos(ang) * grow).addScaledVector(o, rc * Math.sin(ang) * grow); pts.push(q); }
+    geos.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 70, R * 0.075, 5, false));
+  }
+  const curls = new THREE.Mesh(mergeGeometries(geos), mat); group.add(curls);
+  root.add(group); root.updateMatrixWorld(true);
+  root.getObjectByName('Head').attach(group);                      // follows the head when he moves
+}
+
+const cv = document.getElementById('c'), statusEl = document.getElementById('status');
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(1280, 720, false); renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+function fit(){ const s = Math.min(innerWidth/1280, innerHeight/720); cv.style.width = Math.floor(1280*s)+'px'; cv.style.height = Math.floor(720*s)+'px'; cv.style.left = Math.floor((innerWidth-1280*s)/2)+'px'; cv.style.top = Math.floor((innerHeight-720*s)/2)+'px'; }
+addEventListener('resize', fit); fit();
+
+// background: the 2D arena painting (same floor line as the arenas)
+const ARENA_INDEX = +(new URLSearchParams(location.search).get('arena') || 7) - 1;
+const bgCanvas = document.createElement('canvas'); bgCanvas.width = 960; bgCanvas.height = 540;
+FIGHTER_ARENAS[ARENA_INDEX].draw(bgCanvas.getContext('2d'), 3);
+const bg = new THREE.CanvasTexture(bgCanvas); bg.colorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene(); scene.background = bg;
+
+// camera: feet line lands on y = 450 of 540, same as the 2D arenas
+const camera = new THREE.PerspectiveCamera(28, 16/9, 0.1, 100); camera.position.set(0, 1.35, 8.2); camera.lookAt(0, 1.35, 0);
+const QS = new URLSearchParams(location.search);
+if (QS.get('close')) { camera.position.set(1.7, 1.9, 6.4); camera.lookAt(1.7, 1.75, 0); }   // close-up of Ravan (for checking details)
+
+// lights: warm key from the front, red moon rim from behind, soft fill
+scene.add(new THREE.HemisphereLight(0x8890c0, 0x2a1020, 0.9));
+const key = new THREE.DirectionalLight(0xffe6c8, 2.2); key.position.set(2.5, 4, 6); scene.add(key);
+const rim = new THREE.DirectionalLight(0xff3a3a, 2.4); rim.position.set(-3, 3, -4); scene.add(rim);
+const rim2 = new THREE.DirectionalLight(0x6aa0ff, 1.2); rim2.position.set(4, 2, -3); scene.add(rim2);
+
+// blob shadows
+function shadow(x){ const m = new THREE.Mesh(new THREE.CircleGeometry(0.75, 32), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.45, depthWrite: false })); m.rotation.x = -Math.PI/2; m.position.set(x, 0.01, 0); m.scale.set(1.3, 1, 0.55); scene.add(m); return m; }
+
+const loader = new GLTFLoader(), texLoader = new THREE.TextureLoader();
+const clips = {};
+async function loadClips(url){ const g = await loader.loadAsync(url); g.animations.forEach(a => { clips[a.name] = a; }); }
+
+async function makeFighter({ x, facing, scale, skin, eyeGlow }){
+  const g = await loader.loadAsync('./assets/characters/Superhero_Male_FullBody.gltf');
+  const root = g.scene; if (Array.isArray(scale)) root.scale.set(...scale); else root.scale.setScalar(scale); root.position.set(x, 0, 0); root.rotation.y = facing * Math.PI/2; scene.add(root);
+  root.traverse(o => {
+    if (!o.isMesh) return; o.frustumCulled = false;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    mats.forEach(m => {
+      if (m.name === 'MI_Superhero_Male') {
+        if (skin === 'light') { const t = texLoader.load('./assets/characters/T_Superhero_Male_Light.png'); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; m.map = t; }
+        m.needsUpdate = true;
+      }
+      if (m.name === 'MI_Eyes' && eyeGlow) { m.color = new THREE.Color(0xff3020); m.emissive = new THREE.Color(0xff2010); m.emissiveIntensity = 1.4; }
+    });
+  });
+  if (skin === 'ravan') {
+    const body = findBody(root);
+    paintRavanTexture(body, { pants: [96, 60, 34], skin: [0.30, 0.30, 0.34] });     // brown pants, black skin, bare chest
+    addPants(body, { color: 0x45301f, hip: 0.030, thigh: 0.034, calf: 0.050 });       // loose brown trousers
+    addCurlyHair(root, body, { strands: 230, toShoulder: true, seed: 11 });               // long curly hair
+  }
+  const mixer = new THREE.AnimationMixer(root); const f = { root, mixer, current: null, shadow: shadow(x) };
+  f.play = (name, { loop = true, fade = 0.12, back = 'Idle_Loop', speed = 1 } = {}) => {
+    const clip = clips[name]; if (!clip) { console.warn('missing clip', name); return; }
+    const a = mixer.clipAction(clip); a.reset(); a.timeScale = speed; a.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity); a.clampWhenFinished = !loop;
+    if (f.current && f.current !== a) f.current.fadeOut(fade); a.fadeIn(fade).play(); f.current = a;
+    if (!loop && back) { const onDone = (e) => { if (e.action === a) { mixer.removeEventListener('finished', onDone); f.play(back); } }; mixer.addEventListener('finished', onDone); }
+  };
+  return f;
+}
+
+await Promise.all([loadClips('./assets/animations/UAL1_Standard.glb'), loadClips('./assets/animations/UAL2_Standard.glb')]);
+const p1 = await makeFighter({ x: -1.5, facing: 1, scale: 1.0, skin: 'light', eyeGlow: false });
+const ravan = await makeFighter({ x: 1.7, facing: -1, scale: [1.75, 1.5, 1.9], skin: 'ravan', eyeGlow: true });
+p1.play('Idle_Loop'); ravan.play('Idle_Loop');
+if (QS.get('face')) ravan.root.rotation.y = +QS.get('face') * Math.PI / 4;   // ?face=0 turns Ravan to the camera, for checking his face (debug)
+statusEl.textContent = 'ready · ' + Object.keys(clips).length + ' animations';
+
+const act = { j: () => p1.play('Punch_Jab', { loop: false }), k: () => p1.play('Punch_Cross', { loop: false }), l: () => p1.play('Melee_Hook', { loop: false }),
+              h: () => ravan.play('Hit_Chest', { loop: false }) };
+addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (act[k]) act[k](); if (k === 'a' || k === 'd') p1.play('Walk_Loop'); });
+addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k === 'a' || k === 'd') p1.play('Idle_Loop'); });
+window.__fighter = { p1, ravan, clips: Object.keys(clips), act, THREE };
+
+const clock = new THREE.Clock();
+(function loop(){ const dt = Math.min(0.05, clock.getDelta()); p1.mixer.update(dt); ravan.mixer.update(dt); renderer.render(scene, camera); requestAnimationFrame(loop); })();
+</script>
+</body>
+</html>

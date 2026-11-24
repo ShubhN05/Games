@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Arjun look test</title>
+<style>html,body{margin:0;height:100%;background:#05060d;overflow:hidden}canvas{position:fixed;display:block}</style>
+<script type="importmap">{ "imports": { "three": "./lib/three/three.module.js", "three/addons/": "./lib/three/addons/" } }</script>
+</head><body><canvas id="c"></canvas>
+<script src="arenas.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { findBody } from './lib/look.js';
+import { dressArjun, makeBow, makeArrow } from './lib/arjun.js';
+const cv = document.getElementById('c'), renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(1280, 720, false); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+function fit(){ const s = Math.min(innerWidth/1280, innerHeight/720); Object.assign(cv.style, { width: 1280*s+'px', height: 720*s+'px', left: (innerWidth-1280*s)/2+'px', top: (innerHeight-720*s)/2+'px' }); } addEventListener('resize', fit); fit();
+const bgc = document.createElement('canvas'); bgc.width = 960; bgc.height = 540; FIGHTER_ARENAS[0].draw(bgc.getContext('2d'), 3);
+const scene = new THREE.Scene(); scene.background = new THREE.CanvasTexture(bgc); scene.background.colorSpace = THREE.SRGBColorSpace;
+const QS = new URLSearchParams(location.search), view = QS.get('view') || 'front';
+const cam = new THREE.PerspectiveCamera(28, 16/9, 0.1, 100);
+if (view === 'front') { cam.position.set(0, 1.25, 5.2); cam.lookAt(0, 1.2, 0); } else if (view === 'side') { cam.position.set(0, 1.25, 5.2); cam.lookAt(0, 1.2, 0); } else { cam.position.set(-3.5, 1.4, 4.2); cam.lookAt(0, 1.2, 0); }
+scene.add(new THREE.HemisphereLight(0xb0b8e0, 0x40302a, 1.0));
+const key = new THREE.DirectionalLight(0xfff0d8, 2.6); key.position.set(3, 4, 5); scene.add(key);
+const rim = new THREE.DirectionalLight(0xff9a60, 1.8); rim.position.set(-3, 3, -4); scene.add(rim);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(3, 40), new THREE.MeshBasicMaterial({ color: 0x1a1020 })); floor.rotation.x = -Math.PI/2; floor.position.y = -0.01; scene.add(floor);
+const g = await new GLTFLoader().loadAsync('./assets/characters/Superhero_Male_FullBody.gltf'), root = g.scene; scene.add(root);
+const tl = new THREE.TextureLoader();
+root.traverse(o => { if (!o.isMesh) return; o.frustumCulled = false; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.name === 'MI_Superhero_Male') { const t = tl.load('./assets/characters/T_Superhero_Male_Light.png'); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; m.map = t; m.color = new THREE.Color(0xc7a88f); m.needsUpdate = true; } }); });
+dressArjun(root, findBody(root));
+const mixer = new THREE.AnimationMixer(root); const clips = {}; for (const u of ['UAL1_Standard']) (await new GLTFLoader().loadAsync('./assets/animations/' + u + '.glb')).animations.forEach(a => clips[a.name] = a);
+mixer.clipAction(clips['Idle_Loop']).play();
+const bow = makeBow(); scene.add(bow.group); const hand = root.getObjectByName('hand_l');
+root.rotation.y = view === 'side' ? Math.PI / 2 : (view === 'front' ? 0 : 0.5); bow.group.rotation.y = root.rotation.y;
+window.__a = { root, bow, hand, mixer, THREE, makeArrow, scene };
+const clock = new THREE.Clock();
+function frame(dt){ mixer.update(dt); bow.group.position.copy(hand.getWorldPosition(new THREE.Vector3())); bow.group.position.y += 0.02; renderer.render(scene, cam); }
+window.__a.step = (n) => { for (let i = 0; i < n; i++) frame(1/60); };
+(function loop(){ frame(Math.min(0.05, clock.getDelta())); requestAnimationFrame(loop); })();
+</script></body></html>
