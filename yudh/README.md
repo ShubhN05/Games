@@ -21,11 +21,17 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 | `Z` `S` | left kick / right kick |
 | `A` + `X` | **long-range arrow** (15 %, 5 s cooldown) |
 | `Z` + `S` | **fire arrow** — burns the target 5 s (5 % total, 5 s cooldown) |
+| `A` `A` `A` | **Arrow rain** (20 %) — only a block stops it |
+| `X` then `A` | **Fire rain** (15 % + burn) — block it |
+| `S` then `A` | **Fire blast** (12 %) |
+| `X` `S` `A` | **Ground attack** (18 %) — jump over it |
 | `D` | **SUPER** — burning arrow + fire storm (65 %). Only in the **last 30 s** of a round, **once per round**. Cannot be blocked — get away! |
 | `R` / `Esc` | restart / back to the menu |
 | `T` | (fight) jump to the last 30 s to try the super |
 | training: `1` `2` `3` `4` | Ravan does fire throw / clap / jump slam / super slam |
 | training: `G` / `H` | Ravan fights back on/off / heal both |
+
+Combos: type the keys within ~0.5 s of each other (6 s cooldown). The key sequences are the same for every fighter; each fighter gets a different effect (these are Arjun's). Strong hits knock the opponent down; light hits push him back.
 
 Damage is a **percentage of the victim's full health**. Blocking stops punches, kicks and ranged attacks, but **not** the super.
 
