@@ -7,6 +7,7 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 > Work in progress — the game grows with every update. Right now it is a first playable: one hero, one boss, rounds, a training ground.
 
 ## 👥 Fighters
+- **Kaze** — an original ninja: shuriken, clones, wind. `A+X` shuriken · `Z+S` flying kick · `D` Spiral Sphere (super) · `A A A` Clone Barrage · `X A` Wind Tornado · `S A` Shuriken Storm · `X S A` Ground Burst · `X A Z A A A` fatality.
 - **Arjun** — archer hero (bow, fire arrows).
 - **Choo** — Chinese kung-fu master (Tekken-3 / Bruce-Lee style). Pick him on the **character select** screen (after choosing a mode: ← → to choose, Enter to confirm, Esc to go back), then pick the **stage** (7 arenas + RANDOM). Same combo keys, different powers: `A+X` chi wave · `Z+S` flying kick · `D` Dragon Rush (super) · `A A A` Hundred Fists · `X A` Heavenly Thunder · `S A` Spinning Dragon Kick · `X S A` Earth Shatter · `X A Z A A A` fatality.
 

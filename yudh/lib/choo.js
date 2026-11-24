@@ -9,9 +9,9 @@ const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 function rand(seed){ let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
 /* short spiky black hair swept up and back (the face and the sides stay clear) */
-function addSpikyHair(root, body){
+export function addSpikyHair(root, body, color = 0x0a0a0d, seed = 21){
   const hb = boundsOf(root, body, ['Head']), R = Math.max(hb.size.x, hb.size.z) * 0.5 * 1.06, hc = V(hb.ctr.x, hb.box.max.y - hb.size.y * 0.42, hb.ctr.z);
-  const mat = std(0x0a0a0d, { roughness: 0.95 }), group = new THREE.Group(), FRONT = Math.PI / 2, rn = rand(21);
+  const mat = std(color, { roughness: 0.95 }), group = new THREE.Group(), FRONT = Math.PI / 2, rn = rand(seed);
   const cap = (th0, thLen, ph0, phLen) => { const m = new THREE.Mesh(new THREE.SphereGeometry(R, 28, 18, ph0, phLen, th0, thLen), mat); m.position.copy(hc); group.add(m); };
   cap(0, 0.95, 0, Math.PI * 2); cap(0.9, 0.9, FRONT + 0.95, Math.PI * 2 - 1.9);
   const up = V(0, 1, 0);
