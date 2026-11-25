@@ -100,7 +100,7 @@
   <div id="dim"></div><div id="cine"><i class="cb t"></i><i class="cb b"></i><div id="vig"></div><b id="fatal">FATALITY</b></div><div id="move"></div><div id="msg"></div><div id="flash"></div><div id="lasthit"></div>
   <div id="help"><b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s (test)</div>
 </div>
-<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><small>Fight: beat the other fighters one by one (best of 3, 90 s rounds), then the final boss RAVAN.<br>Mirror duel: a copy of your fighter stands in front of you — test every move and block.<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v15 - arcade ladder, air kicks  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
+<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><button id="bDiff">⚙  DIFFICULTY: NORMAL  (press 4)</button><small>Fight: beat the other fighters one by one (best of 3, 90 s rounds), then the final boss RAVAN.<br>Mirror duel: a copy of your fighter fights you (press G to make it stand still).<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v16 - fairness fixes, difficulty  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
 <div id="select"><div class="top">SELECT YOUR FIGHTER</div><div class="info"><b id="selName">ARJUN</b><em id="selTag"></em><span id="selInfo"></span></div><div><div class="cards" id="cards"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bGo">CONFIRM</button></div></div></div>
 <div id="versus"><div class="vtop" id="vsStage"></div><div class="vrow"><div class="vf"><img id="vsA" alt=""><b id="vsAn"></b></div><i>VS</i><div class="vf"><img id="vsB" alt=""><b id="vsBn"></b></div></div><div id="vsLadder"></div><div class="hint">Enter = fight now · Esc = menu</div></div>
 <div id="stage"><div class="top">SELECT STAGE</div><div class="prev"><canvas id="stPrev" width="640" height="360"></canvas><b id="stName">RANDOM</b></div><div id="stGrid"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bStGo">CONFIRM</button></div></div>
@@ -218,18 +218,32 @@ const $ = id => document.getElementById(id);
 const CHORD = 0.07;                                              // two buttons within 70 ms = one combined move
 const FACE = ['KeyA', 'KeyX', 'KeyZ', 'KeyS'], PARTNER = { KeyA: 'KeyX', KeyX: 'KeyA', KeyZ: 'KeyS', KeyS: 'KeyZ' };
 let gt = 0, pend = null;
-function pollFace(){
+function pollFace(){   // a button acts the moment it is pressed; if its partner follows within CHORD, the two become one chord
   const out = [];
   for (const k of FACE) if (hit(k)) {
-    if (pend && PARTNER[k] === pend.k && gt - pend.t <= CHORD) { out.push({ chord: [pend.k, k].sort().join('') }); pend = null; }
-    else { if (pend) out.push({ single: pend.k }); pend = { k, t: gt }; } }
-  if (pend && gt - pend.t > CHORD) { out.push({ single: pend.k }); pend = null; }
+    if (pend && PARTNER[k] === pend.k && gt - pend.t <= CHORD) {
+      const c = { chord: [pend.k, k].sort().join('') }, same = out.findIndex(o => o.single === pend.k);
+      if (same >= 0) out.splice(same, 1); else c.up = pend.k;      // up = the first key already acted in an earlier frame
+      out.push(c); pend = null; }
+    else { out.push({ single: k }); pend = { k, t: gt }; } }
+  if (pend && gt - pend.t > CHORD) pend = null;
   return out;
 }
+const BUFFER = 0.4;                                              // a press made while you are busy is remembered this long
+function noteMove(id){ p1.hist = (p1.hist || []).filter(h => gt - h.t < 6); p1.hist.push({ id, t: gt }); if (p1.hist.length > 4) p1.hist.shift(); }
+const isSpam = () => { const h = (p1.hist || []).filter(e => gt - e.t < 6); return h.length >= 4 && h.every(e => e.id === h[0].id); };   // the same move 4 times in a row
+const chordReady = c => c === 'KeyAKeyX' ? p1.rangedCd <= 0 : p1.specialCd <= 0;
 
 /* ---------------- tuning numbers (damage = % of the victim's full health) ---------------- */
 const ROUND_TIME = 90, SUPER_TIME = 30, RANGED_CD = 5, SPECIAL_CD = 5, MIN_X = -20, MAX_X = 20, MAX_SEP = 14;
 let MODE = null;
+/* ---------------- difficulty: how quick and strong the computer is (chosen on the menu, remembered) ---------------- */
+const DIFFS = {   // react = seconds before it can guard your attack, wind = warning pose before its hits, aoe/warn = time to leave a marked spot
+  easy:   { name: 'EASY',   react: 0.42, guard: 0.12, wind: 0.30, pause: 1.55, dmg: 0.80, boss: 0.70, sup: 35, warn: 1.50, aoe: 0.90, counter: 0.30 },
+  normal: { name: 'NORMAL', react: 0.30, guard: 0.22, wind: 0.20, pause: 1.15, dmg: 1.00, boss: 0.85, sup: 45, warn: 1.25, aoe: 0.78, counter: 0.60 },
+  hard:   { name: 'HARD',   react: 0.17, guard: 0.38, wind: 0.10, pause: 0.80, dmg: 1.18, boss: 1.00, sup: 55, warn: 1.05, aoe: 0.65, counter: 0.85 } };
+let DIFF = 'normal'; try { const d = localStorage.getItem('yudhDiff'); if (DIFFS[d]) DIFF = d; } catch (e) {}
+const DF = () => DIFFS[DIFF];
 const FREE = () => MODE === 'train' || MODE === 'duel';   // free modes: no rounds, no KO, super any time
 let FOE = 'ravan';                                         // who you fight: 'ravan' (boss) or one of the other fighters
 const OPP = () => MODE === 'duel' ? A2 : FOE === 'ravan' ? R : modelsFor(FOE)[1];   // the visible opponent
@@ -237,17 +251,17 @@ const humanFoe = () => MODE === 'duel' || (MODE === 'fight' && FOE !== 'ravan');
 const foeId = () => MODE === 'duel' ? CHAR : FOE;
 const foeName = () => foeId() === 'ravan' ? (CHAR === 'ravan' ? 'ENEMY RAVAN' : 'RAVAN') : NAMES[foeId()];               // the visible opponent                                                  // null = menu, 'fight' or 'train' (training ground: Ravan stands still)
 const maxSep = () => FREE() ? 1e9 : MAX_SEP;
-const FIGHT_HELP = '<b>YUDH — beat every fighter, then the boss RAVAN</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
-const DUEL_HELP = '<b>ARJUN vs ARJUN — test ground for Arjun</b><br>Arrows move · hold BACK = block (crossed arms) · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>Opponent Arjun: B = he blocks on/off · 1 = he jabs · 2 = he shoots an arrow · G = he fights back on/off<br>H = heal both · R reset · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
+const FIGHT_HELP = '<b>YUDH — beat every fighter, then the boss RAVAN</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
+const duelHelp = () => '<b>MIRROR DUEL — you vs a copy of ' + NAMES[CHAR] + '</b><br>Arrows move · hold BACK = block (crossed arms) · A X Z S hits · A+X ranged · Z+S special · D super (any time)<br>The copy fights back: G = it stands still / fights · B = it blocks on/off · 1 = it attacks · 2 = its ranged move<br>H = heal both · R reset · Esc menu' + (CHAR === 'arjun' ? '<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)' : '') + '<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
 const TRAIN_HELP = '<b>TRAINING GROUND — Ravan stands still</b><br>Arrows move · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>Ravan moves (practice dodging): 1 sword slash · 2 leg sweep · 3 sword throw · 4 inferno sword · 5 heat vision · 6 fire throw · 7 jump slam · 8 super slam<br>G = Ravan fights back on/off · H = heal both · R reset · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (super window)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
-const DMG = { LP: 4, RP: 4, LK: 7, RK: 7, arrow: 15, fireHit: 2, burnTotal: 3, jumpkick: 10, super: 65, dash: 10, tornado: 15, thunder: 15, spin: 12, rain: 20, fireRain: 15, blast: 12, ground: 18, rvFire: 8, slam: 12, sword: 15, sweep: 10, swordthrow: 14, heat: 22, vision: 12, bolt: 18, thunderkick: 14, skythunder: 20, storm: 7, airkick: 8, flykick: 12 };   // Arjun's fire arrow = 2 on impact + 3 burn over 5 s = 5 total
+const DMG = { LP: 4, RP: 4, LK: 7, RK: 7, arrow: 15, fireHit: 2, burnTotal: 3, jumpkick: 10, super: 65, dash: 10, tornado: 15, thunder: 15, spin: 12, rain: 20, fireRain: 15, blast: 12, ground: 18, rvFire: 8, slam: 12, sword: 15, sweep: 10, swordthrow: 14, heat: 22, vision: 12, bolt: 18, thunderkick: 14, skythunder: 20, storm: 6, airkick: 8, flykick: 12 };   // Arjun's fire arrow = 2 on impact + 3 burn over 5 s = 5 total
 const BURN_TIME = 5;
 const FIGHTER = { special: 'firearrow' };                       // Arjun: Z+S = fire arrow (other fighters keep the jump kick)
 const ATTACKS = {
-  KeyA: { id: 'LP', clip: 'Punch_Jab', dmg: DMG.LP, hitAt: 0.16, dur: 0.5, reach: 2.0, speed: 1.6 },
-  KeyX: { id: 'RP', clip: 'Punch_Cross', dmg: DMG.RP, hitAt: 0.2, dur: 0.6, reach: 2.05, speed: 1.5 },
-  KeyZ: { id: 'LK', kick: 'l', dmg: DMG.LK, hitAt: 0.30, dur: 0.58, reach: 2.2 },
-  KeyS: { id: 'RK', kick: 'r', dmg: DMG.RK, hitAt: 0.34, dur: 0.62, reach: 2.25 } };
+  KeyA: { id: 'LP', clip: 'Punch_Jab', dmg: DMG.LP, hitAt: 0.12, dur: 0.42, reach: 2.0, speed: 1.9 },
+  KeyX: { id: 'RP', clip: 'Punch_Cross', dmg: DMG.RP, hitAt: 0.15, dur: 0.50, reach: 2.05, speed: 1.8 },
+  KeyZ: { id: 'LK', kick: 'l', dmg: DMG.LK, hitAt: 0.23, dur: 0.48, reach: 2.2 },
+  KeyS: { id: 'RK', kick: 'r', dmg: DMG.RK, hitAt: 0.27, dur: 0.53, reach: 2.25 } };
 const T_FATAL = { draw: 0.40, rel: 1.0, end: 1.8 };
 const T_RAIN = { draw: 0.26, rel: 0.40, end: 0.80 };
 /* each fighter has his own punches and kicks (same keys A X Z S, same damage, different style) */
@@ -328,12 +342,15 @@ const KD_P = ['sword', 'sweep', 'heat', 'skythunder', 'thunderkick', 'flykick', 
 /* damage kinds: fire/ranged = blockable, clap/slam = block cuts, jumpkick + super = UNBLOCKABLE */
 function hurtP1(dmg, kind, srcX){
   if (!fighting() || p1.inv > 0 || p1.state === 'ko') return;
-  const canBlock = p1.block && p1.y <= 0.01 && kind !== 'jumpkick' && kind !== 'super' && kind !== 'storm' && kind !== 'stormEnd'; if (canBlock) p1.shieldPulse = 1;
+  if (MODE === 'fight' && FOE === 'ravan') dmg *= DF().boss;                                       // the boss hits softer on easier settings
+  const canBlock = p1.block && p1.state === 'idle' && p1.y <= 0.01 && kind !== 'jumpkick' && kind !== 'super' && kind !== 'storm' && kind !== 'stormEnd'; if (canBlock) p1.shieldPulse = 1;
   const cut = canBlock ? ({ fire: 1, ranged: 1, wave: 0.75, slam: 0.5 }[kind] ?? 1) : 0; dmg = Math.round(dmg * (1 - cut));
   p1.hp = Math.max(0, p1.hp - dmg); if (FREE() && p1.hp <= 0) p1.hp = 100; $('hp1').style.width = (100 * p1.hp / p1.max) + '%';
   burst(p1.x, 1.1, canBlock ? 6 : 12, canBlock ? 0x9fe8ff : 0xffb347, 3, 0.5, 0.16);
   shake = Math.max(shake, canBlock ? 0.05 : (kind === 'super' ? 0.3 : 0.14));
   if (p1.hp <= 0) { p1.state = 'ko'; P.play('Death01', { loop: false }); endRound('ko'); return; }
+  if (canBlock) { const v = rv.mv; if (aiFoe() && rv.state === 'move' && v && (v.name === 'basic' || v.name === 'rush') && !v.blocked) { v.blocked = true; v.dur = v.t + 0.6; rv.kickU = -1; OPP().play('Hit_Chest', { loop: false, speed: 0.6, force: true }); moveLabel('BLOCKED — HIT BACK!'); } }
+  if (p1.state === 'cast') return;                                                               // your storm keeps going: you take the damage but are not stopped
   if (kind === 'storm') return;                                                                  // storm strikes do not stun, so you can keep running
   if (!canBlock && KD_P.includes(kind)) { hitStop = Math.max(hitStop, 0.07); knockDownP1(srcX); return; }   // heavy hits: you fall and get up
   if (!canBlock) { p1.state = 'hit'; p1.t = kind === 'flurry' ? 0.2 : 0.45; p1.inv = kind === 'flurry' ? 0.06 : 0.55; p1.atk = null; p1.shoot = null; p1.kickU = -1; if (p1.y > 0) { p1.vy = Math.min(p1.vy, 0); } P.play('Hit_Chest', { loop: false, speed: 0.7 }); p1.x += Math.sign(p1.x - srcX || -1) * (kind === 'super' ? 0.9 : 0.5); }
@@ -344,22 +361,27 @@ function koRavanCheck(){ if (FREE() && rv.hp <= 0) { rv.hp = 100; $('hp2').style
 const HIT_NAMES = { hit: 'PUNCH/KICK', ranged: 'ARROW', fire: 'FIRE ARROW', super: 'SUPER', jumpkick: 'JUMP KICK', rain: 'ARROW RAIN', fireRain: 'FIRE RAIN', blast: 'FIRE BLAST', ground: 'GROUND ATTACK', dash: 'RUN SLAM', thunder: 'HEAVENLY THUNDER', tornado: 'WIND TORNADO', shuriken: 'SHURIKEN', spin: 'SPIN KICK', sword: 'SWORD SLASH', sweep: 'LEG SWEEP', swordthrow: 'SWORD THROW', heat: 'INFERNO SWORD', vision: 'HEAT VISION', bolt: 'THUNDER SHOT', thunderkick: 'THUNDER KICK', skythunder: 'SKY THUNDER', storm: 'STORM OF HEAVEN', stormEnd: 'STORM OF HEAVEN', airkick: 'JUMP KICK', flykick: 'FLYING KICK' };
 function hurtRavan(dmg, kind, id){
   if (!fighting() || rv.state === 'ko' || rv.state === 'down' || rv.state === 'fatal') return false;
+  const open = kind !== 'super' && kind !== 'jumpkick' && kind !== 'storm' && kind !== 'stormEnd';
+  if (MODE === 'fight' && FOE === 'ravan' && open && (rv.guardT > 0 || (rv.state === 'idle' && isSpam() && Math.random() < Math.min(0.9, DF().counter * 1.3)))) { if (!(rv.guardT > 0)) { rv.guardT = 0.25; rv.punish = true; moveLabel('RAVAN READS YOU — mix up your moves!'); } burst(rv.x - rv.face * 0.8, 1.9, 8, 0x9fe8ff, 3, 0.5, 0.18); return false; }
+  if (MODE === 'fight' && FOE === 'ravan' && kind === 'hit' && isSpam()) dmg *= 1 - 0.6 * DF().counter;   // Ravan shrugs off a move you keep repeating
+  if (humanFoe() && rv.block && rv.state === 'idle' && open && aiFoe() && !rv.manualBlock && Math.random() < DF().counter * (isSpam() ? 1 : 0.4)) { rv.counter = true; }
   if (humanFoe() && rv.block && kind !== 'super' && kind !== 'jumpkick' && kind !== 'storm' && kind !== 'stormEnd') { $('lasthit').textContent = 'LAST HIT: BLOCKED (' + (HIT_NAMES[kind] || kind) + ')'; rv.shieldPulse = 1; burst(rv.x - rv.face * 0.5, 1.3, 8, 0x9fe8ff, 3, 0.5, 0.16); shake = Math.max(shake, 0.04); return false; } if (FREE()) $('lasthit').textContent = 'LAST HIT: ' + (HIT_NAMES[kind] || kind) + '  -' + (+dmg.toFixed(1)) + '%'; rv.hp = Math.max(0, rv.hp - dmg); $('hp2').style.width = (100 * rv.hp / rv.max) + '%'; rv.flash = 0.12;
   burst(rv.x - rv.face * 0.3, 1.5, kind === 'super' ? 30 : 10, 0xff7a40, 3, 0.5, 0.16); shake = Math.max(shake, kind === 'super' ? 0.3 : 0.05);
   if (rv.hp <= 0) { koRavanCheck(); return true; }
-  if (MODE === 'fight' && FOE !== 'ravan' && rv.state === 'move' && rv.mv && rv.mv.name === 'super') return true;   // a rival's super cannot be interrupted
+  if (aiFoe() && rv.state === 'move' && rv.mv && (rv.mv.name === 'super' || (rv.mv.armor && !rv.mv.fired && kind === 'hit'))) return true;   // a rival's super cannot be interrupted
   const away = Math.sign(rv.x - p1.x) || 1, big = humanFoe() ? 1 : 0.55, O = OPP();
   const KD = kind === 'jumpkick' || kind === 'super' || kind === 'rain' || kind === 'fireRain' || kind === 'ground' || kind === 'dash' || kind === 'thunder' || kind === 'tornado' || kind === 'sword' || kind === 'sweep' || kind === 'heat' || kind === 'thunderkick' || kind === 'skythunder' || kind === 'stormEnd' || kind === 'flykick';
   const PUSH = { LP: 0.35, RP: 0.35, LK: 0.9, RK: 0.9, ranged: 1.0, fire: 0.4, blast: 1.1, spin: 1.1, airkick: 1.1, swordthrow: 1.2, vision: 0.2, storm: 0, stormEnd: 0 }[id || kind] ?? 0.3;
   if (KD && (humanFoe() || rv.state === 'idle' || kind === 'flykick' || kind === 'sword' || kind === 'sweep' || kind === 'heat' || kind === 'thunderkick' || kind === 'skythunder')) { knockDown(away); hitStop = Math.max(hitStop, kind === 'flykick' ? 0.11 : 0.06); if (kind === 'flykick') rv.kvx *= 1.7; }                        // heavy hits: he falls down and gets up
-  else if (rv.state === 'idle' || (humanFoe() && rv.state !== 'ko')) { if (MODE === 'fight' && FOE !== 'ravan' && rv.state === 'move') rivalEnd(); rv.kvx = away * PUSH * 6 * big; if (kind !== 'fire') { O.play(PUSH >= 0.8 ? 'Hit_Knockback' : 'Hit_Chest', { loop: false, speed: 0.9, force: true }); O.lockT = gt + 0.45; } }   // light hits: he is pushed back
+  else if (rv.state === 'idle' || (humanFoe() && rv.state !== 'ko')) { if (aiFoe() && rv.state === 'move') rivalEnd(); rv.kvx = away * PUSH * 6 * big; if (kind !== 'fire') { O.play(PUSH >= 0.8 ? 'Hit_Knockback' : 'Hit_Chest', { loop: false, speed: 0.9, force: true }); O.lockT = gt + 0.45; } }   // light hits: he is pushed back
   return true;
 }
 
 /* ---------------- rounds ---------------- */
 function resetFighters(){
   Object.assign(p1, { x: -1.6, y: 0, vy: 0, vx: 0, hp: 100, state: 'idle', t: 0, inv: 0, atk: null, kickU: -1, rangedCd: 0, specialCd: 0, superUsed: false, shoot: null, aimW: 0 });
-  Object.assign(rv, { x: 2.5, y: 0, hp: 100, state: 'idle', t: 3.0, mv: null, last: '', fireCd: 3, heatCd: 5, superUsed: false, esc: 0, escDecided: false, burn: 0, fireVis: 0 });
+  Object.assign(rv, { x: 2.5, y: 0, hp: 100, state: 'idle', t: 3.0, mv: null, last: '', fireCd: 3, heatCd: 5, superUsed: false, esc: 0, escDecided: false, burn: 0, fireVis: 0, guardT: 0, manualBlock: false, counter: false, punish: false, seenKey: null, supT: 20, evadeT: 0 });
+  Object.assign(p1, { buf: null, upT: -9, dT: -9, hist: [], pend: null, queued: null });
   $('hp1').style.width = '100%'; $('hp2').style.width = '100%'; P.curName = ''; R.curName = ''; { const O = OPP(); if (O) { O.curName = ''; O.lockT = 0; } } p1.air = null; p1.dashCd = 0; hitStop = 0; Object.assign(rv, { block: false, blockT: 0, walkT: 0, kickU: -1, kickSide: null, spCd: 3, rushCd: 2, vy: 0 }); handFlame.material.opacity = 0; handLight.intensity = 0; slamMark.visible = false; pend = null; burnLight.intensity = 0; cbuf = []; p1.comboCd = 0; rv.kvx = 0; resetFatal(); fx.splice(0).forEach(f => { if (f.end) f.end(); if (f.mesh) { scene.remove(f.mesh); f.mesh.geometry.dispose(); f.mesh.material.dispose(); } }); chiAura.material.opacity = 0; clearBolts(); p1.cast = null; timers.length = 0; falls.splice(0).forEach(f => { scene.remove(f.o); if (f.o.material) f.o.material.dispose(); }); P.lockT = R.lockT = A2.lockT = 0; applyVis();
   storms.length = 0; stormGlow.visible = false; stormLight.intensity = 0; if (superLight) superLight.intensity = 0; if (flameNock) flameNock.visible = false; bowS = 0; bowWas = false; bow.group.visible = false; nockArrow.visible = nockFire.visible = false;
   shots.splice(0).forEach(killShot); rings.splice(0).forEach(r => { r.mesh && scene.remove(r.mesh, r.fill); });
@@ -581,11 +603,11 @@ function updateFalls(dt){
 function knockDown(away){
   const O = OPP(); rv.state = 'down'; rv.mv = null; rv.kickU = -1; rv.vy = 0; rv.kvx = away * 5.2 * (humanFoe() ? 1 : 0.6); rv.down = { t: 0, up: false }; rv.y = 0;
   slamMark.visible = false; handFlame.material.opacity = 0; handLight.intensity = 0; O.lockT = 0;
-  rv.fall = O.play('Death01', { loop: false, speed: 1.7, force: true });
+  O.play('Death01', { loop: false, force: true }); rv.fall = 0.75; fitClip(O, 0.75);
 }
 function updateDown(dt){
   const O = OPP(), d = rv.down; d.t += dt;
-  if (!d.up && d.t >= Math.max(0.5, rv.fall) + 0.3) { d.up = true; d.t0 = d.t; d.upDur = O.play('LayToIdle', { loop: false, speed: 1.2, force: true }); }
+  if (!d.up && d.t >= Math.max(0.5, rv.fall) + 0.25) { d.up = true; d.t0 = d.t; O.play('LayToIdle', { loop: false, force: true }); d.upDur = 0.65; fitClip(O, 0.65); }
   if (d.up && d.t - d.t0 >= d.upDur) { rv.state = 'idle'; rv.t = 0.6; O.curName = ''; }
   rv.x = clamp(rv.x, MIN_X + 0.6, MAX_X);
   O.root.position.set(rv.x, 0, 0); O.root.rotation.y += (rv.face * Math.PI / 2 - O.root.rotation.y) * Math.min(1, dt * 10); O.shadow.position.x = rv.x;
@@ -598,6 +620,12 @@ function updateP1(dt){
   if (!(p1.state === 'attack' && p1.atk && p1.atk.def.charge && p1.atk.t < p1.atk.def.hitAt)) chiAura.material.opacity = Math.max(0, chiAura.material.opacity - dt * 5);
   p1.inv = Math.max(0, p1.inv - dt); p1.rangedCd = Math.max(0, p1.rangedCd - dt); p1.specialCd = Math.max(0, p1.specialCd - dt);
   const acts = pollFace(), L = down('ArrowLeft'), Rr = down('ArrowRight'), grounded = p1.y <= 0.001 && p1.vy <= 0, backKey = p1.face > 0 ? L : Rr;
+  const up = acts.find(a => a.up);
+  if (up) {                                                                                       // the second key of a chord arrived: take the first key back
+    for (let i = cbuf.length - 1; i >= 0; i--) if (cbuf[i].k === up.up) { cbuf.splice(i, 1); break; }
+    p1.pend = null; if (p1.buf && p1.buf.a.single === up.up) p1.buf = null;
+    if (p1.state === 'attack' && p1.atk && p1.atk.key === up.up && !p1.atk.done && chordReady(up.chord)) { p1.state = 'idle'; p1.atk = null; P.curName = ''; if (p1.hist) p1.hist.pop(); } }
+  if (hit('ArrowUp')) p1.upT = gt; if (hit('KeyD')) p1.dT = gt;
   for (const a of acts) if (a.single) cbuf.push({ k: a.single, t: gt }); cbuf = cbuf.filter(e => gt - e.t < 3.5); p1.comboCd = Math.max(0, (p1.comboCd || 0) - dt);
   let comboHit = null; if (fighting() && !cine && p1.state !== 'down' && acts.some(a => a.single)) { const c = matchCombo(); if (c && (c.id === 'fatal' || p1.comboCd <= 0)) comboHit = c; }
   if (p1.state === 'ko') { p1.kickU = -1; p1.aimW = 0; return; }
@@ -608,6 +636,7 @@ function updateP1(dt){
   if (comboHit && grounded && p1.state === 'attack' && p1.atk) { p1.queued = comboHit; comboHit = null; }                          // pressed during a punch/kick: remember it
   if (p1.queued && p1.state === 'attack' && p1.atk && !p1.atk.def.fn && p1.atk.t >= p1.atk.def.hitAt) { const q = p1.queued; p1.queued = null; startCombo(q); }   // ...and cancel the punch/kick into the combo as soon as it has landed
   if (p1.state !== 'attack') p1.queued = null;
+  if (acts[0] && p1.state !== 'idle' && fighting() && !cine) p1.buf = p1.queued ? null : { a: acts[0], c: comboHit, t: gt };   // busy: remember this press
   if (!fighting() || cine) { p1.block = false; if (p1.state === 'idle') P.play('Idle_Loop'); }
   p1.face = Math.sign(rv.x - p1.x) || 1;
   p1.kickU = -1; if (p1.state !== 'shoot') p1.aimW = 0;
@@ -632,34 +661,41 @@ function updateP1(dt){
   else if (p1.state === 'airkick') { const a = p1.air, S = P.root.scale.x, ahead = (rv.x - p1.x) * p1.face; a.t += dt; p1.kickSide = a.side; p1.kickU = Math.min(0.58, 0.24 + a.t * 3.4); p1.x += p1.face * 2.8 * dt;
     if (!a.done && a.t > 0.07 && ahead > -0.2 && ahead < 1.8 + (S - 1) * 1.3 && p1.y > 0.12 && p1.y - rv.y < 2.0 * S) { a.done = true; if (hurtRavan(DMG.airkick, 'airkick')) { hitStop = Math.max(hitStop, 0.06); burst(rv.x - p1.face * 0.35, 1.2 + p1.y * 0.3, 14, 0xfff0c0, 4, 0.35, 0.24); } }
     if (p1.y <= 0 && p1.vy <= 0 && a.t > 0.05) { p1.state = 'idle'; p1.air = null; P.curName = ''; } }
-  else if (p1.state === 'jumpkick') { p1.t += dt; p1.kickU = Math.min(0.6, 0.12 + p1.t * 1.4); p1.kickSide = 'both'; p1.x += p1.vx * dt;
-    if (!p1.jkHit && Math.abs(rv.x - p1.x) < 1.35 && p1.y > 0.2 && p1.face === Math.sign(rv.x - p1.x)) { p1.jkHit = true; hurtRavan(DMG.jumpkick, 'jumpkick'); }
-    if (p1.y <= 0 && p1.vy <= 0 && p1.t > 0.1) { p1.state = 'idle'; p1.vx = 0; P.curName = ''; } }
+  else if (p1.state === 'jumpkick') { const was = p1.t; p1.t += dt;                                 // p1.t < 0 = the crouch before the leap
+    if (p1.t >= 0) { if (was < 0) { p1.vy = 5.2; p1.vx = p1.face * 3.4; P.curName = ''; P.play('Jump_Loop', { fade: 0.05, force: true }); }
+      p1.kickU = Math.min(0.6, 0.12 + p1.t * 1.4); p1.kickSide = 'both'; p1.x += p1.vx * dt;
+      if (!p1.jkHit && Math.abs(rv.x - p1.x) < 1.35 && p1.y > 0.2 && p1.face === Math.sign(rv.x - p1.x)) { p1.jkHit = true; hurtRavan(DMG.jumpkick, 'jumpkick'); }
+      if (p1.y <= 0 && p1.vy <= 0 && p1.t > 0.1) { p1.state = 'recover'; p1.t = 0.3; p1.vx = 0; P.curName = ''; P.play('NinjaJump_Land', { loop: false, speed: 2.0, force: true }); } } }
+  else if (p1.state === 'recover') { p1.t -= dt; if (p1.t <= 0) { p1.state = 'idle'; P.curName = ''; } }
   else if (fighting() && !cine) {
     p1.crouch = down('ArrowDown') && grounded; p1.block = backKey && grounded; p1.dashCd = Math.max(0, (p1.dashCd || 0) - dt);
     const fwdKey = p1.face > 0 ? 'ArrowRight' : 'ArrowLeft';
-    if (hit(fwdKey) && p1.state === 'idle') { if (gt - (p1.tapT ?? -9) < 0.28 && p1.dashCd <= 0 && grounded && !p1.crouch) { p1.tapT = -9; p1.dashCd = 3; p1.state = 'dash'; p1.dash = { t: 0, phase: 'run', done: false }; p1.block = false; moveLabel('FLYING KICK!'); } else p1.tapT = gt; }
-    const act = acts[0];
-    if (act) {
-      if (act.chord === 'KeyAKeyX') { if (p1.rangedCd <= 0 && grounded) { if (CHAR === 'choo') startChiWave(); else if (CHAR === 'kaze') startShuriken(); else if (CHAR === 'ravan') startRavanMove('slash'); else if (CHAR === 'indra') startIndraBolt(); else startShoot(false); } }
+    if (hit(fwdKey) && p1.state === 'idle') { if (gt - (p1.tapT ?? -9) < 0.28 && p1.dashCd <= 0 && grounded && !p1.crouch) { p1.tapT = -9; p1.dashCd = 3; noteMove('dash'); p1.state = 'dash'; p1.dash = { t: 0, phase: 'run', done: false }; p1.block = false; moveLabel('FLYING KICK!'); } else p1.tapT = gt; }
+    let act = acts[0];
+    if (!act && p1.buf && gt - p1.buf.t <= BUFFER) { act = p1.buf.a; comboHit = p1.buf.c && (p1.buf.c.id === 'fatal' ? false : p1.comboCd <= 0) ? p1.buf.c : null; }
+    p1.buf = null;
+    if (act && p1.state === 'idle') {
+      if (act.chord === 'KeyAKeyX') { if (p1.rangedCd <= 0 && grounded) { noteMove('ranged'); if (CHAR === 'choo') startChiWave(); else if (CHAR === 'kaze') startShuriken(); else if (CHAR === 'ravan') startRavanMove('slash'); else if (CHAR === 'indra') startIndraBolt(); else startShoot(false); } }
       else if (act.chord === 'KeySKeyZ') {
         if (!grounded) startAirKick('KeyS');
-        else if (CHAR === 'arjun') { if (p1.specialCd <= 0 && grounded) startShoot(true); }
-        else if (CHAR === 'ravan') { if (p1.specialCd <= 0 && grounded) startRavanMove('sweep'); }
-        else if (CHAR === 'indra') { if (p1.specialCd <= 0 && grounded) startIndraKick(); }
-        else if (grounded) { p1.state = 'jumpkick'; p1.t = 0; p1.jkHit = false; p1.vy = 5.2; p1.vx = p1.face * 3.4; p1.crouch = false; P.play('Jump_Loop'); } }
-      else if (!grounded && (act.single === 'KeyZ' || act.single === 'KeyS')) startAirKick(act.single);
-      else if (act.single && grounded && !p1.crouch) { if (comboHit) startCombo(comboHit); else startAttack((ATTACKS_CHAR[CHAR] || ATTACKS)[act.single]); }
+        else if (p1.specialCd <= 0) { noteMove('special');
+          if (CHAR === 'arjun') startShoot(true);
+          else if (CHAR === 'ravan') startRavanMove('sweep');
+          else if (CHAR === 'indra') startIndraKick();
+          else { p1.state = 'jumpkick'; p1.t = -0.18; p1.jkHit = false; p1.specialCd = SPECIAL_CD; p1.crouch = false; P.play('Crouch_Idle_Loop', { fade: 0.06 }); moveLabel('FLYING KICK!'); } } }
+      else if (!grounded && (act.single === 'KeyZ' || act.single === 'KeyS')) { noteMove('air'); startAirKick(act.single); }
+      else if (act.single && grounded && !p1.crouch) { if (comboHit) { noteMove('combo' + comboHit.id); startCombo(comboHit); } else { const def = (ATTACKS_CHAR[CHAR] || ATTACKS)[act.single]; noteMove(def.id); startAttack(def); p1.atk.key = act.single; } }
     }
     if (p1.state === 'attack' && p1.atk.def.clip) P.play(p1.atk.def.clip, { loop: false, speed: p1.atk.def.speed, fade: 0.06 });
-    if (hit('KeyD') && grounded && !p1.superUsed && (FREE() || M.time <= SUPER_TIME) && p1.state === 'idle') { if (CHAR === 'choo') startChooSuper(); else if (CHAR === 'kaze') startKazeSuper(); else if (CHAR === 'ravan') startRavanMove('rsuper'); else if (CHAR === 'indra') startIndraSuper(); else startSuper(); }
+    if (gt - p1.dT < BUFFER && grounded && !p1.superUsed && (FREE() || M.time <= SUPER_TIME) && p1.state === 'idle') { if (CHAR === 'choo') startChooSuper(); else if (CHAR === 'kaze') startKazeSuper(); else if (CHAR === 'ravan') startRavanMove('rsuper'); else if (CHAR === 'indra') startIndraSuper(); else startSuper(); }
     if (p1.state === 'idle') {
-      if (hit('ArrowUp') && grounded) p1.vy = 7.0;
+      if (gt - p1.upT < BUFFER && grounded) { p1.vy = 7.0; p1.upT = -9; }
       const dir = (Rr ? 1 : 0) - (L ? 1 : 0);
-      if (!p1.crouch) p1.x += dir * 3.0 * dt;
+      if (!p1.crouch) p1.x += dir * (dir === -p1.face ? 2.2 : 3.0) * dt;   // walking back is slower
       if (!grounded) P.play('Jump_Loop'); else if (p1.block && !dir) P.play('Idle_Shield_Loop'); else if (p1.crouch) P.play('Crouch_Idle_Loop'); else if (dir) P.play('Walk_Loop', { speed: 1.35 }); else P.play('Idle_Loop');
     }
   }
+  if (p1.state !== 'idle') p1.block = p1.crouch = false;                                          // no guard or duck while you are attacking or hit
   if (p1.y > 0 || p1.vy > 0) { p1.vy -= 14 * dt; p1.y += p1.vy * dt; if (p1.y <= 0) { p1.y = 0; p1.vy = 0; } }
   p1.x = clamp(p1.x, MIN_X, MAX_X); if (Math.abs(p1.x - rv.x) > maxSep()) p1.x = rv.x - Math.sign(rv.x - p1.x || 1) * maxSep();    // both fighters always stay on screen
   const gap = P.root.scale.x > 1.2 ? 1.4 : 0.95; if (Math.abs(p1.x - rv.x) < gap && rv.y < 0.3 && p1.state !== 'jumpkick' && p1.state !== 'airkick' && !(p1.state === 'dash' && p1.dash.phase !== 'run')) p1.x = rv.x - Math.sign(rv.x - p1.x || 1) * gap;
@@ -804,7 +840,7 @@ const BOSS_DMG = { sword: 10, sweep: 7, swordthrow: 9, heat: 15, vision: 8 };   
 /* the same move works for both sides through these two adapters */
 const AD_P = { who: 0, F: () => P, x: () => p1.x, face: () => p1.face, tx: () => rv.x, ty: () => rv.y, tCrouch: () => false, target: () => OPP(),
   move: v => { p1.x += v; }, place: (x, y) => { p1.x = x; p1.y = y; p1.vy = 0; }, hit: k => hurtRavan(DMG[k], k) };
-const AD_B = { who: 1, F: () => R, x: () => rv.x, face: () => rv.face, tx: () => p1.x, ty: () => p1.y, tCrouch: () => p1.crouch, target: () => P,
+const AD_B = { who: 1, F: () => OPP(), x: () => rv.x, face: () => rv.face, tx: () => p1.x, ty: () => p1.y, tCrouch: () => p1.crouch, target: () => P,
   move: v => { rv.x += v; }, place: (x, y) => { rv.x = x; rv.y = y; },
   hit: k => { const blocked = p1.block && p1.y <= 0.01 && k !== 'super', hp = p1.hp; hurtP1(k === 'super' ? DMG.super : BOSS_DMG[k], k, rv.x); return !blocked && p1.hp !== hp; } };
 /* one sword + trail + heat-vision beams for each side, created once (no stutter) */
@@ -901,7 +937,7 @@ function applyRavanPose(m, K){
 /* runs after the animation each frame: poses whoever is using a sword move, hides everything else */
 function updateRavanFx(){
   const mine = p1.state === 'rmove' ? p1.rm : null; let boss = null;
-  if (rv.state === 'move' && rv.mv && MODE !== 'duel' && FOE === 'ravan') { const v = rv.mv; if (v.rm) boss = v.rm; else if (v.name === 'slam' || v.name === 'super') { const t = v.name === 'super' ? v.t : v.t < 0.5 ? v.t * 2 : v.t + 0.5; boss = { name: 'rsuper', t: Math.min(t, 2.55), dur: 2.6, A: AD_B, quiet: v.name === 'slam' }; } }
+  if (rv.state === 'move' && rv.mv && FOE === 'ravan') { const v = rv.mv; if (v.rm) boss = v.rm; else if (v.name === 'slam' || v.name === 'super') { const t = v.name === 'super' ? v.t : v.t < 0.5 ? v.t * 2 : v.t + 0.5; boss = { name: 'rsuper', t: Math.min(t, 2.55), dur: 2.6, A: AD_B, quiet: v.name === 'slam' }; } }
   let drama = false;
   [mine, boss].forEach((m, i) => { const K = KITS[i];
     if (!m) { if (K.on) { burst(K.sword.group.position.x, K.sword.group.position.y, 16, 0xff3a1a, 3, 0.5, 0.22); K.on = false; } hideKit(K); return; }
@@ -917,13 +953,15 @@ function startRavanMove(name){
 /* you are knocked down: fall on your back, then get up (safe until you stand) */
 function knockDownP1(srcX){
   const away = Math.sign(p1.x - srcX) || -p1.face; p1.state = 'down'; p1.down = { t: 0, up: false }; p1.atk = null; p1.shoot = null; p1.rm = null; p1.dash = null; p1.kickU = -1; p1.block = false; p1.crouch = false; p1.kvx = away * 6; p1.inv = 99; P.lockT = 0;
-  p1.fall = P.play('Death01', { loop: false, speed: 1.7, force: true });
+  P.play('Death01', { loop: false, force: true }); p1.fall = 0.75; fitClip(P, 0.75);
 }
 function updateDownP1(dt){
   const d = p1.down; d.t += dt; p1.x += p1.kvx * dt; p1.kvx *= Math.max(0, 1 - 7 * dt);
-  if (!d.up && d.t >= Math.max(0.5, p1.fall) + 0.3) { d.up = true; d.t0 = d.t; d.dur = P.play('LayToIdle', { loop: false, speed: 1.3, force: true }); }
+  if (hit(...FACE, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight')) d.wake = true;                  // any button = get up sooner
+  if (!d.up && (d.t >= 0.95 || (d.wake && d.t >= 0.55))) { d.up = true; d.t0 = d.t; P.play('LayToIdle', { loop: false, force: true }); d.dur = 0.65; fitClip(P, 0.65); }
   if (d.up && d.t - d.t0 >= d.dur) { p1.state = 'idle'; p1.inv = 0.5; P.curName = ''; }
 }
+const fitClip = (f, sec) => { if (f.cur) f.cur.timeScale = f.cur.getClip().duration / sec; };   // play the current animation in exactly `sec` seconds
 
 /* ---------------- Ravan's older moves: fire throw (ranged), jump slam, SUPER slam ---------------- */
 const handFlame = sprite(0xff8a1a, 0.9, 0), handLight = new THREE.PointLight(0xff7a1a, 0, 5); scene.add(handLight);
@@ -943,43 +981,28 @@ function chooseMove(){
   if (rv.fireCd > 0) w.fire = 0; if ((rv.heatCd || 0) > 0) w.heat = 0; if (rv.last && w[rv.last]) w[rv.last] *= 0.35;
   const keys = Object.keys(w); let r = Math.random() * keys.reduce((a, k) => a + w[k], 0); for (const k of keys) { if ((r -= w[k]) <= 0 && w[k] > 0) return k; } return 'slam';
 }
-function endMove(){ slamMark.visible = false; rv.state = 'idle'; rv.mv = null; rv.t = 1.8 + Math.random() * 1.4; R.curName = ''; handFlame.material.opacity = 0; handLight.intensity = 0; }
-/* ---------------- Arjun vs Arjun: the second Arjun is a training partner (stands still, can block, jab, shoot) ---------------- */
+function endMove(){ slamMark.visible = false; rv.state = 'idle'; rv.mv = null; rv.t = (1.8 + Math.random() * 1.4) * DF().pause; R.curName = ''; handFlame.material.opacity = 0; handLight.intensity = 0; }
+/* ---------------- MIRROR DUEL: the copy fights with the same brain as the ladder opponents (G = stand still, B = block) ---------------- */
 function updateDuel(dt){
-  const O = A2, d = Math.abs(p1.x - rv.x); rv.t = Math.max(0, (rv.t || 0) - dt);
-  if (hit('KeyB')) { rv.block = !rv.block; moveLabel(rv.block ? 'OPPONENT BLOCKS' : 'OPPONENT STOPS BLOCKING'); }
-  if (hit('KeyG')) { rv.aggro = !rv.aggro; moveLabel(rv.aggro ? 'OPPONENT FIGHTS BACK' : 'OPPONENT STANDS STILL'); }
-  if (rv.state === 'move') {
-    const m = rv.mv; m.t += dt;
-    if (m.name === 'jab' && !m.fired && m.t >= 0.16) { m.fired = true; if (d < 2.0 && p1.y < 0.6) hurtP1(DMG.LP, 'hit', rv.x); }
-    if (m.name === 'arrow' && !m.fired && m.t >= 0.42) { m.fired = true; spawnShot('r', rv.x + rv.face * 0.8, 1.25, rv.face * 14, 0xbfe8ff, { kind: 'arrow', range: 18, dmg: DMG.arrow }); }
-    if (m.t >= m.dur) { rv.state = 'idle'; rv.mv = null; O.curName = ''; rv.t = 0.4; }
-  } else if (rv.state === 'idle') {
-    if (!rv.block && hit('Digit1')) { rv.state = 'move'; rv.mv = { name: 'jab', t: 0, dur: 0.55 }; O.play('Punch_Jab', { loop: false, speed: 1.6, fade: 0.06 }); }
-    else if (!rv.block && hit('Digit2')) { rv.state = 'move'; rv.mv = { name: 'arrow', t: 0, dur: 0.9 }; O.play('OverhandThrow', { loop: false, speed: 1.4, fade: 0.06 }); moveLabel('OPPONENT ARROW'); }
-    else if (rv.aggro && !rv.block && rv.t <= 0) {
-      if (d > 2.0 && d < 5.5 && Math.random() < 0.012) { rv.state = 'move'; rv.mv = { name: 'arrow', t: 0, dur: 0.9 }; O.play('OverhandThrow', { loop: false, speed: 1.4, fade: 0.06 }); }
-      else if (d > 1.9) { rv.x += Math.sign(p1.x - rv.x) * 2.4 * dt; O.play('Walk_Loop', { speed: 1.2 }); }
-      else { rv.state = 'move'; rv.mv = { name: 'jab', t: 0, dur: 0.55 }; O.play('Punch_Jab', { loop: false, speed: 1.6, fade: 0.06 }); }
-    } else O.play(rv.block ? 'Idle_Shield_Loop' : 'Idle_Loop');
-  }
-  rv.x = clamp(rv.x, MIN_X + 0.6, MAX_X);
-  O.root.position.set(rv.x, 0, 0); O.root.rotation.y += (rv.face * Math.PI / 2 - O.root.rotation.y) * Math.min(1, dt * 12);
-  O.shadow.position.x = rv.x;
+  if (hit('KeyB')) { rv.manualBlock = !rv.manualBlock; moveLabel(rv.manualBlock ? 'OPPONENT BLOCKS' : 'OPPONENT STOPS BLOCKING'); }
+  if (hit('KeyG')) { rv.aggro = !rv.aggro; rv.t = 0.6; rv.walkT = 0; moveLabel(rv.aggro ? 'OPPONENT FIGHTS BACK' : 'OPPONENT STANDS STILL'); }
+  if (rv.state === 'idle' && !rv.manualBlock && fighting() && !cine) { if (hit('Digit1')) rivalStart('basic'); else if (hit('Digit2')) rivalStart('ranged'); }
+  updateRival(dt);
 }
 function updateRavan(dt){
   rv.flash = Math.max(0, rv.flash - dt); rv.fireCd = Math.max(0, rv.fireCd - dt); rv.heatCd = Math.max(0, (rv.heatCd || 0) - dt); rv.face = Math.sign(p1.x - rv.x) || -1;
   if (rv.state === 'fatal') { const O = OPP(); rv.x = clamp(rv.x, MIN_X + 0.6, MAX_X); O.root.position.set(rv.x, 0, 0); O.root.rotation.y += (rv.face * Math.PI / 2 - O.root.rotation.y) * Math.min(1, dt * 10); O.shadow.position.x = rv.x; return; }
   if (rv.state === 'down') { updateDown(dt); return; }
   if (MODE === 'duel') { if (fighting()) updateDuel(dt); return; }
-  if (MODE === 'fight' && FOE !== 'ravan') { updateRival(dt); return; }
+  if (aiFoe()) { updateRival(dt); return; }
   if (rv.state === 'ko') { R.root.position.set(rv.x, 0, 0); return; }
   if (!fighting()) { if (rv.state === 'idle') R.play('Idle_Loop'); R.root.position.set(rv.x, rv.y, 0); R.root.rotation.y += (rv.face * Math.PI / 2 - R.root.rotation.y) * Math.min(1, dt * 10); return; }
   if (FREE() && !rv.aggro && rv.state === 'idle') {                                  // training ground: Ravan stands still
     R.play('Idle_Loop'); R.root.position.set(rv.x, rv.y, 0); R.root.rotation.y += (rv.face * Math.PI / 2 - R.root.rotation.y) * Math.min(1, dt * 10); R.shadow.position.x = rv.x; R.shadow.scale.setScalar(1.8 * 1.3);
     ['slash', 'sweep', 'throw', 'heat', 'vision', 'fire', 'slam', 'super'].some((n, i) => { if (!hit('Digit' + (i + 1))) return false; startMove(n); return true; });
     return; }
-  if (rv.state === 'idle') {
+  if (rv.state === 'idle' && rv.guardT > 0) { rv.guardT -= dt; R.play('Idle_Shield_Loop'); if (rv.guardT <= 0 && rv.punish) { rv.punish = false; if (Math.abs(p1.x - rv.x) < 3.4) startMove(Math.random() < 0.5 ? 'sweep' : 'slash'); } }
+  else if (rv.state === 'idle') {
     const chooSup = (p1.state === 'attack' && p1.atk && p1.atk.def.sup) || (p1.state === 'rmove' && p1.rm.name === 'rsuper') || p1.state === 'cast', supWind = (p1.state === 'shoot' && p1.shoot && p1.shoot.sup && !p1.shoot.released && p1.shoot.t < 0.9) || (chooSup && (p1.state === 'cast' ? p1.cast : p1.atk || p1.rm).t < 0.9);
     if (supWind && !rv.escDecided) { rv.escDecided = true; if (Math.random() < 0.25) rv.esc = 1.2; }
     if (!(p1.state === 'shoot' && p1.shoot && p1.shoot.sup) && !chooSup) rv.escDecided = false;
@@ -1079,12 +1102,12 @@ function indraSkyThunder(){
 }
 /* D: STORM OF HEAVEN - 4 seconds of coloured lightning that hunts the opponent; blocking is useless, keep moving! */
 function startIndraSuper(){
-  p1.superUsed = true; p1.state = 'cast'; p1.cast = { t: 0, next: 0.6, n: 0 }; p1.atk = null; p1.kickU = -1; p1.block = false; p1.crouch = false; p1.inv = 99; P.curName = ''; P.play('Idle_Loop', { force: true }); moveLabel('SUPER - STORM OF HEAVEN!  keep moving!');
+  p1.superUsed = true; p1.state = 'cast'; p1.cast = { t: 0, next: 0.6, n: 0, dealt: 0 }; p1.atk = null; p1.kickU = -1; p1.block = false; p1.crouch = false; p1.inv = 0; P.curName = ''; P.play('Idle_Loop', { force: true }); moveLabel('SUPER - STORM OF HEAVEN!  keep moving!');
 }
 function updateCast(dt){
   const c = p1.cast; c.t += dt; p1.y = Math.min(0.55, c.t * 1.1) * clamp((5.0 - c.t) / 0.35, 0, 1); p1.vy = 0;
   if (c.n < 11 && c.t >= c.next) { const i = c.n++, col = STORM_COLORS[i % STORM_COLORS.length], x = rv.x; c.next += 0.36; warnRing(x, col, 0.38);
-    later(0.38, () => { strike(x, col, 0.5); strike(x + (Math.random() - 0.5) * 1.2, col, 0.22); if (fighting() && Math.abs(rv.x - x) < 1.0) hurtRavan(DMG.storm, i === 10 ? 'stormEnd' : 'storm'); }); }
+    later(0.38, () => { strike(x, col, 0.5); strike(x + (Math.random() - 0.5) * 1.2, col, 0.22); if (fighting() && Math.abs(rv.x - x) < 1.0) { const n = Math.min(DMG.storm, DMG.super - c.dealt); if ((n > 0 || i === 10) && hurtRavan(n, i === 10 ? 'stormEnd' : 'storm')) c.dealt += n; } }); }
   if (c.t > 0.5 && c.t < 4.6 && Math.random() < dt * 16) { const col = STORM_COLORS[Math.floor(Math.random() * STORM_COLORS.length)], x = rv.x + (Math.random() - 0.5) * 12, sx = x + (Math.random() - 0.5) * 3; zap(V(sx, 9, -1.2), V(x, 0.1 + Math.random() * 2, -1.2), col, 0.09, 0.2, 0.9); }
   if (c.t >= 5.0) { p1.state = 'idle'; p1.cast = null; p1.inv = 0.4; p1.y = 0; P.curName = ''; }
 }
@@ -1143,24 +1166,30 @@ function updateDash(dt){
 /* ================ THE COMPUTER OPPONENT (the other fighters in the ladder) ================ */
 const ORDER = ['arjun', 'choo', 'kaze', 'indra'];
 let LADDER = ['ravan'], STAGE = 0, vsT = 0, vsReady = false, startArena = 6, hitStop = 0;
-const LV = () => Math.min(2, STAGE);                                  // 0..2: later opponents are quicker, stronger and block more
-const rivalDmg = d => Math.max(1, Math.round(d * (0.55 + 0.1 * LV())));
+const LV = () => MODE === 'duel' ? 1 : Math.min(2, STAGE);            // 0..2: later opponents are quicker, stronger and block more
+const aiFoe = () => MODE === 'duel' || (MODE === 'fight' && FOE !== 'ravan');   // the computer fighter brain is in charge
+const rivalDmg = d => Math.max(1, Math.round(d * (0.55 + 0.08 * LV()) * DF().dmg));
 const foeBow = makeBow(), foeArrow = makeArrow(false), foeAura = sprite(0xffd24a, 1.6, 0); foeBow.group.visible = foeArrow.visible = false; scene.add(foeBow.group, foeArrow);
-const RIVAL_NAMES = { arjun: { ranged: 'ARROW (jump, crouch or block)', special: 'ARROW RAIN (block it)', super: 'SUPER FIRE ARROW (get away!)' },
-  choo: { ranged: 'CHI WAVE (jump, crouch or block)', special: 'HUNDRED FISTS (block it)', super: 'DRAGON RUSH (get away!)' },
-  kaze: { ranged: 'SHURIKEN (jump, crouch or block)', special: 'WIND TORNADO (block it)', super: 'SPIRAL SPHERE (get away!)' },
-  indra: { ranged: 'THUNDER SHOT (crouch or block)', special: 'SKY THUNDER (block it)', super: 'STORM OF HEAVEN (keep moving!)' } };
-function rivalStart(name){
-  const F = OPP(); rv.state = 'move'; rv.mv = { name, t: 0, fired: false, dur: 1 }; rv.block = false; rv.blockT = 0; rv.kickU = -1; F.lockT = 0; F.curName = ''; const m = rv.mv;
-  if (name === 'basic') { const def = (ATTACKS_CHAR[FOE] || ATTACKS)[['KeyA', 'KeyX', 'KeyZ', 'KeyS'][Math.floor(Math.random() * 4)]]; m.def = def; m.dur = def.dur * 1.15;
-    if (def.clip) F.play(def.clip, { loop: false, speed: (def.speed || 1) / 1.15, fade: 0.06, force: true }); else { F.play('Idle_Loop', { force: true }); rv.kickSide = def.kick; } return; }
-  m.dur = { ranged: 0.95, special: 1.3, rush: 2.2, super: FOE === 'indra' ? 4.4 : 1.7 }[name];
-  if (name === 'ranged') rv.fireCd = 3.4 - 0.6 * LV(); if (name === 'special') rv.spCd = 8 - LV(); if (name === 'rush') rv.rushCd = 5; if (name === 'super') { rv.superUsed = true; flashScreen(); }
+const RIVAL_NAMES = { arjun: { ranged: 'ARROW (jump, crouch or block)', special: 'ARROW RAIN (leave the circle or block)', super: 'SUPER FIRE ARROW — leave the red zone!' },
+  choo: { ranged: 'CHI WAVE (jump, crouch or block)', special: 'HUNDRED FISTS (block it)', super: 'DRAGON RUSH — leave the red zone!' },
+  kaze: { ranged: 'SHURIKEN (jump, crouch or block)', special: 'WIND TORNADO (leave the circle or block)', super: 'SPIRAL SPHERE — leave the red zone!' },
+  indra: { ranged: 'THUNDER SHOT (crouch or block)', special: 'SKY THUNDER (leave the circle or block)', super: 'STORM OF HEAVEN — keep moving!' },
+  ravan: { super: 'SKY CLEAVER — leave the red zone!' } };
+const SUP_R = 1.5;                                                    // radius of the marked super zone
+function rivalStart(name, punish){
+  const F = OPP(); rv.state = 'move'; rv.mv = { name, t: 0, raw: 0, wind: 0, fired: false, dur: 1 }; rv.block = false; rv.blockT = 0; rv.kickU = -1; F.lockT = 0; F.curName = ''; const m = rv.mv;
+  if (name === 'basic') { const def = (ATTACKS_CHAR[FOE] || ATTACKS)[punish ? 'KeyS' : ['KeyA', 'KeyX', 'KeyZ', 'KeyS'][Math.floor(Math.random() * 4)]]; m.def = def; m.dur = def.dur * 1.15; m.wind = punish ? 0 : DF().wind; m.armor = !!punish;   // a counter kick comes at once, knocks you down, and your light hits do not stop it F.play('Idle_Loop', { force: true });
+    m.go = () => { if (def.clip) F.play(def.clip, { loop: false, speed: (def.speed || 1) / 1.15, fade: 0.06, force: true }); else rv.kickSide = def.kick; }; if (punish) moveLabel(NAMES[FOE] + ': COUNTER KICK! (mix up your moves)'); return; }
+  if (name === 'rush' || (name === 'special' && FOE === 'choo')) m.wind = DF().wind;
+  m.dur = { ranged: 0.95, special: FOE === 'choo' ? 1.3 : 0.6 + DF().aoe, rush: 2.2, super: FOE === 'indra' ? 4.5 : DF().warn + 0.9 }[name];
+  if (name === 'ranged') rv.fireCd = 3.4 - 0.6 * LV(); if (name === 'special') rv.spCd = 8 - LV(); if (name === 'rush') rv.rushCd = 5; if (name === 'super') { rv.superUsed = true; rv.supT = 25; flashScreen(); }
+  if (FOE === 'ravan' && (name === 'ranged' || name === 'special')) { const list = name === 'ranged' ? ['throw', 'vision'] : ['slash', 'sweep', 'heat'], mv = list[Math.floor(Math.random() * list.length)];
+    m.rm = newMove(mv, AD_B); m.dur = m.rm.dur; moveLabel('RAVAN: ' + RMOVES[mv].name + '  ' + RMOVES[mv].hint); return; }
   moveLabel(NAMES[FOE] + ': ' + (name === 'rush' ? 'FLYING KICK (block it)' : RIVAL_NAMES[FOE][name]));
-  const clip = name === 'ranged' && (FOE === 'kaze') ? 'OverhandThrow' : (name === 'ranged' || name === 'special') && FOE !== 'arjun' ? 'Spell_Simple_Shoot' : 'Idle_Loop';
+  const clip = name === 'ranged' && (FOE === 'kaze') ? 'OverhandThrow' : (name === 'ranged' || name === 'special') && FOE !== 'arjun' && FOE !== 'ravan' ? 'Spell_Simple_Shoot' : 'Idle_Loop';
   F.play(clip, { loop: clip === 'Idle_Loop', speed: 1.2, fade: 0.08, force: true });
 }
-function rivalEnd(){ rv.state = 'idle'; rv.mv = null; rv.kickU = -1; rv.y = 0; rv.vy = 0; rv.t = Math.max(0.2, 1.0 - 0.3 * LV()) + Math.random() * 0.5; OPP().curName = ''; }
+function rivalEnd(){ if (rv.mv && rv.mv.name === 'super') slamMark.visible = false; rv.state = 'idle'; rv.mv = null; rv.kickU = -1; rv.y = 0; rv.vy = 0; rv.t = (Math.max(0.2, 1.0 - 0.3 * LV()) + Math.random() * 0.5) * DF().pause; OPP().curName = ''; }
 function foeBolt(){
   const f = rv.face, x0 = rv.x + f * 0.75, y = 1.3, range = 22, speed = 28; let done = false, prev = x0; flashLight(x0, y, GOLD_BOLT, 10, 0.18);
   fx.push({ t: 0, dur: range / speed, upd: u => { if (done) return; const hx = x0 + f * range * u, tail = f > 0 ? Math.max(x0, hx - 3.4) : Math.min(x0, hx + 3.4); zap(V(tail, y, 0.25), V(hx, y, 0.25), GOLD_BOLT, 0.24, 0.08, 0.5);
@@ -1171,9 +1200,14 @@ function foeTornado(cx){
   fx.push({ t: 0, dur: 0.9, upd: u => sps.forEach((sp, i) => { const a = i * 0.7 + u * 16, h = (i / 18 + u * 0.8) % 1; sp.position.set(cx + Math.cos(a) * (0.4 + h * 0.7), 0.1 + h * 3.0, Math.sin(a) * 0.4); sp.material.opacity = 0.9 * (1 - u * 0.4); }), end: () => sps.forEach(sp => { scene.remove(sp); sp.material.dispose(); }) });
 }
 function rivalRun(dt){
-  const F = OPP(), m = rv.mv, f = rv.face, big = F.root.scale.x - 1; m.t += dt; const t = m.t, d = Math.abs(p1.x - rv.x);
-  if (m.name === 'basic') { const a = m.def; if (a.kick) rv.kickU = t / m.dur;
-    if (!m.fired && t >= a.hitAt * 1.15) { m.fired = true; if (d < a.reach && p1.y < 1.0) { hurtP1(rivalDmg(a.dmg + 2), 'hit', rv.x); if (a.fxc) burst(p1.x - f * 0.3, 1.3, 6, a.fxc, 3, 0.3, 0.2); } } }
+  const F = OPP(), m = rv.mv, f = rv.face, big = F.root.scale.x - 1;
+  if (m.raw < m.wind) { m.raw += dt; F.play('Idle_Loop'); return; }                       // warning pose before the hit
+  if (m.go) { m.go(); m.go = null; }
+  m.t += dt; const t = m.t, d = Math.abs(p1.x - rv.x);
+  if (m.blocked) { rv.kickU = -1; rv.y = Math.max(0, rv.y - 4 * dt); }                   // you blocked it: it is stuck recovering
+  else if (m.rm) runMove(m.rm, dt);
+  else if (m.name === 'basic') { const a = m.def; if (a.kick) rv.kickU = t / m.dur;
+    if (!m.fired && t >= a.hitAt * 1.15) { m.fired = true; if (d < a.reach && p1.y < 1.0) { hurtP1(rivalDmg(m.armor ? 14 : a.dmg + 2), m.armor ? 'sweep' : 'hit', rv.x); if (a.fxc) burst(p1.x - f * 0.3, 1.3, 6, a.fxc, 3, 0.3, 0.2); } } }
   else if (m.name === 'rush') { m.phase = m.phase || 'run';
     if (m.phase === 'run') { rv.x += f * 8.5 * dt; F.play('Sprint_Loop', { speed: 1.2 }); if (d < 3.0 + big || t > 0.8) { m.phase = 'leap'; m.t0 = t; m.x0 = rv.x; m.tx = d < 4.5 ? p1.x - f * 1.2 : rv.x + f * 2.4; F.curName = ''; F.play('Jump_Loop', { force: true }); } }
     else { const u = (t - m.t0) / 0.42;
@@ -1186,30 +1220,53 @@ function rivalRun(dt){
       else spawnShot('r', x, 1.0, f * (FOE === 'kaze' ? 13 : 10), FOE === 'kaze' ? 0xd8e4ff : 0x5ad8ff, { range: 16, dmg: rivalDmg(DMG.arrow) }); } }
   else if (m.name === 'special') {
     if (FOE === 'choo') { if (t < 0.28 && d > 1.5) rv.x += f * Math.min(d - 1.4, 11 * dt); m.n = m.n || 0; if (m.n < 4 && t >= 0.34 + m.n * 0.16) { F.play(m.n % 2 ? 'Punch_Cross' : 'Punch_Jab', { loop: false, speed: 2.3, fade: 0.03, force: true }); if (Math.abs(p1.x - rv.x) < 2.3) hurtP1(rivalDmg(m.n === 3 ? 7 : 6), m.n === 3 ? 'dash' : 'flurry', rv.x); m.n++; } }
-    else if (!m.fired && t >= 0.35) { m.fired = true; const x = p1.x;
-      if (FOE === 'arjun') { for (let i = 0; i < 22; i++) later(i * 0.022, () => { const o = makeArrow(false); o.rotation.z = -Math.PI / 2; scene.add(o); falls.push({ o, fire: false, x: p1.x + (Math.random() - 0.5) * 3.2, y: 7 + Math.random() * 2, vy: -(15 + Math.random() * 4) }); }); later(0.65, () => { if (fighting()) hurtP1(rivalDmg(DMG.rain), 'rain', rv.x); }); }
-      else if (FOE === 'kaze') { foeTornado(x); later(0.5, () => { if (fighting()) hurtP1(rivalDmg(DMG.tornado), 'tornado', rv.x); }); }
-      else { warnRing(x, GOLD_BOLT, 0.45); later(0.45, () => { if (!fighting()) return; const q = p1.x; strike(q, GOLD_BOLT, 0.46); strike(q + 0.45, GOLD_BOLT, 0.2); hurtP1(rivalDmg(DMG.skythunder), 'skythunder', rv.x); }); } } }
+    else if (!m.fired && t >= 0.35) { m.fired = true; const x = p1.x, W = DF().aoe, inside = r => fighting() && Math.abs(p1.x - x) < r;   // the spot is marked now; leaving it saves you
+      if (FOE === 'arjun') { warnRing(x, 0xff8a1a, W); for (let i = 0; i < 22; i++) later(Math.max(0, W - 0.5) + i * 0.012, () => { const o = makeArrow(false); o.rotation.z = -Math.PI / 2; scene.add(o); falls.push({ o, fire: false, x: x + (Math.random() - 0.5) * 2.0, y: 7 + Math.random() * 2, vy: -(15 + Math.random() * 4) }); }); later(W, () => { if (inside(1.15)) hurtP1(rivalDmg(DMG.rain), 'rain', rv.x); }); }
+      else if (FOE === 'kaze') { warnRing(x, 0x8ad8ff, W); later(W - 0.15, () => foeTornado(x)); later(W, () => { if (inside(1.15)) hurtP1(rivalDmg(DMG.tornado), 'tornado', rv.x); }); }
+      else { warnRing(x, GOLD_BOLT, W); later(W, () => { if (!fighting()) return; strike(x, GOLD_BOLT, 0.46); strike(x + 0.45, GOLD_BOLT, 0.2); if (inside(1.1)) hurtP1(rivalDmg(DMG.skythunder), 'skythunder', rv.x); }); } } }
   else if (m.name === 'super') {
-    if (FOE === 'indra') { rv.y = Math.min(0.55, t) * clamp((4.4 - t) / 0.3, 0, 1); m.n = m.n || 0; if (m.n < 8 && t >= 0.6 + m.n * 0.4) { const i = m.n++, col = STORM_COLORS[i % STORM_COLORS.length], x = p1.x; warnRing(x, col, 0.42); later(0.42, () => { strike(x, col, 0.5); if (fighting() && Math.abs(p1.x - x) < 1.0) hurtP1(7, i === 7 ? 'stormEnd' : 'storm', rv.x); }); } }
-    else if (!m.fired && t >= 1.1) { m.fired = true; flashScreen(); shake = Math.max(shake, 0.5);
-      if (FOE === 'arjun') spawnShot('r', rv.x + f * 0.9, 1.25, f * 20, 0xffa030, { kind: 'super', range: 5.0, r: 0.3, dmg: 50 });
-      else if (d <= 4.5) { rv.x = p1.x - f * 1.15; const col = FOE === 'kaze' ? 0x4ad0ff : 0xffd24a; impactFx(p1.x, 1.3, col); const hp = p1.hp; hurtP1(50, 'super', rv.x); if (p1.hp < hp && p1.hp > 0) knockDownP1(rv.x); F.play('Punch_Cross', { loop: false, speed: 1.4, force: true }); }
-      else rv.x += f * 4.5; } }
+    if (FOE === 'indra') { rv.y = Math.min(0.55, t) * clamp((4.5 - t) / 0.3, 0, 1); m.n = m.n || 0; m.dealt = m.dealt || 0; const W = DF().aoe * 0.72;
+      if (m.n < 8 && t >= 0.6 + m.n * 0.4) { const i = m.n++, col = STORM_COLORS[i % STORM_COLORS.length], x = p1.x; warnRing(x, col, W); later(W, () => { strike(x, col, 0.5); if (fighting() && Math.abs(p1.x - x) < 0.9) { const n = Math.min(7, DF().sup - m.dealt), hp = p1.hp; if (n > 0 || i === 7) { hurtP1(n, i === 7 ? 'stormEnd' : 'storm', rv.x); if (p1.hp < hp) m.dealt += n; } } }); } }
+    else rivalZoneSuper(m, t, dt, F, f); }
   if (t >= m.dur && rv.state === 'move') rivalEnd();
+}
+/* every other computer super follows ONE rule: a red zone marks where you stand, you have a moment to leave it; jumping or ducking does not help */
+function rivalZoneSuper(m, t, dt, F, f){
+  const W = DF().warn;
+  if (m.spot === undefined) { m.spot = p1.x; const side = Math.sign(rv.x - p1.x) || 1; m.back = clamp(m.spot + side * 4.0, MIN_X + 0.6, MAX_X); }
+  if (t < W) { rv.x += clamp(m.back - rv.x, -7 * dt, 7 * dt);                              // it steps back to charge, so you have room to get out
+    slamMark.visible = true; slamMark.scale.setScalar(SUP_R / 2.5); slamMark.position.set(m.spot, 0.03, 0); slamMark.material.opacity = 0.38 + 0.18 * Math.sin(t * 24); return; }
+  if (m.fired) return;
+  m.fired = true; slamMark.visible = false; flashScreen(); shake = Math.max(shake, 0.6);
+  const col = TRAIL[FOE], inside = Math.abs(p1.x - m.spot) < SUP_R;
+  if (FOE === 'arjun') { for (let i = 0; i <= 12; i++) burst(rv.x + (m.spot - rv.x) * i / 12, 1.2 - i * 0.07, 3, 0xffa030, 1.2, 0.4, 0.3, 0.5); fireStorm(m.spot, 0.8); }
+  else { rv.x = clamp(m.spot - f * 1.15, MIN_X + 0.6, MAX_X); F.curName = ''; F.play('Punch_Cross', { loop: false, speed: 1.4, force: true }); burst(m.spot, 0.3, 40, col, 7, 0.8, 0.34, 1.2); }
+  impactFx(m.spot, 1.3, col);
+  if (inside) { const hp = p1.hp; hurtP1(DF().sup, 'super', rv.x); if (p1.hp < hp && p1.hp > 0) knockDownP1(rv.x); } else moveLabel('DODGED!');
 }
 function updateRival(dt){
   const F = OPP(); rv.spCd = Math.max(0, (rv.spCd || 0) - dt); rv.rushCd = Math.max(0, (rv.rushCd || 0) - dt); rv.reactCd = Math.max(0, (rv.reactCd || 0) - dt); const d = Math.abs(p1.x - rv.x);
+  const think = !FREE() || rv.aggro, free = FREE(); if (free) rv.supT = (rv.supT ?? 20) - dt;
   if (rv.state !== 'ko' && fighting() && !cine) {
     if (rv.state === 'move') { rv.block = false; rivalRun(dt); }
     else if (rv.state === 'idle') {
-      const threat = (['attack', 'dash', 'shoot', 'rmove', 'airkick'].includes(p1.state) && d < 3.4) || shots.some(q => q.owner === 'p' && Math.abs(q.x - rv.x) < 4.5);
-      if (threat && rv.reactCd <= 0 && !(rv.blockT > 0) && rv.y <= 0) { rv.reactCd = 1.0; const r = Math.random(); if (r < 0.2 + 0.16 * LV()) rv.blockT = 0.55; else if (r < 0.32 + 0.16 * LV() && d > 2.5) rv.vy = 6.6; }
-      if (rv.blockT > 0) { rv.blockT -= dt; rv.block = true; F.play('Idle_Shield_Loop'); }
+      const attacking = ['attack', 'dash', 'shoot', 'rmove', 'airkick', 'jumpkick'].includes(p1.state), threat = think && ((attacking && d < 3.4) || shots.some(q => q.owner === 'p' && Math.abs(q.x - rv.x) < 4.5)), spam = isSpam();
+      const key = threat ? (p1.atk || p1.rm || p1.shoot || p1.dash || p1.air || p1.state) : null;
+      if (key !== rv.seenKey) { rv.seenKey = key; rv.seenAt = gt; }                        // it needs a moment to see a new attack
+      if (threat && gt - rv.seenAt >= (spam ? 0.04 : DF().react) && rv.reactCd <= 0 && !(rv.blockT > 0) && rv.y <= 0) { rv.reactCd = spam ? 0.3 : 1.0; const r = Math.random(), g = spam ? Math.min(0.9, DF().counter * 1.3) : DF().guard + 0.08 * LV();
+        if (r < g) rv.blockT = 0.55; else if (r < g + 0.12 && d > 2.5) rv.vy = 6.6; }
+      if (rv.counter) { rv.counter = false; rv.punish = true; rv.blockT = 0.08; }            // it blocked you and strikes back
+      if (p1.state === 'cast' && think) { rv.evadeT = (rv.evadeT || 0) - dt; if (rv.evadeT <= 0) { rv.evadeT = 0.7; rv.evade = Math.random() < DF().counter; const away = Math.sign(rv.x - p1.x) || 1; rv.evadeDir = (away > 0 ? MAX_X - rv.x : rv.x - MIN_X) > 3 ? away : -away; } } else rv.evade = false;
+      if (rv.manualBlock) { rv.block = true; F.play('Idle_Shield_Loop'); }
+      else if (rv.evade) { rv.block = false; rv.x += rv.evadeDir * 3.0 * dt; F.play('Walk_Loop', { speed: 1.5 }); }   // it runs from your storm
+      else if (rv.blockT > 0) { rv.blockT -= dt; rv.block = true; F.play('Idle_Shield_Loop'); }
+      else if (!think) { rv.block = false; F.play('Idle_Loop'); }
+      else if (rv.punish) { rv.punish = false; rv.block = false; if (d < 2.6) rivalStart('basic', true); }
       else { rv.block = false; rv.t -= dt;
         if (rv.walkT > 0) { rv.walkT -= dt; rv.x += rv.face * rv.walkDir * (2.2 + 0.35 * LV()) * dt; F.play('Walk_Loop', { speed: rv.walkDir > 0 ? 1.3 : 1.0 }); }
         else if (rv.t <= 0 && p1.state !== 'down' && rv.y <= 0) {
-          if (M.time <= SUPER_TIME && !rv.superUsed && d < 8 && Math.random() < 0.7) rivalStart('super');
+          const superNow = free ? rv.supT <= 0 : (M.time <= SUPER_TIME && !rv.superUsed);
+          if (superNow && d < 8 && p1.state !== 'cast' && Math.random() < 0.7) rivalStart('super');
           else { const w = d > 4.5 ? { ranged: rv.fireCd > 0 ? 0 : 45, special: rv.spCd > 0 ? 0 : 20, rush: rv.rushCd > 0 ? 0 : 15, walk: 35 } : d > 2.4 ? { rush: rv.rushCd > 0 ? 0 : 25, ranged: rv.fireCd > 0 ? 0 : 20, special: rv.spCd > 0 ? 0 : 20, walk: 35 } : { basic: 72, special: rv.spCd > 0 ? 0 : 14, back: 14 };
             const ks = Object.keys(w); let r = Math.random() * ks.reduce((a, k) => a + w[k], 0), pick = ks.find(k => (r -= w[k]) <= 0 && w[k] > 0) || 'walk';
             if (pick === 'walk' || pick === 'back') { rv.walkT = pick === 'walk' ? 0.55 : 0.35; rv.walkDir = pick === 'walk' ? 1 : -1; rv.t = 0.2; } else rivalStart(pick); } }
@@ -1223,15 +1280,16 @@ function updateRival(dt){
 /* the opponent's bow, charge glow and raised arms (applied after the animation) */
 function rivalPose(){
   foeBow.group.visible = foeArrow.visible = false; foeAura.material.opacity = 0;
-  const m = rv.mv; if (!(MODE === 'fight' && FOE !== 'ravan' && rv.state === 'move' && m)) return;
+  const m = rv.mv; if (!(aiFoe() && rv.state === 'move' && m)) return;
   const F = OPP(), t = m.t, f = rv.face;
-  if (FOE === 'arjun' && (m.name === 'ranged' || m.name === 'special' || m.name === 'super')) { const rel = m.name === 'super' ? 1.1 : 0.45; if (t > rel + 0.25) return;
+  if (m.raw < m.wind) { const g = m.raw / m.wind; foeAura.material.color.setHex(0xffffff); foeAura.position.set(rv.x + f * 0.2, 1.45 * F.root.scale.x, 0.35); foeAura.scale.setScalar(1.1 - 0.7 * g); foeAura.material.opacity = 0.75; return; }   // white glint = an attack is coming
+  if (FOE === 'arjun' && (m.name === 'ranged' || m.name === 'special' || m.name === 'super')) { const rel = m.name === 'super' ? DF().warn : 0.45; if (t > rel + 0.25) return;
     const asc = m.name === 'special' ? 0.95 : 0, up = V(0, 1, 0), fwd = V(f * Math.cos(asc), Math.sin(asc), 0), ch = F.bones.spine_03.getWorldPosition(V()), pull = clamp(t / (rel * 0.8), 0, 1), w = clamp(t / 0.15, 0, 1);
     solveLimb(F, 'upperarm_l', 'lowerarm_l', 'hand_l', ch.clone().addScaledVector(fwd, 0.72).addScaledVector(up, 0.04).add(V(0, 0, 0.1)), V(0, -0.5, 0.7).addScaledVector(fwd, -0.2), w);
     solveLimb(F, 'upperarm_r', 'lowerarm_r', 'hand_r', ch.clone().addScaledVector(fwd, 0.72 - 0.56 * pull).addScaledVector(up, 0.07), fwd.clone().multiplyScalar(-1).addScaledVector(up, 0.5), w);
     const hl = F.bones.hand_l.getWorldPosition(V()), hr = F.bones.hand_r.getWorldPosition(V()); foeBow.group.visible = true; foeBow.group.position.copy(hl); foeBow.group.rotation.y = f * Math.PI / 2; foeBow.setString(t < rel ? hr : null);
     if (t < rel) { const dir = hl.clone().sub(hr).normalize(); foeArrow.visible = true; foeArrow.position.copy(hr); foeArrow.quaternion.setFromUnitVectors(V(1, 0, 0), dir); if (m.name === 'super') { foeAura.material.color.setHex(0xff8a1a); foeAura.position.copy(hr).addScaledVector(dir, 0.9); foeAura.scale.setScalar(0.4 + t); foeAura.material.opacity = 0.9; } } }
-  else if (m.name === 'super' && FOE !== 'indra' && t < 1.1) { const g = t / 1.1, col = FOE === 'kaze' ? 0x4ad0ff : 0xffd24a; foeAura.material.color.setHex(col); foeAura.position.set(rv.x, 1.2, 0.3); foeAura.scale.setScalar(0.7 + 1.8 * g); foeAura.material.opacity = 0.35 + 0.5 * g; if (Math.random() < 0.7) burst(rv.x + (Math.random() - 0.5) * 0.8, 0.3 + Math.random() * 1.5, 1, col, 0.6, 0.5, 0.2, 1.6); }
+  else if (m.name === 'super' && FOE !== 'indra' && t < DF().warn) { const g = t / DF().warn, col = FOE === 'kaze' ? 0x4ad0ff : 0xffd24a; foeAura.material.color.setHex(col); foeAura.position.set(rv.x, 1.2, 0.3); foeAura.scale.setScalar(0.7 + 1.8 * g); foeAura.material.opacity = 0.35 + 0.5 * g; if (Math.random() < 0.7) burst(rv.x + (Math.random() - 0.5) * 0.8, 0.3 + Math.random() * 1.5, 1, col, 0.6, 0.5, 0.2, 1.6); }
   else if (m.name === 'super' && FOE === 'indra') { const w = clamp(t / 0.3, 0, 1) * clamp((4.4 - t) / 0.3, 0, 1); for (const [sd, z] of [['l', -0.22], ['r', 0.22]]) { const sh = F.bones['upperarm_' + sd].getWorldPosition(V()); solveLimb(F, 'upperarm_' + sd, 'lowerarm_' + sd, 'hand_' + sd, sh.clone().add(V(f * 0.2, 0.55, z)), V(-f, -0.2, z * 3), w); } }
 }
 
@@ -1301,7 +1359,7 @@ function updateHUD(){
   $('timer').textContent = FREE() ? '∞' : Math.max(0, Math.ceil(M.time)); $('timer').classList.toggle('low', !FREE() && M.time <= 10);
   const sup = (FREE() || M.time <= SUPER_TIME) && fighting();
   $('sup1').style.visibility = sup && !p1.superUsed ? 'visible' : 'hidden'; $('sup2').style.visibility = sup && !rv.superUsed && !FREE() ? 'visible' : 'hidden';
-  const RL = { arjun: 'ARROW', choo: 'CHI WAVE', kaze: 'SHURIKEN', ravan: 'SWORD SLASH', indra: 'THUNDER SHOT' }[CHAR]; $('rng1').textContent = p1.rangedCd > 0 ? RL + ' ' + p1.rangedCd.toFixed(1) + 's' : RL + ' READY'; $('cmb1').textContent = ((p1.comboCd || 0) > 0 ? 'COMBO ' + p1.comboCd.toFixed(1) + 's' : 'COMBO READY') + (fatalOk() ? '  FATALITY READY' : ''); $('sp1').textContent = CHAR === 'indra' ? (p1.specialCd > 0 ? 'THUNDER KICK ' + p1.specialCd.toFixed(1) + 's' : 'THUNDER KICK READY') : CHAR === 'ravan' ? (p1.specialCd > 0 ? 'LEG SWEEP ' + p1.specialCd.toFixed(1) + 's' : 'LEG SWEEP READY') : CHAR !== 'arjun' ? 'FLYING KICK READY' : p1.specialCd > 0 ? 'FIRE ARROW ' + p1.specialCd.toFixed(1) + 's' : 'FIRE ARROW READY';
+  const RL = { arjun: 'ARROW', choo: 'CHI WAVE', kaze: 'SHURIKEN', ravan: 'SWORD SLASH', indra: 'THUNDER SHOT' }[CHAR]; $('rng1').textContent = p1.rangedCd > 0 ? RL + ' ' + p1.rangedCd.toFixed(1) + 's' : RL + ' READY'; $('cmb1').textContent = ((p1.comboCd || 0) > 0 ? 'COMBO ' + p1.comboCd.toFixed(1) + 's' : 'COMBO READY') + (fatalOk() ? '  FATALITY READY' : ''); $('sp1').textContent = CHAR === 'indra' ? (p1.specialCd > 0 ? 'THUNDER KICK ' + p1.specialCd.toFixed(1) + 's' : 'THUNDER KICK READY') : CHAR === 'ravan' ? (p1.specialCd > 0 ? 'LEG SWEEP ' + p1.specialCd.toFixed(1) + 's' : 'LEG SWEEP READY') : CHAR !== 'arjun' ? (p1.specialCd > 0 ? 'FLYING KICK ' + p1.specialCd.toFixed(1) + 's' : 'FLYING KICK READY') : p1.specialCd > 0 ? 'FIRE ARROW ' + p1.specialCd.toFixed(1) + 's' : 'FIRE ARROW READY';
   $('rng2').textContent = humanFoe() ? (rv.block ? '🛡 BLOCKING' : '') : rv.fireCd > 0 ? 'RANGED ' + rv.fireCd.toFixed(1) + 's' : 'RANGED READY';
 }
 function updateRound(dt){
@@ -1316,17 +1374,17 @@ function updateRound(dt){
   else if (M.phase === 'matchEnd' && M.next) { M.phaseT -= dt; if (M.phaseT <= 0) { M.next = false; STAGE++; showVersus(); } }
 }
 /* debug / testing hooks */
-window.__y = { get FOE() { return FOE; }, get LADDER() { return LADDER; }, get STAGE() { return STAGE; }, setStage: n => { STAGE = n; }, showVersus, beginStage, rivalStart, buildLadder, openSelect, confirmSel, confirmStage, moveStage, setArena, getStage: () => stIdx, moveSel, getSel: () => selIdx, get P() { return P; }, get A2() { return A2; }, pickChar, getChar: () => CHAR, fatalOk, startFatal, getCine: () => cine, getTS: () => TS, FAT, p1, rv, M, cam, camera, renderer, scene, bow, storms, startMode, showMenu, getMode: () => MODE, startMove, restartMatch, hurtP1, hurtRavan, shots, KEYS, PRESSED, setTime: s => { M.time = s; }, state: () => ({ shots: shots.length, waves: waves.length, rings: rings.length, phase: M.phase }) };
+window.__y = { get DIFF() { return DIFF; }, setDiff: d => { DIFF = d; }, isSpam, get FOE() { return FOE; }, get LADDER() { return LADDER; }, get STAGE() { return STAGE; }, setStage: n => { STAGE = n; }, showVersus, beginStage, rivalStart, buildLadder, openSelect, confirmSel, confirmStage, moveStage, setArena, getStage: () => stIdx, moveSel, getSel: () => selIdx, get P() { return P; }, get A2() { return A2; }, pickChar, getChar: () => CHAR, fatalOk, startFatal, getCine: () => cine, getTS: () => TS, FAT, p1, rv, M, cam, camera, renderer, scene, bow, storms, startMode, showMenu, getMode: () => MODE, startMove, restartMatch, hurtP1, hurtRavan, shots, KEYS, PRESSED, setTime: s => { M.time = s; }, state: () => ({ shots: shots.length, waves: waves.length, rings: rings.length, phase: M.phase }) };
 const clock = new THREE.Clock();
 function frame(dtReal, draw = true){
   const dt = dtReal * (hitStop > 0 ? 0.06 : TS); if (hitStop > 0) hitStop -= dtReal; gt += dtReal;
   if (M.phase === 'versus') { frameVersus(dtReal, draw); return; }
   if (M.phase === 'select') { frameSelect(dtReal, draw); return; }
   if (M.phase === 'stage') { frameStage(); if (draw) renderer.render(scene, camera); return; }
-  if (M.phase === 'menu') { if (hit('Digit1')) openSelect('fight'); if (hit('Digit2')) openSelect('train'); if (hit('Digit3')) openSelect('duel'); delete PRESSED.Digit1; delete PRESSED.Digit2; delete PRESSED.Digit3; }   // the menu key must not also trigger a training move
+  if (M.phase === 'menu') { if (hit('Digit1')) openSelect('fight'); if (hit('Digit2')) openSelect('train'); if (hit('Digit3')) openSelect('duel'); if (hit('Digit4')) cycleDiff(); delete PRESSED.Digit4; delete PRESSED.Digit1; delete PRESSED.Digit2; delete PRESSED.Digit3; }   // the menu key must not also trigger a training move
   else { if (hit('Escape')) showMenu(); if (hit('KeyR') && MODE) { if (FREE()) startMode(MODE); else if (M.champion) { buildLadder(); showVersus(); } else restartMatch(); }
     if (FREE()) { if (MODE === 'train' && hit('KeyG')) { rv.aggro = !rv.aggro; moveLabel(rv.aggro ? 'RAVAN FIGHTS BACK' : 'RAVAN STANDS STILL'); } if (hit('KeyH')) { p1.hp = 100; rv.hp = 100; $('hp1').style.width = '100%'; $('hp2').style.width = '100%'; rv.burn = 0; rv.fireVis = 0; } } }
-   if (hit('KeyT') && fighting()) M.time = Math.min(M.time, SUPER_TIME);   // T = jump to the last 30 s (to test the super)
+
   updateRound(dt); if (fighting() && rv.state !== 'ko') { rv.x += (rv.kvx || 0) * dt; rv.kvx = (rv.kvx || 0) * Math.max(0, 1 - 7 * dt); } updateP1(dt); updateRavan(dt); updateFalls(dt); updateCine(dtReal); updateHead(dt); updateFX(dt); updateStorms(dt); updateBurn(dt); updateHUD();
   P.mixer.update(dt); R.mixer.update(dt); A2.mixer.update(dt); { const O = OPP(); if (O !== R && O !== A2) O.mixer.update(dt); } if (FAT.bone) FAT.bone.scale.setScalar(0.0001); applyKickIK(P, p1.kickU, p1.kickSide, p1.face, CHAR); if (humanFoe() && rv.kickSide) applyKickIK(OPP(), rv.kickU, rv.kickSide, rv.face, foeId()); applyBowIK(dt); rivalPose(); updateRavanFx(); updateIndraFx(dt); updateBolts(dt);
   const pb = p1.block && p1.state === 'idle' && fighting() ? 1 : 0, ob = humanFoe() && rv.block && rv.state === 'idle' && fighting() ? 1 : 0;
@@ -1426,14 +1484,18 @@ function frameSelect(dt, draw){
 }
 const CHAR_HELP = { choo: '<br><b>CHOO:</b> A+X chi wave · Z+S flying kick · D dragon rush · A A A hundred fists · X A thunder · S A spinning kick · X S A earth shatter', kaze: '<br><b>KAZE:</b> A+X shuriken · Z+S flying kick · D spiral sphere · A A A clone barrage · X A wind tornado · S A shuriken storm · X S A ground burst', ravan: '<br><b>RAVAN:</b> A+X sword slash · Z+S leg sweep · D Sky Cleaver · A A heat vision · X A sword throw · X S A inferno sword (his combos replace the ones above; no fatality)', indra: '<br><b>INDRA:</b> A+X thunder shot · Z+S thunder kick · D Storm of Heaven · X A sky thunder · X A Z A A A white fatality (only these combos)' };
 function startMode(m){
-  MODE = m; if (m !== 'fight') FOE = 'ravan'; setTimeout(() => { if (MODE === 'fight') return; const H = CHAR_HELP; if (MODE && H[CHAR]) $('help').innerHTML += H[CHAR]; }, 0); $('menu').style.display = 'none'; $('lasthit').textContent = '';
+  MODE = m; if (m === 'train') FOE = 'ravan'; else if (m === 'duel') FOE = CHAR; setTimeout(() => { if (MODE === 'fight') return; const H = CHAR_HELP; if (MODE && H[CHAR]) $('help').innerHTML += H[CHAR]; }, 0); $('menu').style.display = 'none'; $('lasthit').textContent = '';
   applyVis(); P.curName = ''; A2.curName = '';
-  if (m === 'duel') { restartMatch(); M.phase = 'fight'; rv.x = 3; p1.x = -1.5; rv.aggro = false; rv.block = false; rv.state = 'idle'; rv.mv = null; $('rnd').textContent = NAMES[CHAR] + ' vs ' + NAMES[CHAR]; $('pips1').textContent = ''; $('pips2').textContent = ''; say(''); $('help').innerHTML = DUEL_HELP; }
+  if (m === 'duel') { restartMatch(); M.phase = 'fight'; rv.x = 3; p1.x = -1.5; rv.aggro = true; rv.t = 2.5; rv.block = false; rv.state = 'idle'; rv.mv = null; $('rnd').textContent = NAMES[CHAR] + ' vs ' + NAMES[CHAR]; $('pips1').textContent = ''; $('pips2').textContent = ''; say(''); $('help').innerHTML = duelHelp(); }
   else if (m === 'train') { restartMatch(); M.phase = 'fight'; rv.x = 4; p1.x = -2; rv.aggro = false; $('rnd').textContent = 'TRAINING'; $('pips1').textContent = ''; $('pips2').textContent = ''; say(''); $('help').innerHTML = TRAIN_HELP; }
-  else { buildLadder(); showVersus(); }
+  else { buildLadder(); showVersus(); return; }
+  applyVis();                                                      // now the match has started: show the opponent
 }
 function showMenu(){ MODE = null; M.phase = 'menu'; $('select').style.display = 'none'; $('stage').style.display = 'none'; $('hud').style.display = ''; pendingMode = null; FOE = 'ravan'; $('versus').style.display = 'none'; applyVis(); M.phase = 'menu'; resetFighters(); $('menu').style.display = 'flex'; say(''); }
-$('bFight').onclick = () => openSelect('fight'); $('bTrain').onclick = () => openSelect('train'); $('bDuel').onclick = () => openSelect('duel'); $('bGo').onclick = () => confirmSel(); $('bStGo').onclick = () => confirmStage();
+$('bFight').onclick = () => openSelect('fight'); $('bTrain').onclick = () => openSelect('train'); $('bDuel').onclick = () => openSelect('duel'); $('bDiff').onclick = () => cycleDiff();
+function showDiff(){ $('bDiff').textContent = '⚙  DIFFICULTY: ' + DF().name + '  (press 4)'; }
+function cycleDiff(){ DIFF = DIFF === 'easy' ? 'normal' : DIFF === 'normal' ? 'hard' : 'easy'; try { localStorage.setItem('yudhDiff', DIFF); } catch (e) {} showDiff(); }
+showDiff(); $('bGo').onclick = () => confirmSel(); $('bStGo').onclick = () => confirmStage();
 (function warmUp(){   // compile every shader once at start, so nothing stutters later
   for (const kind of ['ball', 'arrow', 'fire', 'super', 'ground', 'fatal']) spawnShot('p', 0, 1, 1, 0xffffff, { kind });
   HEADS.arjun.visible = HEADS.ravan.visible = HEADS.choo.visible = HEADS.kaze.visible = bloodPool.visible = true; const a = makeArrow(false); scene.add(a); BOLTS.forEach(b => { b.glow.visible = b.core.visible = true; }); KITS.forEach(K => { K.sword.group.visible = K.trail.visible = true; K.beams.forEach(b => { b.visible = true; }); });

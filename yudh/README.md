@@ -6,21 +6,29 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 
 > Work in progress — the game grows with every update. Right now it is a first playable: one hero, one boss, rounds, a training ground.
 
+## ⚙ Difficulty
+Press `4` on the menu: **Easy / Normal / Hard** (remembered by your browser). Easier settings give the computer slower reactions, longer warnings and softer hits.
+
+- A **white glint** on the computer fighter means an attack is coming.
+- A **circle** on the floor marks a power: leave it or block. A **red zone** marks a super: leave it (jumping and ducking do not help).
+- Block a computer punch or kick and it is stuck for a moment: **hit back**.
+- Repeat the same move four times in a row and the computer reads you: it blocks and counter-kicks.
+
 ## 🏆 Fight mode (arcade ladder)
 Pick a fighter, then beat the other fighters one by one (best of 3, 90-second rounds, a VS screen between stages, each opponent a bit tougher). **Ravan is the final boss.** Lose and press `R` to retry that fight.
 
 **Everyone:** `Z` or `S` while jumping = **air kick** (8 %) · double-tap forward = **running flying kick** (12 %, knocks down, block it).
 
 ## 👥 Fighters
-- **Indra** — king of the gods, lord of thunder. Lightning crackles around him all the time. `A+X` Thunder Shot (18 %, very fast) · `Z+S` Thunder Kick (14 %, knocks down) · `X A` Sky Thunder (20 %, anywhere; block it) · `D` Storm of Heaven (4 s of coloured lightning, up to 77 %, cannot be blocked: keep moving) · `X A Z A A A` White Judgement fatality.
+- **Indra** — king of the gods, lord of thunder. Lightning crackles around him all the time. `A+X` Thunder Shot (18 %, very fast) · `Z+S` Thunder Kick (14 %, knocks down) · `X A` Sky Thunder (20 %, anywhere; block it) · `D` Storm of Heaven (4 s of coloured lightning, up to 65 %, cannot be blocked: keep moving) · `X A Z A A A` White Judgement fatality.
 - **Ravan** — the demon king, now playable (and still the boss). A giant with a demon sword that appears whenever he uses a power. `A+X` Sword Slash (knocks down) · `Z+S` Leg Sweep (knocks down, jump it) · `A A` Heat Vision (crouch it) · `X A` Sword Throw, it flies back to his hand · `X S A` Inferno Sword · `D` Sky Cleaver (super). No fatality: he is powerful enough.
-- **Kaze** — an original ninja: shuriken, clones, wind. `A+X` shuriken · `Z+S` flying kick · `D` Spiral Sphere (super) · `A A A` Clone Barrage · `X A` Wind Tornado · `S A` Shuriken Storm · `X S A` Ground Burst · `X A Z A A A` fatality.
+- **Kaze** — an original ninja: shuriken, clones, wind. `A+X` shuriken · `Z+S` flying kick (10 %, 5 s cooldown) · `D` Spiral Sphere (super) · `A A A` Clone Barrage · `X A` Wind Tornado · `S A` Shuriken Storm · `X S A` Ground Burst · `X A Z A A A` fatality.
 - **Arjun** — archer hero (bow, fire arrows).
-- **Choo** — Chinese kung-fu master (Tekken-3 / Bruce-Lee style). Pick him on the **character select** screen (after choosing a mode: ← → to choose, Enter to confirm, Esc to go back), then pick the **stage** (7 arenas + RANDOM). Same combo keys, different powers: `A+X` chi wave · `Z+S` flying kick · `D` Dragon Rush (super) · `A A A` Hundred Fists · `X A` Heavenly Thunder · `S A` Spinning Dragon Kick · `X S A` Earth Shatter · `X A Z A A A` fatality.
+- **Choo** — Chinese kung-fu master (Tekken-3 / Bruce-Lee style). Pick him on the **character select** screen (after choosing a mode: ← → to choose, Enter to confirm, Esc to go back), then pick the **stage** (7 arenas + RANDOM). Same combo keys, different powers: `A+X` chi wave · `Z+S` flying kick (10 %, 5 s cooldown) · `D` Dragon Rush (super) · `A A A` Hundred Fists · `X A` Heavenly Thunder · `S A` Spinning Dragon Kick · `X S A` Earth Shatter · `X A Z A A A` fatality.
 
 ## Modes
 - **⚔ Fight** — best-of-3 rounds (first to 2 wins, 3rd round if 1–1), **90 seconds** each. Ravan attacks.
-- **🏹 Arjun vs Arjun** — a second Arjun stands in front of you (a test ground for Arjun's moves): `B` he blocks, `1` he jabs, `2` he shoots an arrow, `G` he fights back.
+- **🏹 Mirror duel** — you against a copy of your fighter. It fights with its punches, kicks, powers and super. `G` makes it stand still, `B` makes it block, `1` / `2` make it attack on command.
 - **🎯 Training ground** — Ravan **stands still**. Practice every move, use your super any time, and trigger Ravan's moves one by one to learn how to dodge them.
 
 ## Controls
@@ -28,7 +36,7 @@ Pick a fighter, then beat the other fighters one by one (best of 3, 90-second ro
 |---|---|
 | `←` `→` | move (walk as far as you like — the camera follows and zooms out) |
 | `↑` / `↓` | jump / crouch |
-| hold **BACK** (away from the enemy) | block — Arjun **crosses his arms in an X** and a blue shield glows |
+| hold **BACK** (away from the enemy) | block — your fighter **crosses both arms in an X** and a blue shield glows. No block while you are attacking. Walking back is slower |
 | `A` `X` | left punch / right punch |
 | `Z` `S` | left kick / right kick |
 | `A` + `X` | **long-range arrow** (15 %, 5 s cooldown) |
@@ -42,9 +50,10 @@ Pick a fighter, then beat the other fighters one by one (best of 3, 90-second ro
 | `Z` / `S` while jumping | **Air kick** (8 %) |
 | `D` | **SUPER** — burning arrow + fire storm (65 %). Only in the **last 30 s** of a round, **once per round**. Cannot be blocked — get away! |
 | `R` / `Esc` | restart / back to the menu |
-| `T` | (fight) jump to the last 30 s to try the super |
 | training: `1`–`8` | Ravan does sword slash / leg sweep / sword throw / inferno sword / heat vision / fire throw / jump slam / super slam |
 | training: `G` / `H` | Ravan fights back on/off / heal both |
+
+A button pressed during another move is remembered for a moment. After a knockdown, press any button to get up sooner.
 
 Combos: type the keys within ~0.5 s of each other (6 s cooldown). The key sequences are the same for every fighter; each fighter gets a different effect (these are Arjun's). Strong hits knock the opponent down; light hits push him back.
 
