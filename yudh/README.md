@@ -26,6 +26,17 @@ Pick a fighter, then beat the other fighters one by one (best of 3, 90-second ro
 
 **Everyone:** `Z` or `S` while jumping = **air kick** (8 %) · double-tap forward = **running flying kick** (12 %, knocks down, block it).
 
+## ✨ Q and W combos (every fighter, each in his own element)
+| Keys | Power | Damage | How to stop it |
+|---|---|---|---|
+| `Q` then `A` | **Giant orb** (Asur: huge fireball from his mouth) | 22 %, knocks down | **cannot be blocked**: jump it |
+| `W` then `Q` | **Laser** across the arena | 18 % | block or jump |
+| `W` then `A` | Leap and throw a **sky sword** | 20 %, knocks down | block or jump |
+| `W` then `S` | **Burning floor** for 1 second | up to 20 % (4 x 5) | jump, or block |
+| `Q` then `S` | **Arrow throw** | 15 % | block, jump or crouch |
+
+Long range. They share the 6-second combo cooldown. `Q` and `W` do nothing on their own. Elements: Arjun sun/fire, Choo chi, Kaze wind, Indra thunder, Ravan demon, Asur fire.
+
 ## 👥 Fighters
 - **Asur** — the fire warrior, as strong as Indra. Fair skin, red trousers, flame-red hair. `A+X` Hand Fireball (18 %, crouch, jump or block) · `Z+S` Flame Kick (14 %, knocks down) · `X A` Mouth Fireball (20 %, knocks down, jump or block) · `D` Inferno (4 s of fire pillars, up to 65 %: keep moving) · `X A Z A A A` Hellfire fatality.
 - **Indra** — king of the gods, lord of thunder. Lightning crackles around him all the time. `A+X` Thunder Shot (18 %, very fast) · `Z+S` Thunder Kick (14 %, knocks down) · `X A` Sky Thunder (20 %, anywhere; block it) · `D` Storm of Heaven (4 s of coloured lightning, up to 65 %, cannot be blocked: keep moving) · `X A Z A A A` White Judgement fatality.
