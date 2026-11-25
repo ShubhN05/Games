@@ -100,7 +100,7 @@
   <div id="dim"></div><div id="cine"><i class="cb t"></i><i class="cb b"></i><div id="vig"></div><b id="fatal">FATALITY</b></div><div id="move"></div><div id="msg"></div><div id="flash"></div><div id="lasthit"></div>
   <div id="help"><b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s (test)</div>
 </div>
-<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><button id="bDiff">⚙  DIFFICULTY: NORMAL  (press 4)</button><button id="bSound">🔊  SOUND: ON  (press M)</button><small>Fight: beat the other fighters one by one (best of 3, 90 s rounds), then the final boss RAVAN.<br>Mirror duel: a copy of your fighter fights you (press G to make it stand still).<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v21 - fighter ranges, 3 s cooldowns  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
+<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><button id="bDiff">⚙  DIFFICULTY: NORMAL  (press 4)</button><button id="bSound">🔊  SOUND: ON  (press M)</button><small>Fight: beat the other fighters one by one (best of 3, 90 s rounds), then the final boss RAVAN.<br>Mirror duel: a copy of your fighter fights you (press G to make it stand still).<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v22 - Choo and Kaze fight close  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
 <div id="select"><div class="top">SELECT YOUR FIGHTER</div><div class="info"><b id="selName">ARJUN</b><em id="selTag"></em><span id="selInfo"></span></div><div><div class="cards" id="cards"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bGo">CONFIRM</button></div></div></div>
 <div id="versus"><div class="vtop" id="vsStage"></div><div class="vrow"><div class="vf"><img id="vsA" alt=""><b id="vsAn"></b></div><i>VS</i><div class="vf"><img id="vsB" alt=""><b id="vsBn"></b></div></div><div id="vsLadder"></div><div class="hint">Enter = fight now · Esc = menu</div></div>
 <div id="stage"><div class="top">SELECT STAGE</div><div class="prev"><canvas id="stPrev" width="640" height="360"></canvas><b id="stName">RANDOM</b></div><div id="stGrid"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bStGo">CONFIRM</button></div></div>
@@ -256,7 +256,7 @@ const foeId = () => MODE === 'duel' ? CHAR : FOE;
 const foeName = () => foeId() === 'ravan' ? (CHAR === 'ravan' ? 'ENEMY RAVAN' : 'RAVAN') : NAMES[foeId()];               // the visible opponent                                                  // null = menu, 'fight' or 'train' (training ground: Ravan stands still)
 const maxSep = () => FREE() ? 1e9 : MAX_SEP;
 const FIGHT_HELP = '<b>YUDH — beat every fighter, then the boss RAVAN</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · M sound on/off · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (any time, once the enemy is below half health)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
-const QW_HELP = '<br>Q A giant orb (no block: jump) · W Q laser · W A sky sword · W S burning floor (jump) · Q S arrow<br>Choo and Kaze: short-range versions · all cooldowns 3 s';
+const QW_HELP = '<br>Q A giant orb (no block: jump) · W Q laser · W A sky sword · W S burning floor (jump) · Q S arrow<br>Choo and Kaze fight close: all their powers are short range (not the fatality) · cooldowns 3 s';
 const duelHelp = () => '<b>MIRROR DUEL — you vs a copy of ' + NAMES[CHAR] + '</b><br>Arrows move · hold BACK = block (crossed arms) · A X Z S hits · A+X ranged · Z+S special · D super (any time)<br>The copy fights back: G = it stands still / fights · B = it blocks on/off · 1 = it attacks · 2 = its ranged move<br>H = heal both · R reset · M sound on/off · Esc menu' + (CHAR === 'arjun' ? '<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (any time, once the enemy is below half health)' : '') + '<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
 const TRAIN_HELP = '<b>TRAINING GROUND — Ravan stands still</b><br>Arrows move · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>Ravan moves (practice dodging): 1 sword slash · 2 leg sweep · 3 sword throw · 4 inferno sword · 5 heat vision · 6 fire throw · 7 jump slam · 8 super slam<br>G = Ravan fights back on/off · H = heal both · R reset · M sound on/off · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (any time, once the enemy is below half health)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
 const DMG = { LP: 4, RP: 4, LK: 7, RK: 7, arrow: 15, fireHit: 2, burnTotal: 3, jumpkick: 10, super: 65, dash: 10, tornado: 15, thunder: 15, spin: 12, rain: 20, fireRain: 15, blast: 12, ground: 18, rvFire: 8, slam: 12, sword: 15, sweep: 10, swordthrow: 14, heat: 22, vision: 12, bolt: 18, thunderkick: 14, skythunder: 20, storm: 6, airkick: 8, flykick: 12, fireball: 18, mouthfire: 20, flamekick: 14, orb: 22, laser: 18, skysword: 20, floortick: 5, comboarrow: 15 };   // Arjun's fire arrow = 2 on impact + 3 burn over 5 s = 5 total
@@ -587,17 +587,18 @@ function boltFx(x){
   fx.push({ t: 0, dur: 0.22, mesh: m, upd: u => { m.material.opacity = 1 - u; m.scale.x = 1 + u * 2; } }); burst(x, 0.2, 10, 0x9fd8ff, 3, 0.4, 0.22); shake = Math.max(shake, 0.1);
 }
 function chooFists(smoke){      // HUNDRED FISTS: he steps in and punches 5 times very fast
-  const d = Math.abs(rv.x - p1.x); if (d > 1.5) p1.x += p1.face * Math.min(d - 1.4, 3.2);
+  const d = Math.abs(rv.x - p1.x); if (d > 1.5) p1.x += p1.face * Math.min(d - 1.4, 1.0);
   for (let i = 0; i < 5; i++) later(0.08 + i * 0.14, () => { if (!fighting() || p1.state === 'hit' || p1.state === 'ko' || cine) return;
     P.play(i % 2 ? 'Punch_Cross' : 'Punch_Jab', { loop: false, speed: 2.4, fade: 0.03, force: true }); if (smoke) burst(rv.x + (i % 2 ? 1 : -1) * 1.0, 1.0, 8, 0xffffff, 2, 0.4, 0.4); if (Math.abs(rv.x - p1.x) < 2.4) hurtRavan(i === 4 ? 5 : 3.75, i === 4 ? 'dash' : 'hit', 'LP'); });
 }
 function chooThunder(){    // HEAVENLY THUNDER: lightning strikes the opponent; only a block saves him
-  for (let i = 0; i < 6; i++) later(i * 0.08, () => boltFx(rv.x + (Math.random() - 0.5) * 2.0));
-  later(0.5, () => { if (fighting()) hurtRavan(DMG.thunder, 'thunder'); });
+  const spot = () => p1.x + p1.face * Math.min(SHORT, Math.abs(rv.x - p1.x));                  // the lightning only reaches close to him
+  for (let i = 0; i < 6; i++) later(i * 0.08, () => boltFx(spot() + (Math.random() - 0.5) * 1.4));
+  later(0.5, () => { if (inReach(SHORT)) hurtRavan(DMG.thunder, 'thunder'); });
 }
 function chooSpin(){       // SPINNING DRAGON KICK: he spins through the opponent
-  const d = Math.abs(rv.x - p1.x), step = clamp(d - 1.2, 0, 3.0); for (let k = 1; k <= 5; k++) later(k * 0.03, () => { p1.x += p1.face * step / 5; });
-  burst(p1.x, 1.0, 14, 0xffd24a, 3, 0.4, 0.2); if (d < 4.4) later(0.05, () => { if (fighting()) hurtRavan(DMG.spin, 'spin'); });
+  const d = Math.abs(rv.x - p1.x), step = clamp(d - 1.2, 0, 1.8); for (let k = 1; k <= 5; k++) later(k * 0.03, () => { p1.x += p1.face * step / 5; });
+  burst(p1.x, 1.0, 14, 0xffd24a, 3, 0.4, 0.2); if (d <= SHORT) later(0.05, () => { if (fighting()) hurtRavan(DMG.spin, 'spin'); });
 }
 function chooQuake(){      // EARTH SHATTER: stomp, a shockwave runs along the floor
   const m = new THREE.Mesh(new THREE.RingGeometry(0.9, 1, 48), new THREE.MeshBasicMaterial({ color: 0xffd24a, transparent: true, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(p1.x, 0.05, 0); scene.add(m);
@@ -606,7 +607,7 @@ function chooQuake(){      // EARTH SHATTER: stomp, a shockwave runs along the f
 }
 function startChiWave(){   // A+X: a ball of chi energy
   p1.rangedCd = RANGED_CD; p1.state = 'attack'; p1.kickSide = 'l';
-  p1.atk = { def: { clip: 'Spell_Simple_Shoot', speed: 1.8, hitAt: 0.22, dur: 0.55, fn: () => spawnShot('p', p1.x + p1.face * 0.9, 1.0, p1.face * 12, 0x7ad8ff, { kind: 'ball', range: 18, r: 0.35, big: 1.2, tag: 'ranged', dmg: DMG.arrow }) }, t: 0, done: false };
+  p1.atk = { def: { clip: 'Spell_Simple_Shoot', speed: 1.8, hitAt: 0.22, dur: 0.55, fn: () => spawnShot('p', p1.x + p1.face * 0.9, 1.0, p1.face * 12, 0x7ad8ff, { kind: 'ball', range: 1.5, r: 0.35, big: 1.2, tag: 'ranged', dmg: DMG.arrow }) }, t: 0, done: false };
   P.play('Spell_Simple_Shoot', { loop: false, speed: 1.8, fade: 0.05, force: true }); moveLabel('CHI WAVE!');
 }
 function startChooSuper(){ // D: DRAGON RUSH - he glows, then flashes through the opponent (65 %, cannot be blocked; get away!)
@@ -615,26 +616,26 @@ function startChooSuper(){ // D: DRAGON RUSH - he glows, then flashes through th
 }
 function chooRush(col = 0xffd24a, label = 'DRAGON RUSH!'){ snd('whooshBig');
   const d = Math.abs(rv.x - p1.x); flashScreen(); shake = Math.max(shake, 0.5);
-  if (d <= 4.5) { p1.x += p1.face * Math.max(0, d - 1.1); burst(rv.x, 1.2, 40, col, 6, 0.7, 0.3); hurtRavan(DMG.super, 'super'); moveLabel(label);
+  if (d <= SHORT) { p1.x += p1.face * Math.max(0, d - 1.1); burst(rv.x, 1.2, 40, col, 6, 0.7, 0.3); hurtRavan(DMG.super, 'super'); moveLabel(label);
     for (let i = 0; i < 8; i++) later(i * 0.07, () => { if (!cine && fighting()) { P.play(i % 2 ? 'Punch_Cross' : 'Punch_Jab', { loop: false, speed: 2.6, fade: 0.02, force: true }); burst(rv.x - p1.face * 0.3, 1.3, 6, col, 3, 0.3, 0.2); } }); }
-  else { p1.x += p1.face * 4.5; burst(p1.x, 1.0, 20, col, 4, 0.5, 0.25); }
+  else { p1.x += p1.face * Math.min(2.2, Math.max(0, d - 1.1)); burst(p1.x, 1.0, 20, col, 4, 0.5, 0.25); }
 }
 function startShuriken(){ snd('whooshBig');   // A+X: a big shuriken
   p1.rangedCd = RANGED_CD; p1.state = 'attack'; p1.kickSide = 'l';
-  p1.atk = { def: { clip: 'OverhandThrow', speed: 1.8, hitAt: 0.28, dur: 0.6, fn: () => spawnShot('p', p1.x + p1.face * 0.8, 1.25, p1.face * 16, 0xd8e4ff, { kind: 'ball', range: 18, r: 0.3, big: 0.7, tag: 'ranged', dmg: DMG.arrow }) }, t: 0, done: false };
+  p1.atk = { def: { clip: 'OverhandThrow', speed: 1.8, hitAt: 0.28, dur: 0.6, fn: () => spawnShot('p', p1.x + p1.face * 0.8, 1.25, p1.face * 16, 0xd8e4ff, { kind: 'ball', range: 1.6, r: 0.3, big: 0.7, tag: 'ranged', dmg: DMG.arrow }) }, t: 0, done: false };
   P.play('OverhandThrow', { loop: false, speed: 1.8, fade: 0.05, force: true }); moveLabel('SHURIKEN!');
 }
 function kazeStorm(){       // SHURIKEN STORM: five shuriken in a row
-  for (let i = 0; i < 5; i++) later(i * 0.07, () => { if (fighting()) spawnShot('p', p1.x + p1.face * 0.8, 0.95 + (i % 3) * 0.2, p1.face * 16, 0xd8e4ff, { kind: 'ball', range: 12, r: 0.28, big: 0.55, tag: 'shuriken', dmg: 2.4 }); });
+  for (let i = 0; i < 5; i++) later(i * 0.07, () => { if (fighting()) spawnShot('p', p1.x + p1.face * 0.8, 0.95 + (i % 3) * 0.2, p1.face * 16, 0xd8e4ff, { kind: 'ball', range: 1.6, r: 0.28, big: 0.55, tag: 'shuriken', dmg: 2.4 }); });
 }
 function kazeTornado(){ snd('wind');     // WIND TORNADO: a whirlwind rises from the opponent's feet; only a block saves him
-  const sps = []; for (let i = 0; i < 18; i++) sps.push(sprite(i % 2 ? 0xdff6ff : 0x8ad8ff, 0.35 + Math.random() * 0.3)); const cx = rv.x;
+  const sps = []; for (let i = 0; i < 18; i++) sps.push(sprite(i % 2 ? 0xdff6ff : 0x8ad8ff, 0.35 + Math.random() * 0.3)); const cx = p1.x + p1.face * Math.min(SHORT, Math.abs(rv.x - p1.x));
   fx.push({ t: 0, dur: 0.9, upd: u => sps.forEach((sp, i) => { const a = i * 0.7 + u * 16, h = (i / 18 + u * 0.8) % 1; sp.position.set(cx + Math.cos(a) * (0.4 + h * 0.7), 0.1 + h * 3.0, Math.sin(a) * 0.4); sp.material.opacity = 0.9 * (1 - u * 0.4); }), end: () => sps.forEach(sp => { scene.remove(sp); sp.material.dispose(); }) });
-  later(0.55, () => { if (fighting()) hurtRavan(DMG.tornado, 'tornado'); });
+  later(0.55, () => { if (inReach(SHORT)) hurtRavan(DMG.tornado, 'tornado'); });
 }
 function kazeBurst(){       // GROUND BURST: he sinks into the ground and bursts out under the opponent
   burst(p1.x, 0.3, 14, 0xffffff, 3, 0.5, 0.4); P.root.visible = P.shadow.visible = false; p1.inv = Math.max(p1.inv, 0.5);
-  later(0.3, () => { if (!fighting()) return; const away = Math.sign(rv.x - p1.x) || 1; p1.x = rv.x - away * 0.95; P.root.visible = P.shadow.visible = true; P.play('Punch_Cross', { loop: false, speed: 1.6, force: true });
+  later(0.3, () => { if (!fighting()) return; const away = Math.sign(rv.x - p1.x) || 1, gap = Math.abs(rv.x - p1.x); p1.x = gap <= SHORT ? rv.x - away * 0.95 : p1.x + away * 2.0; P.root.visible = P.shadow.visible = true; P.play('Punch_Cross', { loop: false, speed: 1.6, force: true });
     burst(rv.x, 0.2, 24, 0x6a4a2a, 4, 0.7, 0.25, 1); burst(rv.x, 0.3, 10, 0xffffff, 3, 0.5, 0.4); shake = Math.max(shake, 0.3); if (Math.abs(rv.x - p1.x) < 2.2 && rv.y < 0.6) hurtRavan(DMG.ground, 'ground'); });
 }
 function startKazeSuper(){  // D: SPIRAL SPHERE - a blue sphere grows in his hand, then he rushes through the opponent (65 %, cannot be blocked; get away!)
@@ -1392,7 +1393,8 @@ const RIVAL_NAMES = { arjun: { ranged: 'ARROW (jump, crouch or block)', special:
   indra: { ranged: 'THUNDER SHOT (crouch or block)', special: 'SKY THUNDER (leave the circle or block)', super: 'STORM OF HEAVEN — keep moving!' },
   asur: { ranged: 'HAND FIREBALL (crouch, jump or block)', special: 'MOUTH FIREBALL (jump or block)', super: 'INFERNO — keep moving!' },
   ravan: { super: 'SKY CLEAVER — leave the red zone!' } };
-const SUP_R = 1.5;                                                    // radius of the marked super zone
+const SUP_R = 1.5;
+const isShort = c => !!(ELEM[c] && ELEM[c].short);                // Choo and Kaze fight close                                                    // radius of the marked super zone
 function rivalStart(name, punish){
   const F = OPP(); rv.state = 'move'; rv.mv = { name, t: 0, raw: 0, wind: 0, fired: false, dur: 1 }; rv.block = false; rv.blockT = 0; rv.kickU = -1; F.lockT = 0; F.curName = ''; const m = rv.mv;
   if (name === 'basic') { const def = (ATTACKS_CHAR[FOE] || ATTACKS)[punish ? 'KeyS' : ['KeyA', 'KeyX', 'KeyZ', 'KeyS'][Math.floor(Math.random() * 4)]]; m.def = def; m.dur = def.dur * 1.15; m.wind = punish ? 0 : DF().wind; m.armor = !!punish;   // a counter kick comes at once, knocks you down, and your light hits do not stop it F.play('Idle_Loop', { force: true });
@@ -1437,7 +1439,7 @@ function rivalRun(dt){
       if (FOE === 'arjun') spawnShot('r', x, 1.25, f * 14, 0xbfe8ff, { kind: 'arrow', range: 18, dmg: rivalDmg(DMG.arrow) });
       else if (FOE === 'indra') foeBolt();
       else if (FOE === 'asur') { fireBall('r', V(x, 1.25), f, { speed: 20, r: 0.18, big: 0.85, tag: 'fireball', dmg: rivalDmg(DMG.fireball) }); }
-      else spawnShot('r', x, 1.0, f * (FOE === 'kaze' ? 13 : 10), FOE === 'kaze' ? 0xd8e4ff : 0x5ad8ff, { range: 16, dmg: rivalDmg(DMG.arrow) }); } }
+      else spawnShot('r', x, 1.0, f * (FOE === 'kaze' ? 13 : 10), FOE === 'kaze' ? 0xd8e4ff : 0x5ad8ff, { range: 1.6, dmg: rivalDmg(DMG.arrow) }); } }
   else if (m.name === 'special') {
     if (FOE === 'choo') { if (t < 0.28 && d > 1.5) rv.x += f * Math.min(d - 1.4, 11 * dt); m.n = m.n || 0; if (m.n < 4 && t >= 0.34 + m.n * 0.16) { F.play(m.n % 2 ? 'Punch_Cross' : 'Punch_Jab', { loop: false, speed: 2.3, fade: 0.03, force: true }); if (Math.abs(p1.x - rv.x) < 2.3) hurtP1(rivalDmg(m.n === 3 ? 7 : 6), m.n === 3 ? 'dash' : 'flurry', rv.x); m.n++; } }
     else if (FOE === 'asur') { if (!m.fired && t >= 0.5) { m.fired = true; const q = mouthPos(F); fireBall('r', V(q.x + f * 0.35, q.y), f, { speed: 11, r: 0.4, big: 1.7, tag: 'mouthfire', dmg: rivalDmg(DMG.mouthfire) }); flames(q.x + f * 0.3, q.y, 20, 0.3, 0.6); snd('whooshBig'); } }
@@ -1454,7 +1456,7 @@ function rivalRun(dt){
 /* every other computer super follows ONE rule: a red zone marks where you stand, you have a moment to leave it; jumping or ducking does not help */
 function rivalZoneSuper(m, t, dt, F, f){
   const W = DF().warn;
-  if (m.spot === undefined) { m.spot = p1.x; const side = Math.sign(rv.x - p1.x) || 1; m.back = clamp(m.spot + side * 4.0, MIN_X + 0.6, MAX_X); }
+  if (m.spot === undefined) { m.spot = p1.x; const side = Math.sign(rv.x - p1.x) || 1; m.back = clamp(m.spot + side * (isShort(FOE) ? SHORT - 0.2 : 4.0), MIN_X + 0.6, MAX_X); }
   if (t < W) { rv.x += clamp(m.back - rv.x, -7 * dt, 7 * dt);                              // it steps back to charge, so you have room to get out
     slamMark.visible = true; slamMark.scale.setScalar(SUP_R / 2.5); slamMark.position.set(m.spot, 0.03, 0); slamMark.material.opacity = 0.38 + 0.18 * Math.sin(t * 24); return; }
   if (m.fired) return;
@@ -1491,8 +1493,9 @@ function updateRival(dt){
         if (rv.walkT > 0) { rv.walkT -= dt; rv.x += rv.face * rv.walkDir * (2.2 + 0.35 * LV()) * dt; F.play('Walk_Loop', { speed: rv.walkDir > 0 ? 1.3 : 1.0 }); }
         else if (rv.t <= 0 && p1.state !== 'down' && rv.y <= 0) {
           const superNow = free ? rv.supT <= 0 : (M.time <= SUPER_TIME && !rv.superUsed);
-          if (superNow && d < 8 && p1.state !== 'cast' && Math.random() < 0.7) rivalStart('super');
+          if (superNow && d < (isShort(FOE) ? SHORT : 8) && p1.state !== 'cast' && Math.random() < 0.7) rivalStart('super');
           else { const w = d > 4.5 ? { ranged: rv.fireCd > 0 ? 0 : 45, special: rv.spCd > 0 ? 0 : 20, rush: rv.rushCd > 0 ? 0 : 15, walk: 35 } : d > near ? { rush: rv.rushCd > 0 ? 0 : 25, ranged: rv.fireCd > 0 ? 0 : 20, special: rv.spCd > 0 ? 0 : 20, walk: 35 } : { basic: 72, special: rv.spCd > 0 ? 0 : 14, back: 14 };
+            if (isShort(FOE) && d > SHORT) { w.ranged = 0; w.special = 0; }               // out of reach: walk or run in first
             const ks = Object.keys(w); let r = Math.random() * ks.reduce((a, k) => a + w[k], 0), pick = ks.find(k => (r -= w[k]) <= 0 && w[k] > 0) || 'walk';
             if (pick === 'walk' || pick === 'back') { rv.walkT = pick === 'walk' ? 0.55 : 0.35; rv.walkDir = pick === 'walk' ? 1 : -1; rv.t = 0.2; } else rivalStart(pick); } }
         else if (d > near - 0.25) { rv.x += rv.face * (1.7 + 0.35 * LV()) * dt; F.play('Walk_Loop', { speed: 1.2 }); } else F.play('Idle_Loop'); }

@@ -37,6 +37,8 @@ Pick a fighter, then beat the other fighters one by one (best of 3, 90-second ro
 
 **Fighter roles:** Arjun, Indra and Asur are the top fighters, strong at long and short range; Ravan, the villain, is too: their versions of these combos cross the whole arena. **Choo and Kaze are short-range fighters:** theirs reach only close up (about 3 steps) — a burst, a palm beam, a leaping blade cut, a ring on the floor and a short dart.
 
+**All of Choo's and Kaze's powers are short range** (about 3.2 units), old and new, for the player and the computer, including their D supers. Only the fatality still reaches any distance (flying kick / running kick unchanged).
+
 They share the 3-second combo cooldown. `Q` and `W` do nothing on their own. Elements: Arjun sun/fire, Choo chi, Kaze wind, Indra thunder, Ravan demon, Asur fire.
 
 ## 👥 Fighters
