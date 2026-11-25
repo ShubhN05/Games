@@ -100,7 +100,7 @@
   <div id="dim"></div><div id="cine"><i class="cb t"></i><i class="cb b"></i><div id="vig"></div><b id="fatal">FATALITY</b></div><div id="move"></div><div id="msg"></div><div id="flash"></div><div id="lasthit"></div>
   <div id="help"><b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s (test)</div>
 </div>
-<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><button id="bDiff">⚙  DIFFICULTY: NORMAL  (press 4)</button><button id="bSound">🔊  SOUND: ON  (press M)</button><small>Fight: beat the other fighters one by one (best of 3, 90 s rounds), then the final boss RAVAN.<br>Mirror duel: a copy of your fighter fights you (press G to make it stand still).<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v20 - five new Q and W combos  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
+<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><button id="bDiff">⚙  DIFFICULTY: NORMAL  (press 4)</button><button id="bSound">🔊  SOUND: ON  (press M)</button><small>Fight: beat the other fighters one by one (best of 3, 90 s rounds), then the final boss RAVAN.<br>Mirror duel: a copy of your fighter fights you (press G to make it stand still).<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v21 - fighter ranges, 3 s cooldowns  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
 <div id="select"><div class="top">SELECT YOUR FIGHTER</div><div class="info"><b id="selName">ARJUN</b><em id="selTag"></em><span id="selInfo"></span></div><div><div class="cards" id="cards"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bGo">CONFIRM</button></div></div></div>
 <div id="versus"><div class="vtop" id="vsStage"></div><div class="vrow"><div class="vf"><img id="vsA" alt=""><b id="vsAn"></b></div><i>VS</i><div class="vf"><img id="vsB" alt=""><b id="vsBn"></b></div></div><div id="vsLadder"></div><div class="hint">Enter = fight now · Esc = menu</div></div>
 <div id="stage"><div class="top">SELECT STAGE</div><div class="prev"><canvas id="stPrev" width="640" height="360"></canvas><b id="stName">RANDOM</b></div><div id="stGrid"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bStGo">CONFIRM</button></div></div>
@@ -239,7 +239,7 @@ const isSpam = () => { const h = (p1.hist || []).filter(e => gt - e.t < 6); retu
 const chordReady = c => c === 'KeyAKeyX' ? p1.rangedCd <= 0 : p1.specialCd <= 0;
 
 /* ---------------- tuning numbers (damage = % of the victim's full health) ---------------- */
-const ROUND_TIME = 90, SUPER_TIME = 30, RANGED_CD = 5, SPECIAL_CD = 5, MIN_X = -20, MAX_X = 20, MAX_SEP = 14;
+const ROUND_TIME = 90, SUPER_TIME = 30, RANGED_CD = 3, SPECIAL_CD = 3, MIN_X = -20, MAX_X = 20, MAX_SEP = 14;
 let MODE = null;
 /* ---------------- difficulty: how quick and strong the computer is (chosen on the menu, remembered) ---------------- */
 const DIFFS = {   // react = seconds before it can guard your attack, wind = warning pose before its hits, aoe/warn = time to leave a marked spot
@@ -256,7 +256,7 @@ const foeId = () => MODE === 'duel' ? CHAR : FOE;
 const foeName = () => foeId() === 'ravan' ? (CHAR === 'ravan' ? 'ENEMY RAVAN' : 'RAVAN') : NAMES[foeId()];               // the visible opponent                                                  // null = menu, 'fight' or 'train' (training ground: Ravan stands still)
 const maxSep = () => FREE() ? 1e9 : MAX_SEP;
 const FIGHT_HELP = '<b>YUDH — beat every fighter, then the boss RAVAN</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · M sound on/off · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (any time, once the enemy is below half health)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
-const QW_HELP = '<br>Q A giant orb (no block: jump) · W Q laser · W A sky sword · W S burning floor (jump) · Q S arrow';
+const QW_HELP = '<br>Q A giant orb (no block: jump) · W Q laser · W A sky sword · W S burning floor (jump) · Q S arrow<br>Choo and Kaze: short-range versions · all cooldowns 3 s';
 const duelHelp = () => '<b>MIRROR DUEL — you vs a copy of ' + NAMES[CHAR] + '</b><br>Arrows move · hold BACK = block (crossed arms) · A X Z S hits · A+X ranged · Z+S special · D super (any time)<br>The copy fights back: G = it stands still / fights · B = it blocks on/off · 1 = it attacks · 2 = its ranged move<br>H = heal both · R reset · M sound on/off · Esc menu' + (CHAR === 'arjun' ? '<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (any time, once the enemy is below half health)' : '') + '<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
 const TRAIN_HELP = '<b>TRAINING GROUND — Ravan stands still</b><br>Arrows move · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>Ravan moves (practice dodging): 1 sword slash · 2 leg sweep · 3 sword throw · 4 inferno sword · 5 heat vision · 6 fire throw · 7 jump slam · 8 super slam<br>G = Ravan fights back on/off · H = heal both · R reset · M sound on/off · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (any time, once the enemy is below half health)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
 const DMG = { LP: 4, RP: 4, LK: 7, RK: 7, arrow: 15, fireHit: 2, burnTotal: 3, jumpkick: 10, super: 65, dash: 10, tornado: 15, thunder: 15, spin: 12, rain: 20, fireRain: 15, blast: 12, ground: 18, rvFire: 8, slam: 12, sword: 15, sweep: 10, swordthrow: 14, heat: 22, vision: 12, bolt: 18, thunderkick: 14, skythunder: 20, storm: 6, airkick: 8, flykick: 12, fireball: 18, mouthfire: 20, flamekick: 14, orb: 22, laser: 18, skysword: 20, floortick: 5, comboarrow: 15 };   // Arjun's fire arrow = 2 on impact + 3 burn over 5 s = 5 total
@@ -318,7 +318,7 @@ const rv = { x: 2.5, y: 0, hp: 100, max: 100, state: 'idle', t: 3.0, face: -1, m
 const M = { round: 1, pw: 0, rw: 0, time: ROUND_TIME, phase: 'intro', phaseT: 1.6 };
 let moveLabelT = 0;
 /* ---------------- COMBOS: the key sequences are the SAME for every fighter; each fighter plugs in its own effect ---------------- */
-const COMBO_CD = 6, COMBO_GAP = 0.6;
+const COMBO_CD = 3, COMBO_GAP = 0.6;
 const COMBO_SEQ = [ { id: 'orb', seq: ['KeyQ', 'KeyA'] }, { id: 'laser', seq: ['KeyW', 'KeyQ'] }, { id: 'sword', seq: ['KeyW', 'KeyA'] }, { id: 'floor', seq: ['KeyW', 'KeyS'] }, { id: 'arrow', seq: ['KeyQ', 'KeyS'] },
   { id: 'fatal', seq: ['KeyX', 'KeyA', 'KeyZ', 'KeyA', 'KeyA', 'KeyA'] }, { id: 'ground', seq: ['KeyX', 'KeyS', 'KeyA'] }, { id: 'rain', seq: ['KeyA', 'KeyA', 'KeyA'] }, { id: 'fireRain', seq: ['KeyX', 'KeyA'] }, { id: 'blast', seq: ['KeyS', 'KeyA'] }, { id: 'vision', seq: ['KeyA', 'KeyA'] } ];   // longest first
 let cbuf = [];                                                    // input buffer: the last single presses with their time
@@ -345,15 +345,15 @@ const RAVAN_COMBOS = { vision: { name: 'HEAT VISION!', move: 'vision' }, fireRai
 /* Q / W COMBOS: the same five key pairs for every fighter, each one in his own element */
 const ELEM = {
   arjun: { col: 0xffa030, fire: true,  zap: false, snd: 'fire', orb: 'SUN ORB',              laser: 'SUN LASER',       sword: 'SKY SWORD OF FIRE',  floor: 'BURNING FLOOR',   arrow: 'FIRE ARROW THROW' },
-  choo:  { col: 0xffd24a, fire: false, zap: false, snd: 'chi',  orb: 'DRAGON CHI ORB',       laser: 'CHI LASER',       sword: 'SKY SWORD OF CHI',   floor: 'CHI FLOOR',       arrow: 'CHI ARROW' },
-  kaze:  { col: 0x7ae0ff, fire: false, zap: false, snd: 'wind', orb: 'GIANT WIND SPHERE',    laser: 'WIND LASER',      sword: 'SKY SWORD OF WIND',  floor: 'CYCLONE FLOOR',   arrow: 'WIND ARROW' },
+  choo:  { col: 0xffd24a, fire: false, zap: false, snd: 'chi',  short: true, orb: 'DRAGON CHI BURST',   laser: 'CHI PALM BEAM',   sword: 'FLYING CHI BLADE',   floor: 'CHI QUAKE RING',   arrow: 'CHI DART' },
+  kaze:  { col: 0x7ae0ff, fire: false, zap: false, snd: 'wind', short: true, orb: 'WIND SPHERE BURST',  laser: 'WIND BLADE BEAM', sword: 'AERIAL WIND BLADE',  floor: 'CYCLONE RING',     arrow: 'WIND KUNAI' },
   ravan: { col: 0xff2410, fire: true,  zap: false, snd: 'fire', orb: 'DEMON ORB',            laser: 'DEMON LASER',     sword: 'SKY SWORD OF DOOM',  floor: 'DEMON FLOOR',     arrow: 'DEMON ARROW' },
   indra: { col: 0xffc800, fire: false, zap: true,  snd: 'zap',  orb: 'THUNDER ORB',          laser: 'THUNDER LASER',   sword: 'SKY SWORD OF STORM', floor: 'LIGHTNING FLOOR', arrow: 'THUNDER ARROW' },
   asur:  { col: 0xff6a14, fire: true,  zap: false, snd: 'fire', orb: 'GIANT MOUTH FIREBALL', laser: 'FIRE LASER',      sword: 'SKY SWORD OF FIRE',  floor: 'LAVA FLOOR',      arrow: 'FIRE ARROW THROW' } };
 function qwCombos(c){ const E = ELEM[c]; return {
-  orb:   { name: E.orb + '!  (no block: jump it)', def: { clip: 'Idle_Loop', orb: true, mouth: c === 'asur', charge: true, aura: E.col, hitAt: 0.55, dur: 0.95, fn: () => qwOrb() } },
+  orb:   { name: E.orb + (E.short ? '!  (short range, no block)' : '!  (no block: jump it)'), def: { clip: 'Idle_Loop', orb: true, mouth: c === 'asur', charge: true, aura: E.col, hitAt: 0.55, dur: 0.95, fn: () => qwOrb() } },
   laser: { name: E.laser + '!', def: { clip: 'Spell_Simple_Shoot', speed: 0.9, charge: true, aura: E.col, hitAt: 0.40, dur: 0.90, fn: () => qwLaser() } },
-  sword: { name: E.sword + '!', def: { clip: 'OverhandThrow', speed: 1.1, leap: true, hitAt: 0.40, dur: 1.0, fn: () => qwSword() } },
+  sword: { name: E.sword + '!', def: { clip: 'OverhandThrow', speed: 1.1, leap: true, dash: !!E.short, hitAt: 0.40, dur: 1.0, fn: () => qwSword() } },
   floor: { name: E.floor + '!  (jump!)', def: { clip: 'NinjaJump_Land', speed: 1.2, hitAt: 0.22, dur: 0.6, fn: () => qwFloor() } },
   arrow: { name: E.arrow + '!', def: { clip: 'OverhandThrow', speed: 2.0, hitAt: 0.22, dur: 0.55, fn: () => qwArrow() } } }; }
 const combosFor = () => ({ ...({ arjun: ARJUN_COMBOS, choo: CHOO_COMBOS, kaze: KAZE_COMBOS, ravan: RAVAN_COMBOS, indra: INDRA_COMBOS, asur: ASUR_COMBOS })[CHAR], ...qwCombos(CHAR) });
@@ -578,7 +578,8 @@ function startCombo(c){ snd('whooshBig');
   const f = combosFor()[c.id]; cbuf.forEach(e => { e.used = true; }); p1.comboCd = COMBO_CD; moveLabel(f.name); p1.atk = null; p1.kickU = -1;
   if (f.move) { startRavanMove(f.move); return; }
   if (f.shoot) { p1.state = 'shoot'; p1.shoot = { fire: f.fire, rain: true, t: 0, released: false }; P.play('Idle_Loop'); }
-  else { p1.state = 'attack'; p1.atk = { def: f.def, t: 0, done: false }; p1.kickSide = f.def.kick || 'l'; if (f.def.leap) { p1.vy = 7.0; snd('jump'); } P.play(f.def.clip, { loop: false, speed: f.def.speed || 1, fade: 0.06, force: true }); }
+  else { p1.state = 'attack'; p1.atk = { def: f.def, t: 0, done: false }; p1.kickSide = f.def.kick || 'l'; if (f.def.leap) { p1.vy = 7.0; snd('jump'); }
+    if (f.def.dash) { const step = clamp(Math.abs(rv.x - p1.x) - 1.5, 0, 2.6); for (let k = 1; k <= 8; k++) later(0.045 * k, () => { if (p1.state === 'attack') p1.x += p1.face * step / 8; }); }   /* the short-range leap carries him in */ P.play(f.def.clip, { loop: false, speed: f.def.speed || 1, fade: 0.06, force: true }); }
 }
 /* ---- CHOO's moves ---- */
 function boltFx(x){
@@ -1033,7 +1034,7 @@ slamMark.rotation.x = -Math.PI / 2; slamMark.visible = false; scene.add(slamMark
 function ravanHand(){ const a = R.bones.hand_r.getWorldPosition(V()), b = R.bones.hand_l.getWorldPosition(V()); return a.y > b.y ? a : b; }
 function startMove(name){
   rv.state = 'move'; rv.last = name; rv.mv = { name, t: 0, fired: false, x0: rv.x, tx: clamp(p1.x + (Math.sign(rv.x - p1.x) || 1) * 1.5, MIN_X + 0.6, MAX_X) };
-  if (name === 'fire') { moveLabel('FIRE THROW — jump, crouch or block!'); rv.fireCd = RANGED_CD; }
+  if (name === 'fire') { moveLabel('FIRE THROW — jump, crouch or block!'); rv.fireCd = 5; }
   if (RMOVES[name]) { rv.mv.rm = newMove(name, AD_B); moveLabel('RAVAN: ' + RMOVES[name].name + '  ' + RMOVES[name].hint); if (name === 'heat') rv.heatCd = 10; }
   if (name === 'slam') { moveLabel('JUMP SLAM — keep out of the zone!'); R.play('NinjaJump_Start', { loop: false, speed: 1.3 }); }
   if (name === 'super') { snd('charge'); rv.superUsed = true; moveLabel('RAVAN SUPER — GET AWAY!'); flashScreen(); R.play('NinjaJump_Start', { loop: false, speed: 0.9 }); }
@@ -1289,10 +1290,32 @@ const ORB = [[0.42, 0.95], [0.72, 0.38]].map(([r, o]) => { const m = new THREE.M
 function follow(f, upd, end){ const e = { t: 0, dur: 60, upd: () => { if (shots.includes(f)) upd(); else e.dur = 0; }, end }; fx.push(e); }   // keeps an effect on a flying shot
 const SKY = makeSword(); SKY.group.visible = false; scene.add(SKY.group);
 const floorGlow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), addMat(0xff6a14, 0)); floorGlow.rotation.x = -Math.PI / 2; floorGlow.visible = false; scene.add(floorGlow);
+const floorRing = new THREE.Mesh(new THREE.CircleGeometry(0.5, 56), floorGlow.material); floorRing.rotation.x = -Math.PI / 2; floorRing.visible = false; scene.add(floorRing);   // round patch for the short-range floor
 function sparks(E, x, y, n, spread){ if (E.fire) flames(x, y, n, spread, 1.2); else for (let i = 0; i < n; i++) burst(x + (Math.random() - 0.5) * spread, y + (Math.random() - 0.5) * spread, 1, E.col, 1.6, 0.4, 0.2, 0.6);
   if (E.zap) for (let i = 0; i < 3; i++) zap(V(x, y, 0.3), V(x + (Math.random() - 0.5) * spread * 3, y + (Math.random() - 0.5) * spread * 3, 0.3), E.col, 0.07, 0.16, 0.4); }
+const SHORT = 3.2;                                    // reach of the short-range versions (Choo and Kaze)
+const inReach = r => fighting() && (rv.x - p1.x) * p1.face > -0.4 && Math.abs(rv.x - p1.x) <= r;
+/* Q A short: a huge burst of power right in front of him; blocking is useless, jump or back away */
+function qwBurst(){
+  const E = ELEM[CHAR], face = p1.face, x = p1.x + face * 1.6; let done = false;
+  snd(E.snd); snd('explosion'); flashLight(x, 1.1, E.col, 14, 0.4); shake = Math.max(shake, 0.45);
+  ORB[0].material.color.setHex(0xffe6b0).lerp(new THREE.Color(E.col), 0.45); ORB[1].material.color.setHex(E.col);
+  fx.push({ t: 0, dur: 0.4, upd: u => { const k = Math.min(1, u * 2.2), size = (0.6 + 1.4 * k) * (u > 0.75 ? (1 - u) * 4 : 1); ORB.forEach(m => { m.visible = true; m.position.set(x, 1.1, 0.1); m.scale.setScalar(Math.max(0.01, size)); }); sparks(E, x, 1.1, 4, 2.0);
+      if (!done && u > 0.05 && u < 0.65 && inReach(SHORT) && rv.y < 1.25) { done = true; hurtRavan(DMG.orb, 'orb'); sparks(E, rv.x, 1.2, 22, 0.9); } },
+    end: () => { ORB.forEach(m => { m.visible = false; }); } });
+}
+/* W A short: he leaps in and cuts down with the blade */
+function qwBlade(){
+  const E = ELEM[CHAR], face = p1.face; let done = false;
+  snd('sword'); snd(E.snd); SKY.steel.emissive.setHex(E.col); SKY.steel.emissiveIntensity = 0.9;
+  fx.push({ t: 0, dur: 0.32, upd: u => { const a = 0.1 + 2.5 * Math.min(1, u * 1.5), x = p1.x + face * 0.65, y = p1.y + 1.15; SKY.group.visible = true; SKY.group.position.set(x, y, 0.35); SKY.group.rotation.set(0, 0, -face * a);
+      sparks(E, x + face * Math.sin(a) * 1.5, y + Math.cos(a) * 1.5, 3, 0.3);
+      if (!done && u > 0.2 && u < 0.8 && inReach(SHORT) && rv.y < 2.0) { done = true; hurtRavan(DMG.skysword, 'skysword'); sparks(E, rv.x, 1.2, 26, 0.9); flashLight(rv.x, 1.2, E.col, 12, 0.3); shake = Math.max(shake, 0.4); } },
+    end: () => { SKY.group.visible = false; } });
+}
 /* Q A - GIANT ORB: flies the whole arena; blocking is useless, only a jump saves */
 function qwOrb(){
+  if (ELEM[CHAR].short) return qwBurst();
   const E = ELEM[CHAR], y = 1.1, x = p1.x + p1.face * 0.9; if (CHAR === 'asur') { const m = mouthPos(P); flames(m.x + p1.face * 0.3, m.y, 26, 0.35, 0.5); }   // it bursts out of Asur's mouth
   const f = spawnShot('p', x, y, p1.face * 13, E.col, { kind: 'ball', range: 40, r: 0.4, big: 2.1, tag: 'orb', dmg: DMG.orb, ty: 0.85, drop: 0.1 }); f.flame = E.fire ? 2.0 : 0;
   snd(E.snd); snd('whooshBig'); sparks(E, x, y, 24, 0.6); flashLight(x, y, E.col, 12, 0.3); shake = Math.max(shake, 0.35);
@@ -1301,16 +1324,17 @@ function qwOrb(){
 }
 /* W Q - LASER: a beam across the arena */
 function qwLaser(){
-  const E = ELEM[CHAR], face = p1.face, y = 1.2, x0 = p1.x + face * 0.75, len = 34; let done = false;
+  const E = ELEM[CHAR], face = p1.face, y = 1.2, x0 = p1.x + face * 0.75, len = E.short ? SHORT - 0.5 : 34; let done = false;
   snd('zap', 1, 0); snd('whooshBig'); snd(E.snd); LASER[0].material.color.setHex(E.col); flashLight(x0, y, E.col, 12, 0.35);
   fx.push({ t: 0, dur: 0.5, upd: u => { const w = Math.max(0.02, Math.sin(Math.PI * Math.min(1, u * 1.1))) * (0.9 + 0.2 * Math.random());
-      LASER.forEach((m, i) => { m.visible = true; m.position.set(x0 + face * len / 2, y, 0.2); const r = (i ? 0.055 : 0.19) * w; m.scale.set(r, len, r); });
-      sparks(E, x0, y, 2, 0.35); if (Math.random() < 0.7) burst(x0 + face * Math.random() * 12, y, 1, E.col, 1, 0.3, 0.22, 0.3); shake = Math.max(shake, 0.12 * w);
-      if (!done && u > 0.04 && u < 0.7 && fighting() && (rv.x - x0) * face > -0.6 && rv.y < y + 0.1) { done = true; hurtRavan(DMG.laser, 'laser'); sparks(E, rv.x, y, 18, 0.7); flashLight(rv.x, y, E.col, 12, 0.25); } },
+      LASER.forEach((m, i) => { m.visible = true; m.position.set(x0 + face * len / 2, y, 0.2); const r = (i ? 0.055 : 0.19) * (E.short ? 1.7 : 1) * w; m.scale.set(r, len, r); });
+      sparks(E, x0, y, 2, 0.35); if (Math.random() < 0.7) burst(x0 + face * Math.random() * Math.min(12, len), y, 1, E.col, 1, 0.3, 0.22, 0.3); shake = Math.max(shake, 0.12 * w);
+      if (!done && u > 0.04 && u < 0.7 && fighting() && (rv.x - x0) * face > -0.6 && rv.y < y + 0.1 && (!E.short || Math.abs(rv.x - p1.x) <= SHORT)) { done = true; hurtRavan(DMG.laser, 'laser'); sparks(E, rv.x, y, 18, 0.7); flashLight(rv.x, y, E.col, 12, 0.25); } },
     end: () => { LASER.forEach(m => { m.visible = false; }); } });
 }
 /* W A - SKY SWORD: he leaps and hurls a burning sword down at the opponent */
 function qwSword(){
+  if (ELEM[CHAR].short) return qwBlade();
   const E = ELEM[CHAR], face = p1.face, sx = p1.x + face * 0.5, sy = p1.y + 1.5, tx = rv.x, ty = 1.0 * OPP().root.scale.x, L = Math.hypot(tx - sx, ty - sy) || 1, dx = (tx - sx) / L, dy = (ty - sy) / L, speed = 24; let done = false, landed = false;
   snd('sword'); snd(E.snd); SKY.steel.emissive.setHex(E.col); SKY.steel.emissiveIntensity = 0.9;
   fx.push({ t: 0, dur: 1.5, upd: u => { const t = u * 1.5; let x = sx + dx * speed * t, y = sy + dy * speed * t;
@@ -1322,17 +1346,17 @@ function qwSword(){
 }
 /* W S - BURNING FLOOR: after a short warning the whole floor burns for 1 second; be in the air or block */
 function qwFloor(){
-  const E = ELEM[CHAR], WARN = 0.45; let tick = 0;
+  const E = ELEM[CHAR], G = E.short ? floorRing : floorGlow, WARN = 0.45, cx = p1.x, near = () => !E.short || Math.abs(rv.x - cx) <= SHORT; let tick = 0;
   floorHeat = { jumpAt: gt + 0.33, judged: false }; floorGlow.material.color.setHex(E.col); snd('warn', 0.8); snd(E.snd);
-  fx.push({ t: 0, dur: WARN + 1.0, upd: u => { const t = u * (WARN + 1.0), hot = t >= WARN; floorGlow.visible = true; floorGlow.position.set(cam.x, 0.04, 0); floorGlow.scale.set(60, 3.4, 1);
+  fx.push({ t: 0, dur: WARN + 1.0, upd: u => { const t = u * (WARN + 1.0), hot = t >= WARN; G.visible = true; G.position.set(E.short ? cx : cam.x, 0.04, 0); G.scale.set(E.short ? SHORT * 2 : 60, 3.4, 1);
       floorGlow.material.opacity = hot ? 0.42 + 0.12 * Math.random() : 0.10 + 0.10 * Math.abs(Math.sin(t * 22));
-      const n = hot ? 7 : 1; for (let i = 0; i < n; i++) { const x = cam.x + (Math.random() - 0.5) * 16; if (E.zap && hot && i < 2) zap(V(x, 0.06, 0.4), V(x + (Math.random() - 0.5) * 2.4, 0.1 + Math.random() * 0.8, 0.4), E.col, 0.08, 0.16, 0.4); burst(x, 0.08, 1, E.col, 0.5, 0.45, hot ? 0.34 : 0.18, hot ? 2.6 : 1.0); }
-      while (hot && tick < 4 && t >= WARN + tick * 0.25) { if (tick === 0) { snd('explosion'); shake = Math.max(shake, 0.4); } else snd(E.snd, 0.6, 0.1); if (fighting() && rv.y < 0.15) hurtRavan(DMG.floortick, 'floor'); tick++; } },
-    end: () => { floorGlow.visible = false; floorHeat = null; } });
+      const n = hot ? 7 : 1; for (let i = 0; i < n; i++) { const x = E.short ? cx + (Math.random() - 0.5) * SHORT * 2 : cam.x + (Math.random() - 0.5) * 16; if (E.zap && hot && i < 2) zap(V(x, 0.06, 0.4), V(x + (Math.random() - 0.5) * 2.4, 0.1 + Math.random() * 0.8, 0.4), E.col, 0.08, 0.16, 0.4); burst(x, 0.08, 1, E.col, 0.5, 0.45, hot ? 0.34 : 0.18, hot ? 2.6 : 1.0); }
+      while (hot && tick < 4 && t >= WARN + tick * 0.25) { if (tick === 0) { snd('explosion'); shake = Math.max(shake, 0.4); } else snd(E.snd, 0.6, 0.1); if (fighting() && rv.y < 0.15 && near()) hurtRavan(DMG.floortick, 'floor'); tick++; } },
+    end: () => { G.visible = false; floorHeat = null; } });
 }
 /* Q S - ARROW THROW: a fast burning arrow */
 function qwArrow(){
-  const E = ELEM[CHAR], x = p1.x + p1.face * 0.9, f = spawnShot('p', x, 1.25, p1.face * 24, E.col, { kind: 'arrow', fire: true, range: 40, tag: 'comboarrow', dmg: DMG.comboarrow });
+  const E = ELEM[CHAR], x = p1.x + p1.face * 0.9, f = spawnShot('p', x, 1.25, p1.face * 24, E.col, { kind: 'arrow', fire: true, range: E.short ? 2.3 : 40, tag: 'comboarrow', dmg: DMG.comboarrow });
   f.s.material.color.setHex(E.col); f.s.scale.setScalar(1.5); f.sc = 2.1; f.mesh.scale.setScalar(2.1); f.flame = E.fire ? 0.9 : 0; follow(f, () => sparks(E, f.x - f.dir * 1.3, f.y, 2, 0.2), () => {}); snd(E.snd); snd('whooshBig'); sparks(E, x, 1.25, 14, 0.4); shake = Math.max(shake, 0.15);
 }
 
