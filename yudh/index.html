@@ -100,7 +100,7 @@
   <div id="dim"></div><div id="cine"><i class="cb t"></i><i class="cb b"></i><div id="vig"></div><b id="fatal">FATALITY</b></div><div id="move"></div><div id="msg"></div><div id="flash"></div><div id="lasthit"></div>
   <div id="help"><b>YUDH — Arjun vs Ravan</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · T skip to last 30 s (test)</div>
 </div>
-<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><button id="bDiff">⚙  DIFFICULTY: NORMAL  (press 4)</button><button id="bSound">🔊  SOUND: ON  (press M)</button><small>Fight: beat the other fighters one by one (best of 3, 90 s rounds), then the final boss RAVAN.<br>Mirror duel: a copy of your fighter fights you (press G to make it stand still).<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v18 - sound and hit feel  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
+<div id="menu"><div class="box"><h1>YUDH</h1><p>Part 1 — Arjun vs Ravan</p><button id="bFight">⚔  FIGHT  (press 1)</button><button id="bTrain">🎯  TRAINING GROUND  (press 2)</button><button id="bDuel">🏹  MIRROR DUEL — you vs the same fighter  (press 3)</button><button id="bDiff">⚙  DIFFICULTY: NORMAL  (press 4)</button><button id="bSound">🔊  SOUND: ON  (press M)</button><small>Fight: beat the other fighters one by one (best of 3, 90 s rounds), then the final boss RAVAN.<br>Mirror duel: a copy of your fighter fights you (press G to make it stand still).<br>You pick your fighter after choosing the mode.<br>Training: Ravan stands still — practice every move, use your super any time.<br>Press Esc any time to come back here.</small><small id="ver" style="opacity:.6;margin-top:6px">build: v19 - Asur, the fire warrior  (if you do not see the fighter select: press Ctrl+F5)</small></div></div>
 <div id="select"><div class="top">SELECT YOUR FIGHTER</div><div class="info"><b id="selName">ARJUN</b><em id="selTag"></em><span id="selInfo"></span></div><div><div class="cards" id="cards"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bGo">CONFIRM</button></div></div></div>
 <div id="versus"><div class="vtop" id="vsStage"></div><div class="vrow"><div class="vf"><img id="vsA" alt=""><b id="vsAn"></b></div><i>VS</i><div class="vf"><img id="vsB" alt=""><b id="vsBn"></b></div></div><div id="vsLadder"></div><div class="hint">Enter = fight now · Esc = menu</div></div>
 <div id="stage"><div class="top">SELECT STAGE</div><div class="prev"><canvas id="stPrev" width="640" height="360"></canvas><b id="stName">RANDOM</b></div><div id="stGrid"></div><div class="hint">← → choose · Enter = confirm · Esc = back<button id="bStGo">CONFIRM</button></div></div>
@@ -114,6 +114,7 @@ import { dressChoo } from './lib/choo.js';
 import { dressKaze } from './lib/kaze.js';
 import { makeSword } from './lib/sword.js';
 import { dressIndra } from './lib/indra.js';
+import { dressAsur } from './lib/asur.js';
 import { createSfx } from './lib/sfx.js';
 const sfx = createSfx(), snd = (name, vol, gap) => sfx.play(name, vol, gap);
 
@@ -154,13 +155,14 @@ async function makeFighter({ scale, skin, eyeGlow }){
   root.scale.setScalar(scale); scene.add(root);
   root.traverse(o => { if (!o.isMesh) return; o.frustumCulled = false;
     (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
-      if (m.name === 'MI_Superhero_Male' && (skin === 'light' || skin === 'arjun' || skin === 'choo' || skin === 'kaze' || skin === 'indra')) { const t = texLoader.load('./assets/characters/T_Superhero_Male_Light.png'); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; m.map = t; if (skin === 'arjun') m.color = new THREE.Color(0xc7a88f); if (skin === 'choo') m.color = new THREE.Color(0xf6e2c8); if (skin === 'kaze') m.color = new THREE.Color(0xf0d4b2); if (skin === 'indra') { m.color = new THREE.Color(0xffffff); m.emissive = new THREE.Color(0x2a1c12); } m.needsUpdate = true; }
+      if (m.name === 'MI_Superhero_Male' && (skin === 'light' || skin === 'arjun' || skin === 'choo' || skin === 'kaze' || skin === 'indra' || skin === 'asur')) { const t = texLoader.load('./assets/characters/T_Superhero_Male_Light.png'); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; m.map = t; if (skin === 'arjun') m.color = new THREE.Color(0xc7a88f); if (skin === 'choo') m.color = new THREE.Color(0xf6e2c8); if (skin === 'kaze') m.color = new THREE.Color(0xf0d4b2); if (skin === 'indra') { m.color = new THREE.Color(0xffffff); m.emissive = new THREE.Color(0x2a1c12); } if (skin === 'asur') { m.color = new THREE.Color(0xffefe2); m.emissive = new THREE.Color(0x24140c); } m.needsUpdate = true; }
       if (m.name === 'MI_Eyes' && eyeGlow) { m.color = new THREE.Color(0xff3020); m.emissive = new THREE.Color(0xff2010); m.emissiveIntensity = 1.4; } }); });
   if (skin === 'ravan') { const body = findBody(root); paintRavanTexture(body, { pants: [96, 60, 34], skin: [0.30, 0.30, 0.34] }); addPants(body, { color: 0x45301f, hip: 0.030, thigh: 0.034, calf: 0.050 }); addCurlyHair(root, body, { strands: 230, toShoulder: true, seed: 11 }); }
   if (skin === 'arjun') dressArjun(root, findBody(root), { upper: false });   // bare upper body; bow + arrows only appear when he uses them
   if (skin === 'choo') dressChoo(root, findBody(root));
   if (skin === 'kaze') dressKaze(root, findBody(root));
   if (skin === 'indra') dressIndra(root, findBody(root));
+  if (skin === 'asur') dressAsur(root, findBody(root));
   const mixer = new THREE.AnimationMixer(root), bones = {}; root.traverse(o => { if (o.isBone) bones[o.name] = o; });
   const f = { root, mixer, bones, skin, cur: null, curName: '', shadow: blob() };
   f.eyes = []; root.traverse(o => { if (o.isSkinnedMesh && o.name === 'Eyes') f.eyes.push(o); }); root.updateMatrixWorld(true);
@@ -172,7 +174,7 @@ async function makeFighter({ scale, skin, eyeGlow }){
   return f;
 }
 const PA = await makeFighter({ scale: 1.0, skin: 'arjun', eyeGlow: false });
-let P = PA, PC = null, C2 = null, PK = null, K2 = null, PR = null, R2 = null, PD = null, D2 = null;                                  // P = the fighter you play (Arjun or Choo); Choo is loaded the first time you pick him
+let P = PA, PC = null, C2 = null, PK = null, K2 = null, PR = null, R2 = null, PS, S2, PD = null, D2 = null;                                  // P = the fighter you play (Arjun or Choo); Choo is loaded the first time you pick him
 const R = await makeFighter({ scale: 1.65, skin: 'ravan', eyeGlow: true });
 const A2a = await makeFighter({ scale: 1.0, skin: 'arjun', eyeGlow: false }); A2a.root.visible = false; A2a.shadow.visible = false;   // mirror opponent in duel mode
 let A2 = A2a;
@@ -256,7 +258,7 @@ const maxSep = () => FREE() ? 1e9 : MAX_SEP;
 const FIGHT_HELP = '<b>YUDH — beat every fighter, then the boss RAVAN</b><br>Arrows: ← → move · ↑ jump · ↓ crouch · hold BACK = block<br>A left punch · X right punch · Z left kick · S right kick · D = SUPER fire arrow (last 30 s)<br>A+X long-range arrow · Z+S fire arrow (burns 5 s) · R restart · M sound on/off · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (any time, once the enemy is below half health)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
 const duelHelp = () => '<b>MIRROR DUEL — you vs a copy of ' + NAMES[CHAR] + '</b><br>Arrows move · hold BACK = block (crossed arms) · A X Z S hits · A+X ranged · Z+S special · D super (any time)<br>The copy fights back: G = it stands still / fights · B = it blocks on/off · 1 = it attacks · 2 = its ranged move<br>H = heal both · R reset · M sound on/off · Esc menu' + (CHAR === 'arjun' ? '<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (any time, once the enemy is below half health)' : '') + '<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
 const TRAIN_HELP = '<b>TRAINING GROUND — Ravan stands still</b><br>Arrows move · A X Z S hits · A+X arrow · Z+S fire arrow · D super (any time)<br>Ravan moves (practice dodging): 1 sword slash · 2 leg sweep · 3 sword throw · 4 inferno sword · 5 heat vision · 6 fire throw · 7 jump slam · 8 super slam<br>G = Ravan fights back on/off · H = heal both · R reset · M sound on/off · Esc menu<br>COMBOS: A A A arrow rain · X A fire rain · S A fire blast · X S A ground attack · X A Z A A A = FATALITY (any time, once the enemy is below half health)<br>Double-tap FORWARD = running flying kick · Z or S while jumping = air kick';
-const DMG = { LP: 4, RP: 4, LK: 7, RK: 7, arrow: 15, fireHit: 2, burnTotal: 3, jumpkick: 10, super: 65, dash: 10, tornado: 15, thunder: 15, spin: 12, rain: 20, fireRain: 15, blast: 12, ground: 18, rvFire: 8, slam: 12, sword: 15, sweep: 10, swordthrow: 14, heat: 22, vision: 12, bolt: 18, thunderkick: 14, skythunder: 20, storm: 6, airkick: 8, flykick: 12 };   // Arjun's fire arrow = 2 on impact + 3 burn over 5 s = 5 total
+const DMG = { LP: 4, RP: 4, LK: 7, RK: 7, arrow: 15, fireHit: 2, burnTotal: 3, jumpkick: 10, super: 65, dash: 10, tornado: 15, thunder: 15, spin: 12, rain: 20, fireRain: 15, blast: 12, ground: 18, rvFire: 8, slam: 12, sword: 15, sweep: 10, swordthrow: 14, heat: 22, vision: 12, bolt: 18, thunderkick: 14, skythunder: 20, storm: 6, airkick: 8, flykick: 12, fireball: 18, mouthfire: 20, flamekick: 14 };   // Arjun's fire arrow = 2 on impact + 3 burn over 5 s = 5 total
 const BURN_TIME = 5;
 const FIGHTER = { special: 'firearrow' };                       // Arjun: Z+S = fire arrow (other fighters keep the jump kick)
 const ATTACKS = {
@@ -273,6 +275,11 @@ const ATTACKS_CHAR = {
     KeyX: { id: 'RP', clip: 'Punch_Cross', dmg: 5, hitAt: 0.18, dur: 0.54, reach: 2.15, limb: 0.67, speed: 1.7, fxc: 0xffe23a },
     KeyZ: { id: 'LK', kick: 'l', dmg: 8, hitAt: 0.28, dur: 0.54, reach: 2.3, limb: 0.89, fxc: 0xffe23a },
     KeyS: { id: 'RK', kick: 'r', dmg: 8, hitAt: 0.30, dur: 0.58, reach: 2.4, limb: 0.76, fxc: 0xffe23a } },
+  asur: {    // fire warrior: as strong and quick as Indra, every hit burns bright
+    KeyA: { id: 'LP', clip: 'Punch_Jab', dmg: 5, hitAt: 0.14, dur: 0.46, reach: 2.1, limb: 0.76, speed: 1.8, fxc: 0xff6a14 },
+    KeyX: { id: 'RP', clip: 'Punch_Cross', dmg: 5, hitAt: 0.18, dur: 0.54, reach: 2.15, limb: 0.67, speed: 1.7, fxc: 0xff6a14 },
+    KeyZ: { id: 'LK', kick: 'l', dmg: 8, hitAt: 0.28, dur: 0.54, reach: 2.3, limb: 0.89, fxc: 0xff6a14 },
+    KeyS: { id: 'RK', kick: 'r', dmg: 8, hitAt: 0.30, dur: 0.58, reach: 2.4, limb: 0.76, fxc: 0xff6a14 } },
   ravan: {   // demon king: heavy, long reach, hits a little harder
     KeyA: { id: 'LP', clip: 'Punch_Jab', dmg: 5, hitAt: 0.22, dur: 0.60, reach: 2.8, limb: 1.26, speed: 1.3, fxc: 0xff3a1a },
     KeyX: { id: 'RP', clip: 'Punch_Cross', dmg: 5, hitAt: 0.26, dur: 0.70, reach: 2.9, limb: 1.10, speed: 1.2, fxc: 0xff3a1a },
@@ -296,7 +303,8 @@ const contact = (limb, A, B) => Math.max(limb + (bulk(B) ? 0.46 : 0.30), halfW(A
 const stepIn = (d, c, dt, hitAt) => (d > c && d <= c + STEP_IN) ? Math.min(d - c, STEP_IN / hitAt * 1.5 * dt) : 0;
 /* leg style per fighter: lean = how far the body leans back, lift = strike height, reach = how far the foot goes, yaw = body turn (side kick) */
 const KS = {
-  indra: { l: { lean: 0.34, lift: 0.05, reach: 1.1, yaw: 0 }, r: { lean: 0.55, lift: 0.55, reach: 1.3, yaw: 0 } },   // right = chest-high
+  indra: { l: { lean: 0.34, lift: 0.05, reach: 1.1, yaw: 0 }, r: { lean: 0.55, lift: 0.55, reach: 1.3, yaw: 0 } },
+  asur:  { l: { lean: 0.34, lift: 0.05, reach: 1.1, yaw: 0 }, r: { lean: 0.55, lift: 0.55, reach: 1.3, yaw: 0 } },   // right = chest-high
   arjun: { l: { lean: 0.34, lift: 0.0, reach: 1.05, yaw: 0 }, r: { lean: 0.34, lift: 0.25, reach: 1.05, yaw: 0 } },
   choo:  { l: { lean: 0.22, lift: 0.30, reach: 1.15, yaw: 0 }, r: { lean: 0.50, lift: 0.75, reach: 1.20, yaw: -1.25 } },
   kaze:  { l: { lean: -0.15, lift: -0.42, reach: 1.0, yaw: 0 }, r: { lean: 0.30, lift: 0.35, reach: 1.10, yaw: 0 } } };
@@ -315,7 +323,7 @@ let cbuf = [];                                                    // input buffe
 function matchCombo(){ for (const c of COMBO_SEQ) { if (c.id === 'fatal' ? !fatalOk() : !combosFor()[c.id]) continue; const n = c.seq.length; if (cbuf.length < n) continue; const tail = cbuf.slice(-n);
   if (tail.every((e, i) => e.k === c.seq[i]) && tail.every((e, i) => i === 0 || e.t - tail[i - 1].t <= COMBO_GAP) && (c.id === 'fatal' || tail.every(e => !e.used))) return c; } return null; }
 let CHAR = 'arjun';
-const NAMES = { arjun: 'ARJUN', choo: 'CHOO', kaze: 'KAZE', ravan: 'RAVAN', indra: 'INDRA' };
+const NAMES = { arjun: 'ARJUN', choo: 'CHOO', kaze: 'KAZE', ravan: 'RAVAN', indra: 'INDRA', asur: 'ASUR' };
 const timers = [], falls = [];
 function later(sec, fn){ timers.push({ t: sec, fn }); }
 /* CHOO's combos: the SAME keys as Arjun, a different power */
@@ -332,7 +340,9 @@ const KAZE_COMBOS = {
   ground:   { name: 'GROUND BURST!  (block it)', def: { clip: 'NinjaJump_Land', speed: 1.6, hitAt: 0.0, dur: 0.8, fn: () => kazeBurst() } } };
 /* RAVAN's combos: A A heat vision, X A sword throw, X S A inferno sword (no fatality: he is already powerful) */
 const RAVAN_COMBOS = { vision: { name: 'HEAT VISION!', move: 'vision' }, fireRain: { name: 'SWORD THROW!', move: 'throw' }, ground: { name: 'INFERNO SWORD!', move: 'heat' } };
-const combosFor = () => ({ arjun: ARJUN_COMBOS, choo: CHOO_COMBOS, kaze: KAZE_COMBOS, ravan: RAVAN_COMBOS, indra: INDRA_COMBOS })[CHAR];
+const combosFor = () => ({ arjun: ARJUN_COMBOS, choo: CHOO_COMBOS, kaze: KAZE_COMBOS, ravan: RAVAN_COMBOS, indra: INDRA_COMBOS, asur: ASUR_COMBOS })[CHAR];
+/* ASUR's combo: X A spits a huge fireball from his mouth */
+const ASUR_COMBOS = { fireRain: { name: 'MOUTH FIREBALL!  (block it)', def: { clip: 'Idle_Loop', mouth: true, hitAt: 0.34, dur: 0.78, fn: () => asurMouthBall() } } };
 /* INDRA's combo: X A calls thunder from the sky on the opponent, wherever he is */
 const INDRA_COMBOS = { fireRain: { name: 'SKY THUNDER!  (only a block saves you)', def: { clip: 'Spell_Simple_Shoot', speed: 1.8, hitAt: 0.18, dur: 0.7, fn: () => indraSkyThunder() } } };
 const ARJUN_COMBOS = {
@@ -350,7 +360,7 @@ function pips(){ $('pips1').textContent = (M.pw >= 1 ? '●' : '○') + (M.pw >=
 const FEEL = { punch: { snd: 'punch', stop: 0.065, shake: 0.07, size: 0.9 }, kick: { snd: 'kick', stop: 0.095, shake: 0.12, size: 1.3 }, heavy: { snd: 'heavy', stop: 0.13, shake: 0.22, size: 1.8 },
   shot: { snd: 'punch', stop: 0.07, shake: 0.08, size: 1.1 }, block: { snd: 'block', stop: 0.05, shake: 0.05, size: 0.7 }, flurry: { snd: 'punch', stop: 0.035, shake: 0.06, size: 0.8 },
   storm: { snd: null, stop: 0.015, shake: 0.05, size: 0 }, super: { snd: 'explosion', stop: 0.18, shake: 0.5, size: 2.6 } };
-const HEAVY = ['sword', 'sweep', 'heat', 'flykick', 'dash', 'jumpkick', 'thunderkick', 'slam', 'stormEnd', 'ground', 'tornado', 'rain', 'skythunder', 'thunder', 'spin'];
+const HEAVY = ['mouthfire', 'flamekick', 'sword', 'sweep', 'heat', 'flykick', 'dash', 'jumpkick', 'thunderkick', 'slam', 'stormEnd', 'ground', 'tornado', 'rain', 'skythunder', 'thunder', 'spin'];
 const feelType = (kind, id) => kind === 'storm' || kind === 'flurry' || kind === 'super' ? kind : HEAVY.includes(kind) ? 'heavy' : id === 'LP' || id === 'RP' ? 'punch' : id === 'LK' || id === 'RK' || kind === 'airkick' ? 'kick' : 'shot';
 function hitFeel(type, x, scale){
   const F = FEEL[type]; if (F.snd) snd(F.snd); hitStop = Math.max(hitStop, F.stop); shake = Math.max(shake, F.shake);
@@ -360,7 +370,7 @@ function hitFeel(type, x, scale){
   fx.push({ t: 0, dur: 0.17, upd: u => { a.scale.setScalar(F.size * (0.55 + 1.1 * u)); a.material.opacity = 1 - u; b.scale.setScalar(F.size * 0.6 * (1 - 0.6 * u)); b.material.opacity = 1 - u * u; }, end: () => { for (const q of [a, b]) { scene.remove(q); q.material.dispose(); } } });
   burst(x, y, type === 'block' ? 6 : type === 'heavy' || type === 'super' ? 16 : 9, col, 6, 0.28, 0.13, 0.4);
 }
-const KD_P = ['sword', 'sweep', 'heat', 'skythunder', 'thunderkick', 'flykick', 'rain', 'tornado', 'stormEnd', 'dash'];
+const KD_P = ['mouthfire', 'flamekick', 'sword', 'sweep', 'heat', 'skythunder', 'thunderkick', 'flykick', 'rain', 'tornado', 'stormEnd', 'dash'];
 /* damage kinds: fire/ranged = blockable, clap/slam = block cuts, jumpkick + super = UNBLOCKABLE */
 function hurtP1(dmg, kind, srcX){
   if (!fighting() || p1.inv > 0 || p1.state === 'ko') return;
@@ -381,21 +391,22 @@ function hurtP1(dmg, kind, srcX){
 }
 function koRavanCheck(){ if (FREE() && rv.hp <= 0) { rv.hp = 100; $('hp2').style.width = '100%'; moveLabel(foeName() + ' HEALED'); return; }
   if (rv.hp <= 0 && rv.state !== 'ko') { rv.hp = 0; rv.state = 'ko'; rv.mv = null; rv.burn = 0; OPP().play('Death01', { loop: false, force: true }); endRound('ko'); } }
-const HIT_NAMES = { hit: 'PUNCH/KICK', ranged: 'ARROW', fire: 'FIRE ARROW', super: 'SUPER', jumpkick: 'JUMP KICK', rain: 'ARROW RAIN', fireRain: 'FIRE RAIN', blast: 'FIRE BLAST', ground: 'GROUND ATTACK', dash: 'RUN SLAM', thunder: 'HEAVENLY THUNDER', tornado: 'WIND TORNADO', shuriken: 'SHURIKEN', spin: 'SPIN KICK', sword: 'SWORD SLASH', sweep: 'LEG SWEEP', swordthrow: 'SWORD THROW', heat: 'INFERNO SWORD', vision: 'HEAT VISION', bolt: 'THUNDER SHOT', thunderkick: 'THUNDER KICK', skythunder: 'SKY THUNDER', storm: 'STORM OF HEAVEN', stormEnd: 'STORM OF HEAVEN', airkick: 'JUMP KICK', flykick: 'FLYING KICK' };
+const HIT_NAMES = { hit: 'PUNCH/KICK', ranged: 'ARROW', fire: 'FIRE ARROW', super: 'SUPER', jumpkick: 'JUMP KICK', rain: 'ARROW RAIN', fireRain: 'FIRE RAIN', blast: 'FIRE BLAST', ground: 'GROUND ATTACK', dash: 'RUN SLAM', thunder: 'HEAVENLY THUNDER', tornado: 'WIND TORNADO', shuriken: 'SHURIKEN', spin: 'SPIN KICK', sword: 'SWORD SLASH', sweep: 'LEG SWEEP', swordthrow: 'SWORD THROW', heat: 'INFERNO SWORD', vision: 'HEAT VISION', bolt: 'THUNDER SHOT', thunderkick: 'THUNDER KICK', skythunder: 'SKY THUNDER', storm: 'STORM OF HEAVEN', stormEnd: 'STORM OF HEAVEN', airkick: 'JUMP KICK', flykick: 'FLYING KICK', fireball: 'HAND FIREBALL', mouthfire: 'MOUTH FIREBALL', flamekick: 'FLAME KICK' };
+const hitName = k => CHAR === 'asur' && (k === 'storm' || k === 'stormEnd') ? 'INFERNO' : HIT_NAMES[k] || k;
 function hurtRavan(dmg, kind, id){
   if (!fighting() || rv.state === 'ko' || rv.state === 'down' || rv.state === 'fatal') return false;
   const open = kind !== 'super' && kind !== 'jumpkick' && kind !== 'storm' && kind !== 'stormEnd';
   if (MODE === 'fight' && FOE === 'ravan' && open && (rv.guardT > 0 || (rv.state === 'idle' && isSpam() && Math.random() < Math.min(0.9, DF().counter * 1.3)))) { if (!(rv.guardT > 0)) { rv.guardT = 0.25; rv.punish = true; moveLabel('RAVAN READS YOU — mix up your moves!'); } hitFeel('block', rv.x + rv.face * 0.6, OPP().root.scale.x); return false; }
   if (MODE === 'fight' && FOE === 'ravan' && kind === 'hit' && isSpam()) dmg *= 1 - 0.6 * DF().counter;   // Ravan shrugs off a move you keep repeating
   if (humanFoe() && rv.block && rv.state === 'idle' && open && aiFoe() && !rv.manualBlock && Math.random() < DF().counter * (isSpam() ? 1 : 0.4)) { rv.counter = true; }
-  if (humanFoe() && rv.block && kind !== 'super' && kind !== 'jumpkick' && kind !== 'storm' && kind !== 'stormEnd') { $('lasthit').textContent = 'LAST HIT: BLOCKED (' + (HIT_NAMES[kind] || kind) + ')'; rv.shieldPulse = 1; hitFeel('block', rv.x + rv.face * 0.35, OPP().root.scale.x); return false; } if (FREE()) $('lasthit').textContent = 'LAST HIT: ' + (HIT_NAMES[kind] || kind) + '  -' + (+dmg.toFixed(1)) + '%'; rv.hp = Math.max(0, rv.hp - dmg); $('hp2').style.width = (100 * rv.hp / rv.max) + '%'; rv.flash = 0.12; hitFeel(feelType(kind, id), rv.x + rv.face * 0.3, OPP().root.scale.x);
+  if (humanFoe() && rv.block && kind !== 'super' && kind !== 'jumpkick' && kind !== 'storm' && kind !== 'stormEnd') { $('lasthit').textContent = 'LAST HIT: BLOCKED (' + hitName(kind) + ')'; rv.shieldPulse = 1; hitFeel('block', rv.x + rv.face * 0.35, OPP().root.scale.x); return false; } if (FREE()) $('lasthit').textContent = 'LAST HIT: ' + hitName(kind) + '  -' + (+dmg.toFixed(1)) + '%'; rv.hp = Math.max(0, rv.hp - dmg); $('hp2').style.width = (100 * rv.hp / rv.max) + '%'; rv.flash = 0.12; hitFeel(feelType(kind, id), rv.x + rv.face * 0.3, OPP().root.scale.x);
   burst(rv.x - rv.face * 0.3, 1.5, kind === 'super' ? 30 : 10, 0xff7a40, 3, 0.5, 0.16); shake = Math.max(shake, kind === 'super' ? 0.3 : 0.05);
   if (rv.hp <= 0) { koRavanCheck(); return true; }
   if (aiFoe() && rv.state === 'move' && rv.mv && (rv.mv.name === 'super' || (rv.mv.armor && !rv.mv.fired && kind === 'hit'))) return true;   // a rival's super cannot be interrupted
   const away = Math.sign(rv.x - p1.x) || 1, big = humanFoe() ? 1 : 0.55, O = OPP();
-  const KD = kind === 'jumpkick' || kind === 'super' || kind === 'rain' || kind === 'fireRain' || kind === 'ground' || kind === 'dash' || kind === 'thunder' || kind === 'tornado' || kind === 'sword' || kind === 'sweep' || kind === 'heat' || kind === 'thunderkick' || kind === 'skythunder' || kind === 'stormEnd' || kind === 'flykick';
-  const PUSH = { LP: 0.35, RP: 0.35, LK: 0.9, RK: 0.9, ranged: 1.0, fire: 0.4, blast: 1.1, spin: 1.1, airkick: 1.1, swordthrow: 1.2, vision: 0.2, storm: 0, stormEnd: 0 }[id || kind] ?? 0.3;
-  if (KD && (humanFoe() || rv.state === 'idle' || kind === 'flykick' || kind === 'sword' || kind === 'sweep' || kind === 'heat' || kind === 'thunderkick' || kind === 'skythunder')) { knockDown(away); hitStop = Math.max(hitStop, kind === 'flykick' ? 0.11 : 0.06); if (kind === 'flykick') rv.kvx *= 1.7; }                        // heavy hits: he falls down and gets up
+  const KD = kind === 'mouthfire' || kind === 'flamekick' || kind === 'jumpkick' || kind === 'super' || kind === 'rain' || kind === 'fireRain' || kind === 'ground' || kind === 'dash' || kind === 'thunder' || kind === 'tornado' || kind === 'sword' || kind === 'sweep' || kind === 'heat' || kind === 'thunderkick' || kind === 'skythunder' || kind === 'stormEnd' || kind === 'flykick';
+  const PUSH = { LP: 0.35, RP: 0.35, LK: 0.9, RK: 0.9, ranged: 1.0, fire: 0.4, blast: 1.1, spin: 1.1, airkick: 1.1, swordthrow: 1.2, fireball: 1.0, vision: 0.2, storm: 0, stormEnd: 0 }[id || kind] ?? 0.3;
+  if (KD && (humanFoe() || rv.state === 'idle' || kind === 'flykick' || kind === 'sword' || kind === 'sweep' || kind === 'heat' || kind === 'thunderkick' || kind === 'skythunder' || kind === 'flamekick' || kind === 'mouthfire')) { knockDown(away); hitStop = Math.max(hitStop, kind === 'flykick' ? 0.11 : 0.06); if (kind === 'flykick') rv.kvx *= 1.7; }                        // heavy hits: he falls down and gets up
   else if (rv.state === 'idle' || (humanFoe() && rv.state !== 'ko')) { if (aiFoe() && rv.state === 'move') rivalEnd(); rv.kvx = away * PUSH * 6 * big; if (kind !== 'fire') { O.play(PUSH >= 0.8 ? 'Hit_Knockback' : 'Hit_Chest', { loop: false, speed: 0.9, force: true }); O.lockT = gt + 0.45; } }   // light hits: he is pushed back
   return true;
 }
@@ -427,21 +438,21 @@ let cine = null, TS = 1;                                          // cine = runn
 const fatalOk = () => CHAR !== 'ravan' && fighting() && !cine && rv.hp < rv.max / 2 && rv.state !== 'ko' && rv.state !== 'fatal';   // any time, once the opponent has lost MORE than half of its health
 const neckY = () => 1.5 * OPP().root.scale.x;
 function makeHead(kind, S){
-  const arjun = kind === 'arjun' || kind === 'indra', g = new THREE.Group(), skin = new THREE.MeshLambertMaterial({ color: kind === 'indra' ? 0xe8c4a0 : arjun ? 0xa57a5e : kind === 'choo' ? 0xd2ae84 : kind === 'kaze' ? 0xe0bc94 : 0x1c1c22 }), hairM = new THREE.MeshLambertMaterial({ color: kind === 'kaze' ? 0xb23a1c : 0x120c0a });
+  const arjun = kind === 'arjun' || kind === 'indra', g = new THREE.Group(), skin = new THREE.MeshLambertMaterial({ color: kind === 'indra' || kind === 'asur' ? 0xe8c4a0 : arjun ? 0xa57a5e : kind === 'choo' ? 0xd2ae84 : kind === 'kaze' ? 0xe0bc94 : 0x1c1c22 }), hairM = new THREE.MeshLambertMaterial({ color: kind === 'kaze' ? 0xb23a1c : kind === 'asur' ? 0x8a1606 : 0x120c0a });
   const h = new THREE.Mesh(new THREE.SphereGeometry(0.12 * S, 20, 16), skin); h.scale.set(0.9, 1.1, 0.95); g.add(h);
   const hair = new THREE.Mesh(new THREE.SphereGeometry(0.13 * S, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.62), hairM); hair.position.y = 0.02 * S; hair.rotation.x = -0.25; g.add(hair);
-  if (kind === 'choo' || kind === 'kaze') { for (let i = 0; i < 6; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(0.03 * S, 0.1 * S, 5), hairM); sp.position.set((i - 2.5) * 0.03 * S, 0.14 * S, -0.04 * S); sp.rotation.x = -0.4; g.add(sp); } }
+  if (kind === 'choo' || kind === 'kaze' || kind === 'asur') { for (let i = 0; i < 6; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(0.03 * S, 0.1 * S, 5), hairM); sp.position.set((i - 2.5) * 0.03 * S, 0.14 * S, -0.04 * S); sp.rotation.x = -0.4; g.add(sp); } }
   if (arjun) { const knot = new THREE.Mesh(new THREE.SphereGeometry(0.05 * S, 12, 10), hairM); knot.position.set(0, 0.15 * S, -0.03 * S); g.add(knot);
     const band = new THREE.Mesh(new THREE.TorusGeometry(0.118 * S, 0.012 * S, 8, 24), new THREE.MeshLambertMaterial({ color: 0xd4a017 })); band.rotation.x = Math.PI / 2; band.position.y = 0.06 * S; g.add(band); }
   g.visible = false; scene.add(g); return g;
 }
-const HEADS = { arjun: makeHead('arjun', 1), ravan: makeHead('ravan', 1.65), choo: makeHead('choo', 1), kaze: makeHead('kaze', 1), indra: makeHead('indra', 1) };
+const HEADS = { arjun: makeHead('arjun', 1), ravan: makeHead('ravan', 1.65), choo: makeHead('choo', 1), kaze: makeHead('kaze', 1), indra: makeHead('indra', 1), asur: makeHead('asur', 1) };
 const bloodPool = new THREE.Mesh(new THREE.CircleGeometry(1, 32), new THREE.MeshBasicMaterial({ color: 0x5a0508, transparent: true, opacity: 0.9, depthWrite: false }));
 bloodPool.rotation.x = -Math.PI / 2; bloodPool.visible = false; scene.add(bloodPool);
 function startFatal(){ snd('fatal');
   const O = OPP(); cbuf = []; p1.superUsed = true; p1.comboCd = COMBO_CD; p1.atk = null; p1.queued = null; p1.kickU = -1; p1.inv = 99; p1.crouch = false; p1.pend = null; p1.dash = null;
   timers.length = 0; falls.splice(0).forEach(f => { scene.remove(f.o); if (f.o.material) f.o.material.dispose(); });
-  if (CHAR !== 'arjun') { p1.state = 'attack'; p1.kickSide = 'l'; p1.atk = { def: { clip: 'Idle_Loop', aura: CHAR === 'kaze' ? 0x4ad0ff : CHAR === 'indra' ? 0xffffff : 0xffd24a, hitAt: 1.0, dur: 2.2, charge: true, fn: () => (CHAR === 'choo' ? chooChopStrike() : CHAR === 'indra' ? indraFryStrike() : kazeOrbStrike()) }, t: 0, done: false }; P.curName = ''; P.play('Idle_Loop', { force: true }); }
+  if (CHAR !== 'arjun') { p1.state = 'attack'; p1.kickSide = 'l'; p1.atk = { def: { clip: 'Idle_Loop', aura: CHAR === 'kaze' ? 0x4ad0ff : CHAR === 'indra' ? 0xffffff : CHAR === 'asur' ? 0xff5a10 : 0xffd24a, mouth: CHAR === 'asur', hitAt: 1.0, dur: 2.2, charge: true, fn: () => (CHAR === 'choo' ? chooChopStrike() : CHAR === 'indra' ? indraFryStrike() : CHAR === 'asur' ? asurFatalStrike() : kazeOrbStrike()) }, t: 0, done: false }; P.curName = ''; P.play('Idle_Loop', { force: true }); }
   else { p1.state = 'shoot'; p1.shoot = { fire: true, sup: true, fatal: true, t: 0, released: false }; P.curName = ''; P.play('Idle_Loop'); }
   rv.state = 'fatal'; rv.mv = null; rv.kvx = 0; rv.y = 0; rv.burn = 0; slamMark.visible = false; handFlame.material.opacity = 0; handLight.intensity = 0; O.lockT = 0; O.curName = ''; O.play('Idle_Loop', { force: true });
   cine = { t: 0, stage: 'draw', fired: false }; TS = 0.75; $('cine').classList.add('on'); moveLabel('FATALITY!  nothing can stop it'); flashScreen();
@@ -450,7 +461,7 @@ function fatalShot(){
   const tip = p1.nockTip || V(p1.x + p1.face * 0.9, 1.25, 0);
   const f = spawnShot('p', tip.x, tip.y, p1.face * 70, 0xffd060, { kind: 'fatal', range: 1e9, r: 0.35 }); f.y0 = tip.y; if (cine) cine.fired = true; flashScreen(); shake = Math.max(shake, 0.4);
 }
-const SKINS = { ravan: 0x1c1c22, indra: 0xe8c4a0, arjun: 0xa57a5e, choo: 0xd2ae84, kaze: 0xe0bc94 }, CLOTH = { indra: [0xf4f2ea, 0xe4b23c], arjun: [0xe9dfcf, 0xc8501a], choo: [0x14141a, 0xf0c010], kaze: [0x1f7f8c, 0x182a38], ravan: [0x45301f, 0x45301f] };
+const SKINS = { ravan: 0x1c1c22, asur: 0xe8c4a0, indra: 0xe8c4a0, arjun: 0xa57a5e, choo: 0xd2ae84, kaze: 0xe0bc94 }, CLOTH = { asur: [0xb4120c, 0x17100e], indra: [0xf4f2ea, 0xe4b23c], arjun: [0xe9dfcf, 0xc8501a], choo: [0x14141a, 0xf0c010], kaze: [0x1f7f8c, 0x182a38], ravan: [0x45301f, 0x45301f] };
 function mkChunk(x, y, z, size, color, vx, vy, vz, round){
   const g = round ? new THREE.SphereGeometry(size * 0.5, 10, 8) : new THREE.BoxGeometry(size * (0.7 + Math.random() * 0.6), size * (0.7 + Math.random() * 0.6), size * (0.7 + Math.random() * 0.6));
   const o = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color })); o.position.set(x, y, z); o.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6); scene.add(o);
@@ -473,7 +484,7 @@ function kazeOrbStrike(){
 }
 function fatalHit(type = 'head'){
   if (!cine || cine.stage === 'hit') return;
-  snd(type === 'orb' ? 'explosion' : type === 'fry' ? 'thunder' : 'splat'); if (type === 'fry') snd('explosion');
+  snd(type === 'orb' || type === 'burn' ? 'explosion' : type === 'fry' ? 'thunder' : 'splat'); if (type === 'fry') snd('explosion');
   const O = OPP(), away = Math.sign(rv.x - p1.x) || 1, S = O.root.scale.x; cine.stage = 'hit'; cine.t = 0; cine.type = type; TS = 0.15; flashScreen(); shake = 1.0; FAT.S = S;
   rv.hp = 0; $('hp2').style.width = '0%'; if (FREE()) $('lasthit').textContent = 'LAST HIT: FATALITY - instant kill';
   bloodPool.visible = true; bloodPool.position.set(rv.x, 0.03, 0.2); bloodPool.scale.setScalar(0.2); $('fatal').classList.add('show');
@@ -491,6 +502,9 @@ function fatalHit(type = 'head'){
   } else if (type === 'fry') {                                    // white lightning deep-fries him
     FAT.charred = charCapture(O); bloodPool.material.color.setHex(0x050403); O.play('Hit_Head', { loop: false, speed: 0.6, force: true }); O.lockT = gt + 1.7; shake = 1.3;
     burst(rv.x, 1.2 * S, 55, 0xffffff, 7, 0.8, 0.3, 1.4); for (let i = 0; i < 4; i++) zap(V(rv.x + (Math.random() - 0.5) * 3, 9, 0.3), V(rv.x, 0.3 + i * 0.4 * S, 0.3), 0xffffff, 0.34, 0.3, 1.1);
+  } else if (type === 'burn') {                                   // hellfire burns him black
+    FAT.charred = charCapture(O); bloodPool.material.color.setHex(0x050403); O.play('Hit_Head', { loop: false, speed: 0.6, force: true }); O.lockT = gt + 1.7; shake = 1.3;
+    firePillar(rv.x, 1.5 * S); fireStorm(rv.x, 0.55); burst(rv.x, 1.2 * S, 55, 0xff8a1a, 7, 0.8, 0.34, 1.4);
   } else {                                                        // chopsticks: both eyes pop out
     const info = O.eyeInfo, hb = O.bones.Head; O.eyes.forEach(e => { e.visible = false; }); FAT.eyesOf = O; FAT.sticks = cine.sticks || [];
     if (info) for (const side of [info.left, info.right]) {
@@ -518,7 +532,7 @@ function resetFatal(){
 }
 function updateCine(rdt){
   if (!cine) return; cine.t += rdt; const O = OPP();
-  if (cine.stage === 'draw') { if (cine.fired && !shots.some(x => x.kind === 'fatal')) fatalHit(); else if (cine.t > 6) fatalHit(CHAR === 'choo' ? 'chop' : CHAR === 'kaze' ? 'orb' : CHAR === 'indra' ? 'fry' : 'head'); return; }
+  if (cine.stage === 'draw') { if (cine.fired && !shots.some(x => x.kind === 'fatal')) fatalHit(); else if (cine.t > 6) fatalHit(CHAR === 'choo' ? 'chop' : CHAR === 'kaze' ? 'orb' : CHAR === 'indra' ? 'fry' : CHAR === 'asur' ? 'burn' : 'head'); return; }
   const T = cine.type;
   if (T === 'head' && cine.t < 2.2) { const np = O.bones.neck_01.getWorldPosition(V()); burst(np.x, np.y, 3, 0xc00a12, 3.2, 0.8, 0.14, 1.6); }
   if (T === 'chop' && cine.t < 2.4 && O.eyeInfo) for (const side of [O.eyeInfo.left, O.eyeInfo.right]) { const w = O.bones.Head.localToWorld(side.clone()); burst(w.x, w.y, 2, 0xc00a12, 2.5, 0.6, 0.14, 1.2); }
@@ -528,9 +542,15 @@ function updateCine(rdt){
     charApply(FAT.charred, clamp((cine.t - 0.2) / 1.3, 0, 1) * 0.995, hot && cine.t < 1.5 && Math.random() < 0.3);
     if (Math.random() < 0.55) smoke(rv.x + (Math.random() - 0.5) * 0.7, 0.25 + Math.random() * (cine.fell ? 0.4 : 1.5) * FAT.S);
   }
+  if (T === 'burn') {
+    const hot = cine.t < 1.8;
+    if (hot) { flames(rv.x, 0.3 + Math.random() * 1.5 * FAT.S, 4, 0.5 * FAT.S, 2.0); cine.zapAcc = (cine.zapAcc || 0) + rdt; if (cine.zapAcc > 0.35) { cine.zapAcc = 0; firePillar(rv.x + (Math.random() - 0.5) * 0.5, 0.9 * FAT.S); } }
+    charApply(FAT.charred, clamp((cine.t - 0.2) / 1.3, 0, 1) * 0.995, false);
+    if (Math.random() < 0.55) smoke(rv.x + (Math.random() - 0.5) * 0.7, 0.25 + Math.random() * (cine.fell ? 0.4 : 1.5) * FAT.S);
+  }
   TS = cine.t < 1.0 ? 0.15 : TS + (1 - TS) * Math.min(1, rdt * 5);
   bloodPool.scale.setScalar(Math.min((T === 'orb' ? 1.8 : 1.3) * FAT.S, 0.2 + cine.t * 0.5)); bloodPool.position.x = rv.x;
-  if (!cine.fell && ((T === 'head' && cine.t >= 0.9) || (T === 'chop' && cine.t >= 1.4) || (T === 'fry' && cine.t >= 1.7))) { cine.fell = true; O.play('Death01', { loop: false, speed: 1.3, force: true }); }
+  if (!cine.fell && ((T === 'head' && cine.t >= 0.9) || (T === 'chop' && cine.t >= 1.4) || (T === 'fry' && cine.t >= 1.7) || (T === 'burn' && cine.t >= 1.8))) { cine.fell = true; O.play('Death01', { loop: false, speed: 1.3, force: true }); }
   if (!cine.ended && cine.t >= 2.3 && !FREE()) { cine.ended = true; rv.state = 'ko'; endRound('ko'); }
   if (cine.t >= 3.6) {
     if (FREE()) { resetFatal(); rv.hp = 100; $('hp2').style.width = '100%'; if (T === 'orb') { rv.state = 'idle'; rv.t = 0.6; O.curName = ''; O.play('Idle_Loop', { force: true }); } else { rv.state = 'down'; rv.down = { t: 0, up: false }; rv.fall = 0.5; } O.lockT = 0; p1.inv = 0; p1.state = 'idle'; p1.shoot = null; p1.atk = null; }
@@ -701,19 +721,20 @@ function updateP1(dt){
     if (!act && p1.buf && gt - p1.buf.t <= BUFFER) { act = p1.buf.a; comboHit = p1.buf.c && (p1.buf.c.id === 'fatal' ? false : p1.comboCd <= 0) ? p1.buf.c : null; }
     p1.buf = null;
     if (act && p1.state === 'idle') {
-      if (act.chord === 'KeyAKeyX') { if (p1.rangedCd <= 0 && grounded) { noteMove('ranged'); if (CHAR === 'choo') startChiWave(); else if (CHAR === 'kaze') startShuriken(); else if (CHAR === 'ravan') startRavanMove('slash'); else if (CHAR === 'indra') startIndraBolt(); else startShoot(false); } }
+      if (act.chord === 'KeyAKeyX') { if (p1.rangedCd <= 0 && grounded) { noteMove('ranged'); if (CHAR === 'choo') startChiWave(); else if (CHAR === 'kaze') startShuriken(); else if (CHAR === 'ravan') startRavanMove('slash'); else if (CHAR === 'indra') startIndraBolt(); else if (CHAR === 'asur') startAsurBall(); else startShoot(false); } }
       else if (act.chord === 'KeySKeyZ') {
         if (!grounded) startAirKick('KeyS');
         else if (p1.specialCd <= 0) { noteMove('special');
           if (CHAR === 'arjun') startShoot(true);
           else if (CHAR === 'ravan') startRavanMove('sweep');
           else if (CHAR === 'indra') startIndraKick();
+          else if (CHAR === 'asur') startAsurKick();
           else { p1.state = 'jumpkick'; p1.t = -0.18; p1.jkHit = false; p1.specialCd = SPECIAL_CD; p1.crouch = false; P.play('Crouch_Idle_Loop', { fade: 0.06 }); moveLabel('FLYING KICK!'); } } }
       else if (!grounded && (act.single === 'KeyZ' || act.single === 'KeyS')) { noteMove('air'); startAirKick(act.single); }
       else if (act.single && grounded && !p1.crouch) { if (comboHit) { noteMove('combo' + comboHit.id); startCombo(comboHit); } else { const def = (ATTACKS_CHAR[CHAR] || ATTACKS)[act.single]; noteMove(def.id); startAttack(def); p1.atk.key = act.single; } }
     }
     if (p1.state === 'attack' && p1.atk.def.clip) P.play(p1.atk.def.clip, { loop: false, speed: p1.atk.def.speed, fade: 0.06 });
-    if (gt - p1.dT < BUFFER && grounded && !p1.superUsed && (FREE() || M.time <= SUPER_TIME) && p1.state === 'idle') { snd('charge'); if (CHAR === 'choo') startChooSuper(); else if (CHAR === 'kaze') startKazeSuper(); else if (CHAR === 'ravan') startRavanMove('rsuper'); else if (CHAR === 'indra') startIndraSuper(); else startSuper(); }
+    if (gt - p1.dT < BUFFER && grounded && !p1.superUsed && (FREE() || M.time <= SUPER_TIME) && p1.state === 'idle') { snd('charge'); if (CHAR === 'choo') startChooSuper(); else if (CHAR === 'kaze') startKazeSuper(); else if (CHAR === 'ravan') startRavanMove('rsuper'); else if (CHAR === 'indra') startIndraSuper(); else if (CHAR === 'asur') startAsurSuper(); else startSuper(); }
     if (p1.state === 'idle') {
       if (gt - p1.upT < BUFFER && grounded) { p1.vy = 7.0; p1.upT = -9; snd('jump'); }
       const dir = (Rr ? 1 : 0) - (L ? 1 : 0);
@@ -1132,9 +1153,10 @@ function startIndraSuper(){
 }
 function updateCast(dt){
   const c = p1.cast; c.t += dt; p1.y = Math.min(0.55, c.t * 1.1) * clamp((5.0 - c.t) / 0.35, 0, 1); p1.vy = 0;
-  if (c.n < 11 && c.t >= c.next) { const i = c.n++, col = STORM_COLORS[i % STORM_COLORS.length], x = rv.x; c.next += 0.36; warnRing(x, col, 0.38);
-    later(0.38, () => { strike(x, col, 0.5); strike(x + (Math.random() - 0.5) * 1.2, col, 0.22); if (fighting() && Math.abs(rv.x - x) < 1.0) { const n = Math.min(DMG.storm, DMG.super - c.dealt); if ((n > 0 || i === 10) && hurtRavan(n, i === 10 ? 'stormEnd' : 'storm')) c.dealt += n; } }); }
-  if (c.t > 0.5 && c.t < 4.6 && Math.random() < dt * 16) { const col = STORM_COLORS[Math.floor(Math.random() * STORM_COLORS.length)], x = rv.x + (Math.random() - 0.5) * 12, sx = x + (Math.random() - 0.5) * 3; zap(V(sx, 9, -1.2), V(x, 0.1 + Math.random() * 2, -1.2), col, 0.09, 0.2, 0.9); }
+  if (c.n < 11 && c.t >= c.next) { const asur = CHAR === 'asur', i = c.n++, col = asur ? FIRE_COLS[i % FIRE_COLS.length] : STORM_COLORS[i % STORM_COLORS.length], x = rv.x; c.next += 0.36; warnRing(x, col, 0.38);
+    later(0.38, () => { if (asur) { firePillar(x, 1); firePillar(x + (Math.random() - 0.5) * 1.6, 0.55); } else { strike(x, col, 0.5); strike(x + (Math.random() - 0.5) * 1.2, col, 0.22); } if (fighting() && Math.abs(rv.x - x) < 1.0) { const n = Math.min(DMG.storm, DMG.super - c.dealt); if ((n > 0 || i === 10) && hurtRavan(n, i === 10 ? 'stormEnd' : 'storm')) c.dealt += n; } }); }
+  if (CHAR === 'asur') { if (c.t > 0.5 && c.t < 4.6 && Math.random() < dt * 22) fallingFire(rv.x + (Math.random() - 0.5) * 12); }
+  else if (c.t > 0.5 && c.t < 4.6 && Math.random() < dt * 16) { const col = STORM_COLORS[Math.floor(Math.random() * STORM_COLORS.length)], x = rv.x + (Math.random() - 0.5) * 12, sx = x + (Math.random() - 0.5) * 3; zap(V(sx, 9, -1.2), V(x, 0.1 + Math.random() * 2, -1.2), col, 0.09, 0.2, 0.9); }
   if (c.t >= 5.0) { p1.state = 'idle'; p1.cast = null; p1.inv = 0.4; p1.y = 0; P.curName = ''; }
 }
 /* his fatality: pure white lightning */
@@ -1167,11 +1189,83 @@ function updateIndraFx(dt){
     k.acc += dt; if (k.acc > 0.08) { k.acc = 0; const a = F.bones[AURA_BONES[Math.floor(Math.random() * AURA_BONES.length)]].getWorldPosition(V()); a.z += 0.2; zap(a, V(a.x + (Math.random() - 0.5) * 0.9, a.y + (Math.random() - 0.5) * 0.9, a.z), GOLD_BOLT, 0.035, 0.13, 0.24); }
     if (!lit) { lit = true; indraLight.position.set(c.x, c.y + 0.3, 1.0); indraLight.intensity = 1.6 + Math.random() * 0.9; } });
   if (!lit) indraLight.intensity = 0;
-  $('dim').style.opacity = casting ? '1' : '0';
+  $('dim').style.opacity = p1.state === 'cast' ? '1' : '0';
+}
+
+/* ================ ASUR: fire - thrown from his hands and spat from his mouth ================ */
+const FIRE_COLS = [0xff3a08, 0xff6a14, 0xff9a28, 0xffc040];
+const STORMER = c => c === 'indra' || c === 'asur';              // fighters whose super is a 4-second storm
+const fireCol = () => FIRE_COLS[Math.floor(Math.random() * FIRE_COLS.length)];
+function flames(x, y, n, spread, rise = 1.6){ for (let i = 0; i < n; i++) burst(x + (Math.random() - 0.5) * spread, y + (Math.random() - 0.5) * spread, 1, fireCol(), 0.7, 0.45, 0.2 + Math.random() * 0.22, rise); }
+function mouthPos(F){ const h = F.bones.Head.getWorldPosition(V()), f = F === P ? p1.face : rv.face, S = F.root.scale.x; return V(h.x + f * 0.17 * S, h.y + 0.03 * S, 0.12); }
+function fireBall(owner, from, face, o){ const f = spawnShot(owner, from.x, from.y, face * o.speed, 0xff7a1a, { kind: 'ball', range: 22, r: o.r, big: o.big, tag: o.tag, dmg: o.dmg }); f.flame = o.big; return f; }
+function fallingFire(x){ const sp = sprite(fireCol(), 0.35 + Math.random() * 0.45, 0.9); sp.position.set(x, 6 + Math.random() * 2, -1.0); const life = 0.8; parts.push({ sp, vx: (Math.random() - 0.5) * 1.5, vy: -(7 + Math.random() * 4), vz: 0, life, max: life, g: 3, a: 0.9 }); }
+function firePillar(x, s){
+  snd('fire', 0.8, 0.12); snd('explosion', 0.45, 0.3);
+  const col = sprite(0xff6a14, 1, 0.95), core = sprite(0xffd060, 1, 0.9);
+  fx.push({ t: 0, dur: 0.45, upd: u => { const h = (2.2 + 3.0 * Math.min(1, u * 2.5)) * s; col.position.set(x, h * 0.45, 0.2); col.scale.set((1.5 - 0.7 * u) * s, h, 1); core.position.set(x, h * 0.3, 0.3); core.scale.set((0.7 - 0.4 * u) * s, h * 0.65, 1); col.material.opacity = core.material.opacity = 0.95 * (1 - u * u); }, end: () => { for (const q of [col, core]) { scene.remove(q); q.material.dispose(); } } });
+  for (let i = 0; i < Math.round(18 * s); i++) { const sp = sprite(fireCol(), 0.25 + Math.random() * 0.45); sp.position.set(x + (Math.random() - 0.5) * 0.9 * s, 0.1 + Math.random() * 0.6, (Math.random() - 0.5) * 0.8); const life = 0.5 + Math.random() * 0.5; parts.push({ sp, vx: (Math.random() - 0.5) * 1.6, vy: 3 + Math.random() * 6, vz: 0, life, max: life, g: 2, a: 0.85 }); }
+  burst(x, 0.15, 12, 0xff7a1a, 5, 0.5, 0.26, 1.3); flashLight(x, 1.5, 0xff6a14, 12, 0.3); shake = Math.max(shake, 0.28);
+}
+/* A+X: HAND FIREBALL - fast; crouch, jump or block */
+function startAsurBall(){
+  p1.rangedCd = RANGED_CD; p1.state = 'attack'; p1.kickSide = 'l';
+  p1.atk = { def: { clip: 'Spell_Simple_Shoot', speed: 2.4, hitAt: 0.10, dur: 0.42, fn: () => asurHandBall() }, t: 0, done: false };
+  P.play('Spell_Simple_Shoot', { loop: false, speed: 2.4, fade: 0.04, force: true }); moveLabel('HAND FIREBALL!');
+}
+function asurHandBall(){ const x = p1.x + p1.face * 0.75; fireBall('p', V(x, 1.25), p1.face, { speed: 24, r: 0.18, big: 0.85, tag: 'fireball', dmg: DMG.fireball }); flames(x, 1.25, 14, 0.35, 0.8); shake = Math.max(shake, 0.15); }
+/* X A: MOUTH FIREBALL - a huge one; it knocks down */
+function asurMouthBall(){ const m = mouthPos(P); fireBall('p', V(m.x + p1.face * 0.35, m.y), p1.face, { speed: 14, r: 0.4, big: 1.7, tag: 'mouthfire', dmg: DMG.mouthfire }); flames(m.x + p1.face * 0.3, m.y, 24, 0.3, 0.6); shake = Math.max(shake, 0.3); }
+/* Z+S: FLAME KICK - a burning right kick to the chest */
+function startAsurKick(){
+  p1.specialCd = SPECIAL_CD; p1.state = 'attack'; p1.kickSide = 'r';
+  p1.atk = { def: { kick: 'r', flame: true, hitAt: 0.36, dur: 0.74, fn: () => asurKickHit() }, t: 0, done: false }; P.curName = ''; P.play('Idle_Loop', { force: true }); moveLabel('FLAME KICK!'); snd('fire');
+  const step = clamp(Math.abs(rv.x - p1.x) - 1.5, 0, 2.2); for (let k = 1; k <= 6; k++) later(0.045 * k, () => { if (p1.state === 'attack') p1.x += p1.face * step / 6; });
+}
+function asurKickHit(){
+  const foot = P.bones.foot_r.getWorldPosition(V()), hitIt = fighting() && Math.abs(rv.x - p1.x) < 2.8 && p1.face === Math.sign(rv.x - p1.x) && rv.y < 1.4;
+  burst(foot.x, foot.y, hitIt ? 40 : 14, 0xff7a1a, 7, 0.5, 0.3); flames(foot.x + p1.face * 0.4, foot.y, hitIt ? 26 : 10, 0.9, 1.4); flashLight(foot.x, foot.y, 0xff6a14, 12, 0.25); shake = Math.max(shake, hitIt ? 0.45 : 0.15);
+  if (hitIt) hurtRavan(DMG.flamekick, 'flamekick');
+}
+/* D: INFERNO - 4 seconds of fire pillars that hunt the opponent; blocking is useless, keep moving! (cast flies like Indra's storm) */
+function startAsurSuper(){ startIndraSuper(); moveLabel('SUPER - INFERNO!  keep moving!'); }
+/* his fatality: HELLFIRE - a river of fire from his mouth */
+function asurFatalStrike(){
+  const O = OPP(); flashScreen(); snd('fire'); snd('whooshBig');
+  fx.push({ t: 0, dur: 0.8, upd: u => { const m = mouthPos(P), ty = 1.25 * O.root.scale.x; for (let i = 0; i < 9; i++) { const k = Math.random() * Math.min(1, u * 1.8); flames(m.x + (rv.x - m.x) * k, m.y + (ty - m.y) * k, 1, 0.1 + 0.55 * k, 0.5); } shake = Math.max(shake, 0.1 + 0.4 * u); }, end: () => { if (cine) fatalHit('burn'); } });
+}
+/* leaning back to breathe in, then throwing the head forward as the fire leaves his mouth */
+function mouthPose(F, u, face){
+  if (u < 0 || u > 1) return;
+  const back = u < 0.4 ? Math.sin(u / 0.4 * Math.PI / 2) : Math.max(0, 1 - (u - 0.4) / 0.08), out = u > 0.4 && u < 0.85 ? Math.sin((u - 0.4) / 0.45 * Math.PI) : 0;
+  rotateWorld(F.bones.spine_02, V(0, 0, 1), face * (0.30 * back - 0.36 * out)); F.root.updateMatrixWorld(true);
+  if (u < 0.43) { const q = mouthPos(F); flames(q.x + face * 0.06, q.y, 2, 0.1 + 0.2 * u, 0.4); }
+}
+/* the fire that is always around him: warm glow, halo and rising embers */
+const AFX = [0, 1].map(() => ({ glow: sprite(0xff5a10, 3.0, 0), halo: sprite(0xffa030, 1.0, 0), acc: 0 }));
+const asurLight = new THREE.PointLight(0xff6a18, 0, 7); scene.add(asurLight);
+function updateAsurFx(dt){
+  const casting = p1.state === 'cast' && P.skin === 'asur';
+  if (casting) {   // both arms raised, fire in his hands
+    const w = clamp(p1.cast.t / 0.3, 0, 1) * clamp((5.0 - p1.cast.t) / 0.35, 0, 1);
+    for (const [sd, z] of [['l', -0.22], ['r', 0.22]]) { const sh = P.bones['upperarm_' + sd].getWorldPosition(V()); solveLimb(P, 'upperarm_' + sd, 'lowerarm_' + sd, 'hand_' + sd, sh.clone().add(V(p1.face * 0.2, 0.55, z)), V(-p1.face, -0.2, z * 3), w);
+      const h = P.bones['hand_' + sd].getWorldPosition(V()); flames(h.x, h.y + 0.15, 2, 0.2, 2.4); }
+  }
+  if (P.skin === 'asur') { const a = p1.state === 'attack' && p1.atk; if (a && a.def.mouth) mouthPose(P, a.t / a.def.dur, p1.face); if (a && a.def.flame && Math.random() < 0.9) { const q = P.bones.foot_r.getWorldPosition(V()); flames(q.x, q.y, 3, 0.25, 0.8); } }
+  if (aiFoe() && FOE === 'asur' && rv.state === 'move' && rv.mv && rv.mv.name === 'special') mouthPose(OPP(), rv.mv.t / rv.mv.dur, rv.face);
+  let lit = false;
+  [P, humanFoe() ? OPP() : null].forEach((F, i) => { const k = AFX[i];
+    if (!F || F.skin !== 'asur' || !F.root.visible) { k.glow.material.opacity = k.halo.material.opacity = 0; return; }
+    F.root.updateMatrixWorld(true); const c = F.bones.spine_02.getWorldPosition(V()), h = F.bones.Head.getWorldPosition(V()), boost = i === 0 && casting ? 0.3 : 0;
+    k.glow.position.set(c.x, c.y - 0.05, -0.55); k.glow.material.opacity = 0.30 + 0.07 * Math.sin(gt * 11) + 0.04 * Math.random() + boost; k.glow.scale.setScalar(2.8 + boost * 3);
+    k.halo.position.set(h.x, h.y + 0.14, -0.3); k.halo.material.opacity = 0.45 + 0.14 * Math.random() + boost; k.halo.scale.setScalar(0.95 + boost);
+    k.acc += dt; if (k.acc > 0.07) { k.acc = 0; const a = F.bones[AURA_BONES[Math.floor(Math.random() * AURA_BONES.length)]].getWorldPosition(V()); burst(a.x + (Math.random() - 0.5) * 0.2, a.y, 1, fireCol(), 0.3, 0.7, 0.13, 1.7); }
+    if (!lit) { lit = true; asurLight.position.set(c.x, c.y + 0.3, 1.0); asurLight.intensity = 1.5 + Math.random() * 1.1; } });
+  if (!lit) asurLight.intensity = 0;
 }
 
 /* ================ RUNNING FLYING KICK and AIR KICK ================ */
-const TRAIL = { arjun: 0xffb347, choo: 0xffd24a, kaze: 0xdff6ff, ravan: 0xff3a1a, indra: 0xffc800 };
+const TRAIL = { asur: 0xff5a14, arjun: 0xffb347, choo: 0xffd24a, kaze: 0xdff6ff, ravan: 0xff3a1a, indra: 0xffc800 };
 function startAirKick(key){ snd('whooshKick'); p1.state = 'airkick'; p1.air = { t: 0, side: key === 'KeyZ' ? 'airl' : 'airr', done: false }; p1.atk = null; p1.block = false; p1.kickSide = p1.air.side; p1.kickU = 0.24; P.curName = ''; P.play('Jump_Loop', { fade: 0.06 }); }
 function impactFx(x, y, color){
   burst(x, y, 30, 0xffffff, 6, 0.35, 0.3, 1.1); burst(x, y, 22, color, 5, 0.5, 0.26, 1.2); flashLight(x, y, color, 11, 0.2); shake = Math.max(shake, 0.55);
@@ -1190,7 +1284,7 @@ function updateDash(dt){
 }
 
 /* ================ THE COMPUTER OPPONENT (the other fighters in the ladder) ================ */
-const ORDER = ['arjun', 'choo', 'kaze', 'indra'];
+const ORDER = ['arjun', 'choo', 'kaze', 'indra', 'asur'];
 let LADDER = ['ravan'], STAGE = 0, vsT = 0, vsReady = false, startArena = 6, hitStop = 0, koSlow = 0, swingId = null;
 const LV = () => MODE === 'duel' ? 1 : Math.min(2, STAGE);            // 0..2: later opponents are quicker, stronger and block more
 const aiFoe = () => MODE === 'duel' || (MODE === 'fight' && FOE !== 'ravan');   // the computer fighter brain is in charge
@@ -1200,6 +1294,7 @@ const RIVAL_NAMES = { arjun: { ranged: 'ARROW (jump, crouch or block)', special:
   choo: { ranged: 'CHI WAVE (jump, crouch or block)', special: 'HUNDRED FISTS (block it)', super: 'DRAGON RUSH — leave the red zone!' },
   kaze: { ranged: 'SHURIKEN (jump, crouch or block)', special: 'WIND TORNADO (leave the circle or block)', super: 'SPIRAL SPHERE — leave the red zone!' },
   indra: { ranged: 'THUNDER SHOT (crouch or block)', special: 'SKY THUNDER (leave the circle or block)', super: 'STORM OF HEAVEN — keep moving!' },
+  asur: { ranged: 'HAND FIREBALL (crouch, jump or block)', special: 'MOUTH FIREBALL (jump or block)', super: 'INFERNO — keep moving!' },
   ravan: { super: 'SKY CLEAVER — leave the red zone!' } };
 const SUP_R = 1.5;                                                    // radius of the marked super zone
 function rivalStart(name, punish){
@@ -1208,12 +1303,12 @@ function rivalStart(name, punish){
     if (m.wind) snd('glint', 0.8);
     m.go = () => { snd(def.kick ? 'whooshKick' : 'whoosh'); if (def.clip) F.play(def.clip, { loop: false, speed: (def.speed || 1) / 1.15, fade: 0.06, force: true }); else rv.kickSide = def.kick; }; if (punish) moveLabel(NAMES[FOE] + ': COUNTER KICK! (mix up your moves)'); return; }
   if (name === 'rush' || (name === 'special' && FOE === 'choo')) { m.wind = DF().wind; snd('glint', 0.8); }
-  m.dur = { ranged: 0.95, special: FOE === 'choo' ? 1.3 : 0.6 + DF().aoe, rush: 2.2, super: FOE === 'indra' ? 4.5 : DF().warn + 0.9 }[name];
+  m.dur = { ranged: 0.95, special: FOE === 'choo' ? 1.3 : FOE === 'asur' ? 1.2 : 0.6 + DF().aoe, rush: 2.2, super: STORMER(FOE) ? 4.5 : DF().warn + 0.9 }[name];
   if (name === 'ranged') rv.fireCd = 3.4 - 0.6 * LV(); if (name === 'special') rv.spCd = 8 - LV(); if (name === 'rush') rv.rushCd = 5; if (name === 'super') { rv.superUsed = true; rv.supT = 25; flashScreen(); snd('charge'); }
   if (FOE === 'ravan' && (name === 'ranged' || name === 'special')) { const list = name === 'ranged' ? ['throw', 'vision'] : ['slash', 'sweep', 'heat'], mv = list[Math.floor(Math.random() * list.length)];
     m.rm = newMove(mv, AD_B); m.dur = m.rm.dur; moveLabel('RAVAN: ' + RMOVES[mv].name + '  ' + RMOVES[mv].hint); return; }
   moveLabel(NAMES[FOE] + ': ' + (name === 'rush' ? 'FLYING KICK (block it)' : RIVAL_NAMES[FOE][name]));
-  const clip = name === 'ranged' && (FOE === 'kaze') ? 'OverhandThrow' : (name === 'ranged' || name === 'special') && FOE !== 'arjun' && FOE !== 'ravan' ? 'Spell_Simple_Shoot' : 'Idle_Loop';
+  const clip = name === 'ranged' && (FOE === 'kaze') ? 'OverhandThrow' : (name === 'ranged' || name === 'special') && FOE !== 'arjun' && FOE !== 'ravan' && !(FOE === 'asur' && name === 'special') ? 'Spell_Simple_Shoot' : 'Idle_Loop';
   F.play(clip, { loop: clip === 'Idle_Loop', speed: 1.2, fade: 0.08, force: true });
 }
 function rivalEnd(){ if (rv.mv && rv.mv.name === 'super') slamMark.visible = false; rv.state = 'idle'; rv.mv = null; rv.kickU = -1; rv.y = 0; rv.vy = 0; rv.t = (Math.max(0.2, 1.0 - 0.3 * LV()) + Math.random() * 0.5) * DF().pause; OPP().curName = ''; }
@@ -1245,16 +1340,18 @@ function rivalRun(dt){
   else if (m.name === 'ranged') { if (!m.fired && t >= 0.45) { m.fired = true; const x = rv.x + f * 0.9;
       if (FOE === 'arjun') spawnShot('r', x, 1.25, f * 14, 0xbfe8ff, { kind: 'arrow', range: 18, dmg: rivalDmg(DMG.arrow) });
       else if (FOE === 'indra') foeBolt();
+      else if (FOE === 'asur') { fireBall('r', V(x, 1.25), f, { speed: 20, r: 0.18, big: 0.85, tag: 'fireball', dmg: rivalDmg(DMG.fireball) }); }
       else spawnShot('r', x, 1.0, f * (FOE === 'kaze' ? 13 : 10), FOE === 'kaze' ? 0xd8e4ff : 0x5ad8ff, { range: 16, dmg: rivalDmg(DMG.arrow) }); } }
   else if (m.name === 'special') {
     if (FOE === 'choo') { if (t < 0.28 && d > 1.5) rv.x += f * Math.min(d - 1.4, 11 * dt); m.n = m.n || 0; if (m.n < 4 && t >= 0.34 + m.n * 0.16) { F.play(m.n % 2 ? 'Punch_Cross' : 'Punch_Jab', { loop: false, speed: 2.3, fade: 0.03, force: true }); if (Math.abs(p1.x - rv.x) < 2.3) hurtP1(rivalDmg(m.n === 3 ? 7 : 6), m.n === 3 ? 'dash' : 'flurry', rv.x); m.n++; } }
+    else if (FOE === 'asur') { if (!m.fired && t >= 0.5) { m.fired = true; const q = mouthPos(F); fireBall('r', V(q.x + f * 0.35, q.y), f, { speed: 11, r: 0.4, big: 1.7, tag: 'mouthfire', dmg: rivalDmg(DMG.mouthfire) }); flames(q.x + f * 0.3, q.y, 20, 0.3, 0.6); snd('whooshBig'); } }
     else if (!m.fired && t >= 0.35) { m.fired = true; const x = p1.x, W = DF().aoe, inside = r => fighting() && Math.abs(p1.x - x) < r;   // the spot is marked now; leaving it saves you
       if (FOE === 'arjun') { warnRing(x, 0xff8a1a, W); for (let i = 0; i < 22; i++) later(Math.max(0, W - 0.5) + i * 0.012, () => { const o = makeArrow(false); o.rotation.z = -Math.PI / 2; scene.add(o); falls.push({ o, fire: false, x: x + (Math.random() - 0.5) * 2.0, y: 7 + Math.random() * 2, vy: -(15 + Math.random() * 4) }); }); later(W, () => { if (inside(1.15)) hurtP1(rivalDmg(DMG.rain), 'rain', rv.x); }); }
       else if (FOE === 'kaze') { warnRing(x, 0x8ad8ff, W); later(W - 0.15, () => foeTornado(x)); later(W, () => { if (inside(1.15)) hurtP1(rivalDmg(DMG.tornado), 'tornado', rv.x); }); }
       else { warnRing(x, GOLD_BOLT, W); later(W, () => { if (!fighting()) return; strike(x, GOLD_BOLT, 0.46); strike(x + 0.45, GOLD_BOLT, 0.2); if (inside(1.1)) hurtP1(rivalDmg(DMG.skythunder), 'skythunder', rv.x); }); } } }
   else if (m.name === 'super') {
-    if (FOE === 'indra') { rv.y = Math.min(0.55, t) * clamp((4.5 - t) / 0.3, 0, 1); m.n = m.n || 0; m.dealt = m.dealt || 0; const W = DF().aoe * 0.72;
-      if (m.n < 8 && t >= 0.6 + m.n * 0.4) { const i = m.n++, col = STORM_COLORS[i % STORM_COLORS.length], x = p1.x; warnRing(x, col, W); later(W, () => { strike(x, col, 0.5); if (fighting() && Math.abs(p1.x - x) < 0.9) { const n = Math.min(7, DF().sup - m.dealt), hp = p1.hp; if (n > 0 || i === 7) { hurtP1(n, i === 7 ? 'stormEnd' : 'storm', rv.x); if (p1.hp < hp) m.dealt += n; } } }); } }
+    if (STORMER(FOE)) { rv.y = Math.min(0.55, t) * clamp((4.5 - t) / 0.3, 0, 1); m.n = m.n || 0; m.dealt = m.dealt || 0; const W = DF().aoe * 0.72;
+      if (m.n < 8 && t >= 0.6 + m.n * 0.4) { const i = m.n++, col = FOE === 'asur' ? FIRE_COLS[i % FIRE_COLS.length] : STORM_COLORS[i % STORM_COLORS.length], x = p1.x; warnRing(x, col, W); later(W, () => { if (FOE === 'asur') firePillar(x, 1); else strike(x, col, 0.5); if (fighting() && Math.abs(p1.x - x) < 0.9) { const n = Math.min(7, DF().sup - m.dealt), hp = p1.hp; if (n > 0 || i === 7) { hurtP1(n, i === 7 ? 'stormEnd' : 'storm', rv.x); if (p1.hp < hp) m.dealt += n; } } }); } }
     else rivalZoneSuper(m, t, dt, F, f); }
   if (t >= m.dur && rv.state === 'move') rivalEnd();
 }
@@ -1317,8 +1414,8 @@ function rivalPose(){
     solveLimb(F, 'upperarm_r', 'lowerarm_r', 'hand_r', ch.clone().addScaledVector(fwd, 0.72 - 0.56 * pull).addScaledVector(up, 0.07), fwd.clone().multiplyScalar(-1).addScaledVector(up, 0.5), w);
     const hl = F.bones.hand_l.getWorldPosition(V()), hr = F.bones.hand_r.getWorldPosition(V()); foeBow.group.visible = true; foeBow.group.position.copy(hl); foeBow.group.rotation.y = f * Math.PI / 2; foeBow.setString(t < rel ? hr : null);
     if (t < rel) { const dir = hl.clone().sub(hr).normalize(); foeArrow.visible = true; foeArrow.position.copy(hr); foeArrow.quaternion.setFromUnitVectors(V(1, 0, 0), dir); if (m.name === 'super') { foeAura.material.color.setHex(0xff8a1a); foeAura.position.copy(hr).addScaledVector(dir, 0.9); foeAura.scale.setScalar(0.4 + t); foeAura.material.opacity = 0.9; } } }
-  else if (m.name === 'super' && FOE !== 'indra' && t < DF().warn) { const g = t / DF().warn, col = FOE === 'kaze' ? 0x4ad0ff : 0xffd24a; foeAura.material.color.setHex(col); foeAura.position.set(rv.x, 1.2, 0.3); foeAura.scale.setScalar(0.7 + 1.8 * g); foeAura.material.opacity = 0.35 + 0.5 * g; if (Math.random() < 0.7) burst(rv.x + (Math.random() - 0.5) * 0.8, 0.3 + Math.random() * 1.5, 1, col, 0.6, 0.5, 0.2, 1.6); }
-  else if (m.name === 'super' && FOE === 'indra') { const w = clamp(t / 0.3, 0, 1) * clamp((4.4 - t) / 0.3, 0, 1); for (const [sd, z] of [['l', -0.22], ['r', 0.22]]) { const sh = F.bones['upperarm_' + sd].getWorldPosition(V()); solveLimb(F, 'upperarm_' + sd, 'lowerarm_' + sd, 'hand_' + sd, sh.clone().add(V(f * 0.2, 0.55, z)), V(-f, -0.2, z * 3), w); } }
+  else if (m.name === 'super' && !STORMER(FOE) && t < DF().warn) { const g = t / DF().warn, col = FOE === 'kaze' ? 0x4ad0ff : 0xffd24a; foeAura.material.color.setHex(col); foeAura.position.set(rv.x, 1.2, 0.3); foeAura.scale.setScalar(0.7 + 1.8 * g); foeAura.material.opacity = 0.35 + 0.5 * g; if (Math.random() < 0.7) burst(rv.x + (Math.random() - 0.5) * 0.8, 0.3 + Math.random() * 1.5, 1, col, 0.6, 0.5, 0.2, 1.6); }
+  else if (m.name === 'super' && STORMER(FOE)) { const w = clamp(t / 0.3, 0, 1) * clamp((4.4 - t) / 0.3, 0, 1); for (const [sd, z] of [['l', -0.22], ['r', 0.22]]) { const sh = F.bones['upperarm_' + sd].getWorldPosition(V()); solveLimb(F, 'upperarm_' + sd, 'lowerarm_' + sd, 'hand_' + sd, sh.clone().add(V(f * 0.2, 0.55, z)), V(-f, -0.2, z * 3), w); } }
 }
 
 /* ================ ARCADE LADDER: beat the other fighters one by one, RAVAN is the final boss ================ */
@@ -1342,13 +1439,13 @@ function frameVersus(dt, draw){
 /* ---------------- effects update ---------------- */
 function updateFX(dt){
   for (let i = shots.length - 1; i >= 0; i--) { const f = shots[i]; f.t += dt; f.x += f.vx * dt;
-    if (f.kind === 'ball' || f.kind === 'ground') { f.y = f.y0 + ((f.kind === 'ground' ? 0.35 : 1.0) - f.y0) * Math.min(1, f.t / 0.3); f.s.position.set(f.x, f.y, 0); f.core.position.copy(f.s.position); if (f.light) f.light.position.set(f.x, f.y, 0.5); f.s.scale.setScalar((1.0 + Math.sin(f.t * 30) * 0.12) * (f.big || 1)); if (f.kind === 'ground') burst(f.x, 0.2, 2, 0xff6a14, 1.5, 0.5, 0.45, 0.8); }
+    if (f.kind === 'ball' || f.kind === 'ground') { f.y = f.y0 + ((f.kind === 'ground' ? 0.35 : 1.0) - f.y0) * Math.min(1, f.t / 0.3); f.s.position.set(f.x, f.y, 0); f.core.position.copy(f.s.position); if (f.light) f.light.position.set(f.x, f.y, 0.5); f.s.scale.setScalar((1.0 + Math.sin(f.t * 30) * 0.12) * (f.big || 1)); if (f.kind === 'ground') burst(f.x, 0.2, 2, 0xff6a14, 1.5, 0.5, 0.45, 0.8); if (f.flame) flames(f.x - f.dir * 0.4 * f.flame, f.y, 2, 0.22 * f.flame, 0.9); }
     else { if (f.kind === 'fatal') f.y0 += (neckY() - f.y0) * Math.min(1, dt * 14); f.y = f.y0; f.mesh.position.set(f.x - f.dir * 0.84 * (f.sc || 1), f.y, 0); f.s.position.set(f.x, f.y, 0); if (f.light) f.light.position.set(f.x, f.y, 0.6); }
     if (f.kind === 'super' || f.kind === 'fatal') burst(f.x - f.dir * 0.6, f.y, 2, 0xff8a20, 1.2, 0.5, 0.3, 0.5);
     if (Math.random() < (f.kind === 'arrow' ? 0.5 : 0.7)) burst(f.x - (f.kind === 'ball' ? 0 : f.dir * 0.5), f.y, 1, f.color, 0.6, 0.35, f.kind === 'arrow' ? 0.14 : 0.28, 0.3);
     let dead = false;
     if (f.owner === 'r') { const ph = p1.crouch ? 0.8 : 1.75;
-      if (Math.abs(f.x - p1.x) < 0.3 + f.r && f.y + f.r > p1.y && f.y - f.r < p1.y + ph && fighting()) { hurtP1(f.dmg ?? DMG.rvFire, f.kind === 'arrow' ? 'ranged' : f.kind === 'super' ? 'super' : 'fire', f.x); burst(f.x, f.y, 18, 0xff8a1a, 4, 0.5, 0.22); dead = true; } }
+      if (Math.abs(f.x - p1.x) < 0.3 + f.r && f.y + f.r > p1.y && f.y - f.r < p1.y + ph && fighting()) { hurtP1(f.dmg ?? DMG.rvFire, f.kind === 'arrow' ? 'ranged' : f.kind === 'super' ? 'super' : f.tag === 'mouthfire' ? 'mouthfire' : 'fire', f.x); burst(f.x, f.y, 18, 0xff8a1a, 4, 0.5, 0.22); dead = true; } }
     else { if (Math.abs(f.x - rv.x) < 0.85 && f.y > 0.2 && f.y < 2.7 && fighting() && rv.state !== 'ko' && !(f.kind === 'ground' && rv.y > 0.5)) {
       if (f.kind === 'fatal') { fatalHit(); }
       else if (f.kind === 'super') { hurtRavan(DMG.super, 'super'); fireStorm(rv.x, 1); rv.fireVis = 4; moveLabel('FIRE STORM!'); }
@@ -1387,7 +1484,7 @@ function updateHUD(){
   $('timer').textContent = FREE() ? '∞' : Math.max(0, Math.ceil(M.time)); $('timer').classList.toggle('low', !FREE() && M.time <= 10);
   const sup = (FREE() || M.time <= SUPER_TIME) && fighting();
   $('sup1').style.visibility = sup && !p1.superUsed ? 'visible' : 'hidden'; $('sup2').style.visibility = sup && !rv.superUsed && !FREE() ? 'visible' : 'hidden';
-  const RL = { arjun: 'ARROW', choo: 'CHI WAVE', kaze: 'SHURIKEN', ravan: 'SWORD SLASH', indra: 'THUNDER SHOT' }[CHAR]; $('rng1').textContent = p1.rangedCd > 0 ? RL + ' ' + p1.rangedCd.toFixed(1) + 's' : RL + ' READY'; $('cmb1').textContent = ((p1.comboCd || 0) > 0 ? 'COMBO ' + p1.comboCd.toFixed(1) + 's' : 'COMBO READY') + (fatalOk() ? '  FATALITY READY' : ''); $('sp1').textContent = CHAR === 'indra' ? (p1.specialCd > 0 ? 'THUNDER KICK ' + p1.specialCd.toFixed(1) + 's' : 'THUNDER KICK READY') : CHAR === 'ravan' ? (p1.specialCd > 0 ? 'LEG SWEEP ' + p1.specialCd.toFixed(1) + 's' : 'LEG SWEEP READY') : CHAR !== 'arjun' ? (p1.specialCd > 0 ? 'FLYING KICK ' + p1.specialCd.toFixed(1) + 's' : 'FLYING KICK READY') : p1.specialCd > 0 ? 'FIRE ARROW ' + p1.specialCd.toFixed(1) + 's' : 'FIRE ARROW READY';
+  const RL = { arjun: 'ARROW', choo: 'CHI WAVE', kaze: 'SHURIKEN', ravan: 'SWORD SLASH', indra: 'THUNDER SHOT', asur: 'HAND FIREBALL' }[CHAR]; $('rng1').textContent = p1.rangedCd > 0 ? RL + ' ' + p1.rangedCd.toFixed(1) + 's' : RL + ' READY'; $('cmb1').textContent = ((p1.comboCd || 0) > 0 ? 'COMBO ' + p1.comboCd.toFixed(1) + 's' : 'COMBO READY') + (fatalOk() ? '  FATALITY READY' : ''); $('sp1').textContent = CHAR === 'asur' ? (p1.specialCd > 0 ? 'FLAME KICK ' + p1.specialCd.toFixed(1) + 's' : 'FLAME KICK READY') : CHAR === 'indra' ? (p1.specialCd > 0 ? 'THUNDER KICK ' + p1.specialCd.toFixed(1) + 's' : 'THUNDER KICK READY') : CHAR === 'ravan' ? (p1.specialCd > 0 ? 'LEG SWEEP ' + p1.specialCd.toFixed(1) + 's' : 'LEG SWEEP READY') : CHAR !== 'arjun' ? (p1.specialCd > 0 ? 'FLYING KICK ' + p1.specialCd.toFixed(1) + 's' : 'FLYING KICK READY') : p1.specialCd > 0 ? 'FIRE ARROW ' + p1.specialCd.toFixed(1) + 's' : 'FIRE ARROW READY';
   $('rng2').textContent = humanFoe() ? (rv.block ? '🛡 BLOCKING' : '') : rv.fireCd > 0 ? 'RANGED ' + rv.fireCd.toFixed(1) + 's' : 'RANGED READY';
 }
 function updateRound(dt){
@@ -1414,7 +1511,7 @@ function frame(dtReal, draw = true){
     if (FREE()) { if (MODE === 'train' && hit('KeyG')) { rv.aggro = !rv.aggro; moveLabel(rv.aggro ? 'RAVAN FIGHTS BACK' : 'RAVAN STANDS STILL'); } if (hit('KeyH')) { p1.hp = 100; rv.hp = 100; $('hp1').style.width = '100%'; $('hp2').style.width = '100%'; rv.burn = 0; rv.fireVis = 0; } } }
 
   updateRound(dt); if (fighting() && rv.state !== 'ko') { rv.x += (rv.kvx || 0) * dt; rv.kvx = (rv.kvx || 0) * Math.max(0, 1 - 7 * dt); } updateP1(dt); updateRavan(dt); updateFalls(dt); updateCine(dtReal); updateHead(dt); updateFX(dt); updateStorms(dt); updateBurn(dt); updateHUD();
-  P.mixer.update(dt); R.mixer.update(dt); A2.mixer.update(dt); { const O = OPP(); if (O !== R && O !== A2) O.mixer.update(dt); } if (FAT.bone) FAT.bone.scale.setScalar(0.0001); applyKickIK(P, p1.kickU, p1.kickSide, p1.face, CHAR); if (humanFoe() && rv.kickSide) applyKickIK(OPP(), rv.kickU, rv.kickSide, rv.face, foeId()); applyBowIK(dt); rivalPose(); updateRavanFx(); updateIndraFx(dt); updateBolts(dt);
+  P.mixer.update(dt); R.mixer.update(dt); A2.mixer.update(dt); { const O = OPP(); if (O !== R && O !== A2) O.mixer.update(dt); } if (FAT.bone) FAT.bone.scale.setScalar(0.0001); applyKickIK(P, p1.kickU, p1.kickSide, p1.face, CHAR); if (humanFoe() && rv.kickSide) applyKickIK(OPP(), rv.kickU, rv.kickSide, rv.face, foeId()); applyBowIK(dt); rivalPose(); updateRavanFx(); updateIndraFx(dt); updateAsurFx(dt); updateBolts(dt);
   const pb = p1.block && p1.state === 'idle' && fighting() ? 1 : 0, ob = humanFoe() && rv.block && rv.state === 'idle' && fighting() ? 1 : 0;
   p1.blockW = (p1.blockW || 0) + (pb - (p1.blockW || 0)) * Math.min(1, dt * 18); rv.blockW = (rv.blockW || 0) + (ob - (rv.blockW || 0)) * Math.min(1, dt * 18);
   p1.shieldPulse = Math.max(0, (p1.shieldPulse || 0) - dt * 3); rv.shieldPulse = Math.max(0, (rv.shieldPulse || 0) - dt * 3);
@@ -1426,7 +1523,7 @@ function frame(dtReal, draw = true){
 window.__y.step = (n, dt = 1/60, draw = false) => { for (let i = 0; i < n; i++) frame(dt, draw && i === n - 1); if (draw) renderer.render(scene, camera); };
 function applyVis(){
   const duel = MODE === 'duel', set = (f, v) => { if (f) f.root.visible = f.shadow.visible = v; };
-  set(PA, P === PA); set(PC, P === PC); set(PK, P === PK); set(PR, P === PR); set(PD, P === PD); const foe = M.phase === 'select' || M.phase === 'stage' ? null : OPP(); [R, A2a, C2, K2, R2, D2].forEach(f => set(f, f === foe));
+  set(PA, P === PA); set(PC, P === PC); set(PK, P === PK); set(PR, P === PR); set(PD, P === PD); set(PS, P === PS); const foe = M.phase === 'select' || M.phase === 'stage' ? null : OPP(); [R, A2a, C2, K2, R2, D2, S2].forEach(f => set(f, f === foe));
   $('name1').textContent = NAMES[CHAR]; $('name2').textContent = MODE === null ? 'RAVAN' : foeName();
 }
 let loadingChar = false; const loadP = {};
@@ -1434,10 +1531,10 @@ function ensureChar(id){
   if (id === 'arjun') return Promise.resolve();
   return loadP[id] || (loadP[id] = (async () => {
     const o = { scale: id === 'ravan' ? 1.65 : 1.0, skin: id, eyeGlow: id === 'ravan' }, a = await makeFighter(o), b = await makeFighter(o);
-    if (id === 'choo') { PC = a; C2 = b; } else if (id === 'kaze') { PK = a; K2 = b; } else if (id === 'indra') { PD = a; D2 = b; } else { PR = a; R2 = b; b.shadow.scale.setScalar(2.0); }
+    if (id === 'choo') { PC = a; C2 = b; } else if (id === 'kaze') { PK = a; K2 = b; } else if (id === 'indra') { PD = a; D2 = b; } else if (id === 'asur') { PS = a; S2 = b; } else { PR = a; R2 = b; b.shadow.scale.setScalar(2.0); }
     makePortrait(id); applyVis(); })());
 }
-function modelsFor(c){ return c === 'choo' ? [PC, C2] : c === 'kaze' ? [PK, K2] : c === 'ravan' ? [PR, R2] : c === 'indra' ? [PD, D2] : [PA, A2a]; }
+function modelsFor(c){ return c === 'choo' ? [PC, C2] : c === 'kaze' ? [PK, K2] : c === 'ravan' ? [PR, R2] : c === 'indra' ? [PD, D2] : c === 'asur' ? [PS, S2] : [PA, A2a]; }
 async function pickChar(c){
   if (loadingChar) return; loadingChar = true;
   if (!modelsFor(c)[0]) { $('selInfo').textContent = 'Loading...'; await ensureChar(c); }
@@ -1446,7 +1543,7 @@ async function pickChar(c){
 /* portraits for the select cards: a head-and-shoulders snapshot rendered from the 3D model */
 const PORT = {};
 function makePortrait(id){
-  const f = modelsFor(id)[0]; if (!f) return; const all = [PA, PC, C2, PK, K2, PR, R2, PD, D2, A2a, R].filter(Boolean), vis = all.map(o => o.root.visible), ry = f.root.rotation.y;
+  const f = modelsFor(id)[0]; if (!f) return; const all = [PA, PC, C2, PK, K2, PR, R2, PD, D2, PS, S2, A2a, R].filter(Boolean), vis = all.map(o => o.root.visible), ry = f.root.rotation.y;
   all.forEach(o => { o.root.visible = o === f; }); f.root.rotation.y = 0.45; f.root.updateMatrixWorld(true);
   const hp = f.bones.Head.getWorldPosition(V()); const hs = f.root.scale.x; camera.position.set(hp.x + 0.05 * hs, hp.y + 0.02 * hs, hp.z + 1.25 * hs); camera.lookAt(hp.x, hp.y - 0.03 * hs, hp.z); renderer.render(scene, camera);
   const c = document.createElement('canvas'); c.width = 160; c.height = 200; c.getContext('2d').drawImage(renderer.domElement, 352, 0, 576, 720, 0, 0, 160, 200); PORT[id] = c.toDataURL('image/jpeg', 0.9);
@@ -1459,7 +1556,8 @@ const ROSTER = [
   { id: 'kaze', name: 'KAZE', tag: 'NINJA  ·  WIND AND CLONES', info: 'Shuriken, clones, wind.<br>Combos: Clone Barrage · Wind Tornado · Shuriken Storm · Ground Burst<br>Super: Spiral Sphere' },
   { id: 'ravan', name: 'RAVAN', tag: 'DEMON KING  ·  SWORD AND HEAT VISION', info: 'Giant body, demon sword.<br>A+X Sword Slash · Z+S Leg Sweep<br>Combos: Heat Vision · Sword Throw · Inferno Sword<br>Super: Sky Cleaver' },
   { id: 'indra', name: 'INDRA', tag: 'KING OF GODS  ·  THUNDER AND LIGHTNING', info: 'The lord of the storm.<br>A+X Thunder Shot · Z+S Thunder Kick<br>X A Sky Thunder<br>Super: Storm of Heaven<br>Fatality: White Judgement' },
-  ...[1, 2, 3].map(() => ({ id: null, name: '???', tag: 'COMING SOON', info: 'A new fighter will join YUDH.' })) ];
+  { id: 'asur', name: 'ASUR', tag: 'FIRE WARRIOR  ·  FLAMES FROM HAND AND MOUTH', info: 'Born of fire.<br>A+X Hand Fireball · Z+S Flame Kick<br>X A Mouth Fireball<br>Super: Inferno<br>Fatality: Hellfire' },
+  ...[1, 2].map(() => ({ id: null, name: '???', tag: 'COMING SOON', info: 'A new fighter will join YUDH.' })) ];
 let selIdx = 0, pendingMode = null;
 function buildCards(){
   const el = $('cards'); el.innerHTML = '';
@@ -1508,9 +1606,9 @@ function frameSelect(dt, draw){
   if (hit('Enter', 'Space')) confirmSel(); if (hit('Escape')) { showMenu(); for (const k in PRESSED) delete PRESSED[k]; return; }
   const r = ROSTER[selIdx]; P.root.visible = P.shadow.visible = !!r.id;
   if (r.id) { P.play('Idle_Loop'); P.root.position.set(0, 0, 0); P.root.rotation.y += dt * 0.9; P.shadow.position.x = 0; P.mixer.update(dt); }
-  updateIndraFx(dt); updateBolts(dt); updateCamera(dt); if (draw) renderer.render(scene, camera); for (const k in PRESSED) delete PRESSED[k];
+  updateIndraFx(dt); updateAsurFx(dt); updateBolts(dt); updateCamera(dt); if (draw) renderer.render(scene, camera); for (const k in PRESSED) delete PRESSED[k];
 }
-const CHAR_HELP = { choo: '<br><b>CHOO:</b> A+X chi wave · Z+S flying kick · D dragon rush · A A A hundred fists · X A thunder · S A spinning kick · X S A earth shatter', kaze: '<br><b>KAZE:</b> A+X shuriken · Z+S flying kick · D spiral sphere · A A A clone barrage · X A wind tornado · S A shuriken storm · X S A ground burst', ravan: '<br><b>RAVAN:</b> A+X sword slash · Z+S leg sweep · D Sky Cleaver · A A heat vision · X A sword throw · X S A inferno sword (his combos replace the ones above; no fatality)', indra: '<br><b>INDRA:</b> A+X thunder shot · Z+S thunder kick · D Storm of Heaven · X A sky thunder · X A Z A A A white fatality (only these combos)' };
+const CHAR_HELP = { choo: '<br><b>CHOO:</b> A+X chi wave · Z+S flying kick · D dragon rush · A A A hundred fists · X A thunder · S A spinning kick · X S A earth shatter', kaze: '<br><b>KAZE:</b> A+X shuriken · Z+S flying kick · D spiral sphere · A A A clone barrage · X A wind tornado · S A shuriken storm · X S A ground burst', ravan: '<br><b>RAVAN:</b> A+X sword slash · Z+S leg sweep · D Sky Cleaver · A A heat vision · X A sword throw · X S A inferno sword (his combos replace the ones above; no fatality)', indra: '<br><b>INDRA:</b> A+X thunder shot · Z+S thunder kick · D Storm of Heaven · X A sky thunder · X A Z A A A white fatality (only these combos)', asur: '<br><b>ASUR:</b> A+X hand fireball · Z+S flame kick · D Inferno · X A mouth fireball · X A Z A A A hellfire fatality (only these combos)' };
 function startMode(m){
   MODE = m; if (m === 'train') FOE = 'ravan'; else if (m === 'duel') FOE = CHAR; setTimeout(() => { if (MODE === 'fight') return; const H = CHAR_HELP; if (MODE && H[CHAR]) $('help').innerHTML += H[CHAR]; }, 0); $('menu').style.display = 'none'; $('lasthit').textContent = '';
   applyVis(); P.curName = ''; A2.curName = '';
@@ -1533,7 +1631,7 @@ showDiff(); $('bGo').onclick = () => confirmSel(); $('bStGo').onclick = () => co
   renderer.compile(scene, camera);
   HEADS.arjun.visible = HEADS.ravan.visible = HEADS.choo.visible = HEADS.kaze.visible = bloodPool.visible = false; scene.remove(a); shots.splice(0).forEach(killShot); KITS.forEach(hideKit); clearBolts(); shake = 0;
 })();
-makePortrait('arjun'); ensureChar('choo').then(() => ensureChar('kaze')).then(() => ensureChar('ravan')).then(() => ensureChar('indra'));
+makePortrait('arjun'); ensureChar('choo').then(() => ensureChar('kaze')).then(() => ensureChar('ravan')).then(() => ensureChar('indra')).then(() => ensureChar('asur'));
 restartMatch(); showMenu(); updateCamera(0, true);
 (function loop(){ frame(Math.min(0.05, clock.getDelta())); requestAnimationFrame(loop); })();
 </script>

@@ -27,6 +27,7 @@ Pick a fighter, then beat the other fighters one by one (best of 3, 90-second ro
 **Everyone:** `Z` or `S` while jumping = **air kick** (8 %) · double-tap forward = **running flying kick** (12 %, knocks down, block it).
 
 ## 👥 Fighters
+- **Asur** — the fire warrior, as strong as Indra. Fair skin, red trousers, flame-red hair. `A+X` Hand Fireball (18 %, crouch, jump or block) · `Z+S` Flame Kick (14 %, knocks down) · `X A` Mouth Fireball (20 %, knocks down, jump or block) · `D` Inferno (4 s of fire pillars, up to 65 %: keep moving) · `X A Z A A A` Hellfire fatality.
 - **Indra** — king of the gods, lord of thunder. Lightning crackles around him all the time. `A+X` Thunder Shot (18 %, very fast) · `Z+S` Thunder Kick (14 %, knocks down) · `X A` Sky Thunder (20 %, anywhere; block it) · `D` Storm of Heaven (4 s of coloured lightning, up to 65 %, cannot be blocked: keep moving) · `X A Z A A A` White Judgement fatality.
 - **Ravan** — the demon king, now playable (and still the boss). A giant with a demon sword that appears whenever he uses a power. `A+X` Sword Slash (knocks down) · `Z+S` Leg Sweep (knocks down, jump it) · `A A` Heat Vision (crouch it) · `X A` Sword Throw, it flies back to his hand · `X S A` Inferno Sword · `D` Sky Cleaver (super). No fatality: he is powerful enough.
 - **Kaze** — an original ninja: shuriken, clones, wind. `A+X` shuriken · `Z+S` flying kick (10 %, 5 s cooldown) · `D` Spiral Sphere (super) · `A A A` Clone Barrage · `X A` Wind Tornado · `S A` Shuriken Storm · `X S A` Ground Burst · `X A Z A A A` fatality.
