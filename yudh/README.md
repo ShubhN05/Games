@@ -45,7 +45,7 @@ Pick a fighter, then beat the other fighters one by one (best of 3, 90-second ro
 | `X` then `A` | **Fire rain** (15 % + burn) — block it |
 | `S` then `A` | **Fire blast** (12 %) |
 | `X` `S` `A` | **Ground attack** (18 %) — jump over it |
-| `X` `A` `Z` `A` `A` `A` | **FATALITY** — an arrow that can't be blocked or dodged; instant kill, the opponent is beheaded. Super window only (last 30 s), once per round, uses your super |
+| `X` `A` `Z` `A` `A` `A` | **FATALITY** — an arrow that can't be blocked or dodged; instant kill, the opponent is beheaded. Works **at any time once the opponent has lost more than half their health** (the screen shows FATALITY READY) |
 | `→` `→` (double-tap forward) | **Running flying kick** (12 %, knocks down, 3 s cooldown) — hold BACK to block |
 | `Z` / `S` while jumping | **Air kick** (8 %) |
 | `D` | **SUPER** — burning arrow + fire storm (65 %). Only in the **last 30 s** of a round, **once per round**. Cannot be blocked — get away! |
