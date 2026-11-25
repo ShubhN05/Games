@@ -7,6 +7,7 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 > Work in progress — the game grows with every update. Right now it is a first playable: one hero, one boss, rounds, a training ground.
 
 ## 👥 Fighters
+- **Indra** — king of the gods, lord of thunder. Lightning crackles around him all the time. `A+X` Thunder Shot (18 %, very fast) · `Z+S` Thunder Kick (14 %, knocks down) · `X A` Sky Thunder (20 %, anywhere; block it) · `D` Storm of Heaven (4 s of coloured lightning, up to 77 %, cannot be blocked: keep moving) · `X A Z A A A` White Judgement fatality.
 - **Ravan** — the demon king, now playable (and still the boss). A giant with a demon sword that appears whenever he uses a power. `A+X` Sword Slash (knocks down) · `Z+S` Leg Sweep (knocks down, jump it) · `A A` Heat Vision (crouch it) · `X A` Sword Throw, it flies back to his hand · `X S A` Inferno Sword · `D` Sky Cleaver (super). No fatality: he is powerful enough.
 - **Kaze** — an original ninja: shuriken, clones, wind. `A+X` shuriken · `Z+S` flying kick · `D` Spiral Sphere (super) · `A A A` Clone Barrage · `X A` Wind Tornado · `S A` Shuriken Storm · `X S A` Ground Burst · `X A Z A A A` fatality.
 - **Arjun** — archer hero (bow, fire arrows).
