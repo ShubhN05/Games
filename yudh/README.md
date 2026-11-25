@@ -14,6 +14,13 @@ Press `4` on the menu: **Easy / Normal / Hard** (remembered by your browser). Ea
 - Block a computer punch or kick and it is stuck for a moment: **hit back**.
 - Repeat the same move four times in a row and the computer reads you: it blocks and counter-kicks.
 
+## 🔊 Sound and hit feel
+- Punches, kicks, blocks, jumps, knockdowns, every power, round gongs, a slow-motion **K.O.** and an announcer voice (your computer's own English voice).
+- Every hit freezes the picture for a split second and flashes; a blocked hit flashes blue.
+- Punches and kicks step in and land only when the fist or foot reaches the opponent.
+- `M` (or the menu button) turns sound off and on. Sound starts after your first key press (a browser rule).
+- All sounds are made in code (`lib/sfx.js`), no sound files.
+
 ## 🏆 Fight mode (arcade ladder)
 Pick a fighter, then beat the other fighters one by one (best of 3, 90-second rounds, a VS screen between stages, each opponent a bit tougher). **Ravan is the final boss.** Lose and press `R` to retry that fight.
 
@@ -50,6 +57,7 @@ Pick a fighter, then beat the other fighters one by one (best of 3, 90-second ro
 | `Z` / `S` while jumping | **Air kick** (8 %) |
 | `D` | **SUPER** — burning arrow + fire storm (65 %). Only in the **last 30 s** of a round, **once per round**. Cannot be blocked — get away! |
 | `R` / `Esc` | restart / back to the menu |
+| `M` | sound off / on |
 | training: `1`–`8` | Ravan does sword slash / leg sweep / sword throw / inferno sword / heat vision / fire throw / jump slam / super slam |
 | training: `G` / `H` | Ravan fights back on/off / heal both |
 
