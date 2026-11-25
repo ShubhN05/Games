@@ -6,6 +6,11 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 
 > Work in progress — the game grows with every update. Right now it is a first playable: one hero, one boss, rounds, a training ground.
 
+## 🏆 Fight mode (arcade ladder)
+Pick a fighter, then beat the other fighters one by one (best of 3, 90-second rounds, a VS screen between stages, each opponent a bit tougher). **Ravan is the final boss.** Lose and press `R` to retry that fight.
+
+**Everyone:** `Z` or `S` while jumping = **air kick** (8 %) · double-tap forward = **running flying kick** (12 %, knocks down, block it).
+
 ## 👥 Fighters
 - **Indra** — king of the gods, lord of thunder. Lightning crackles around him all the time. `A+X` Thunder Shot (18 %, very fast) · `Z+S` Thunder Kick (14 %, knocks down) · `X A` Sky Thunder (20 %, anywhere; block it) · `D` Storm of Heaven (4 s of coloured lightning, up to 77 %, cannot be blocked: keep moving) · `X A Z A A A` White Judgement fatality.
 - **Ravan** — the demon king, now playable (and still the boss). A giant with a demon sword that appears whenever he uses a power. `A+X` Sword Slash (knocks down) · `Z+S` Leg Sweep (knocks down, jump it) · `A A` Heat Vision (crouch it) · `X A` Sword Throw, it flies back to his hand · `X S A` Inferno Sword · `D` Sky Cleaver (super). No fatality: he is powerful enough.
@@ -33,7 +38,8 @@ A Tekken-style **3D fighting game** that runs in your browser. Play as **Arjun**
 | `S` then `A` | **Fire blast** (12 %) |
 | `X` `S` `A` | **Ground attack** (18 %) — jump over it |
 | `X` `A` `Z` `A` `A` `A` | **FATALITY** — an arrow that can't be blocked or dodged; instant kill, the opponent is beheaded. Super window only (last 30 s), once per round, uses your super |
-| `→` `→` (double-tap forward) | **Run + slam punch** (10 %, knocks down, 3 s cooldown) — only a **BACK block** stops it |
+| `→` `→` (double-tap forward) | **Running flying kick** (12 %, knocks down, 3 s cooldown) — hold BACK to block |
+| `Z` / `S` while jumping | **Air kick** (8 %) |
 | `D` | **SUPER** — burning arrow + fire storm (65 %). Only in the **last 30 s** of a round, **once per round**. Cannot be blocked — get away! |
 | `R` / `Esc` | restart / back to the menu |
 | `T` | (fight) jump to the last 30 s to try the super |
