@@ -22,7 +22,7 @@ characters/
 |---|---|---|---|---|
 | `arjun/` | Arjun | Pandava | Legend | yes, **locked** |
 | `karna/` | Karna | Kaurava | Legend | yes, **locked** |
-| `bhishma/` | Bhishma | Kaurava | Legend | not yet |
+| `bhishma/` | Bhishma | Kaurava | Legend | yes, awaiting approval |
 | `drona/` | Drona | Kaurava | Legend | not yet |
 | `ashvatthama/` | Ashvatthama | Kaurava | Legend | not yet |
 | `abhimanyu/` | Abhimanyu | Pandava | Elite | not yet |

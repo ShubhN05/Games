@@ -4,7 +4,7 @@ import { CHARACTERS } from '../core/index.js';
 import { ARENAS } from '../content/arenas/index.js';
 import { LEVELS } from '../ai/levels.js';
 
-export const settings = { archer: CHARACTERS[0].id, level: 'normal', hints: 'on', arena: ARENAS[0].id };
+export const settings = { archer: CHARACTERS[0].id, opponent: 'random', level: 'normal', hints: 'on', arena: ARENAS[0].id };
 
 function choices(box, options, key, onPick){
   const pick = value => { settings[key] = value; for (const b of box.children) b.classList.toggle('sel', b.dataset.v === value); };
@@ -17,7 +17,11 @@ function choices(box, options, key, onPick){
 }
 
 export function buildMenu({ onStart, onHelp, onSound, onArena }){
-  choices($('pickA'), CHARACTERS.map(c => [c.id, c.name]), 'archer');
+  choices($('pickO'), [['random', 'RANDOM'], ...CHARACTERS.map(c => [c.id, c.name])], 'opponent');
+  /* nobody fights themselves: grey out your own archer among the opponents */
+  const guard = () => { for (const b of $('pickO').children) b.disabled = b.dataset.v === settings.archer; if (settings.opponent === settings.archer) $('pickO').children[0].click(); };
+  choices($('pickA'), CHARACTERS.map(c => [c.id, c.name]), 'archer', guard);
+  guard();
   choices($('pickH'), [['on', 'ON'], ['off', 'OFF']], 'hints');
   choices($('pickL'), Object.entries(LEVELS).map(([id, l]) => [id, l.name]), 'level');
   choices($('pickR'), ARENAS.map(a => [a.id, a.name.toUpperCase()]), 'arena', onArena);

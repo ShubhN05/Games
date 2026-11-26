@@ -1,6 +1,6 @@
-/* Start of the game: load the arena and every archer, then run the frame loop. */
+/* Start of the game: load the arena and the two archers shown on the menu (others load when first chosen), then run the frame loop. */
 import * as THREE from 'three';
-import { CHARACTERS } from './core/index.js';
+import { CHARACTERS, getCharacter } from './core/index.js';
 import { getArena } from './content/arenas/index.js';
 import { fitToWindow, setArena } from './render/stage.js';
 import { loadClips } from '../characters/shared/body.js';
@@ -14,9 +14,9 @@ try {
   await setArena(getArena(settings.arena));
   await loadClips();
   const models = {};
-  for (const c of CHARACTERS) models[c.id] = await createModel(c);
-  init(models, { onArena: id => setArena(getArena(id)) });
-  $('loading').remove();
+  for (const c of CHARACTERS.slice(0, 2)) models[c.id] = await createModel(c);
+  init(models, { onArena: id => setArena(getArena(id)), load: id => createModel(getCharacter(id)) });
+  $('loading').style.display = 'none';
 
   /* for automatic checks: __m.step(frames) advances the game even when the tab is hidden */
   window.__m = {

@@ -1,6 +1,7 @@
 /* Runs a match: starting, pausing, key presses and the frame by frame loop.
    Connects rules (core), computer (ai), pictures (render), screen (ui), sound and keyboard. */
-import { createDuel, step, shoot, setStance, jump, cancelDraw, inputCode, cancelCode, CHARACTERS } from '../core/index.js';
+import { createDuel, step, shoot, setStance, jump, cancelDraw, inputCode, cancelCode, CHARACTERS, getCharacter } from '../core/index.js';
+import { $ } from '../ui/dom.js';
 import { createAI, stepAI } from '../ai/computer.js';
 import { render } from '../render/stage.js';
 import { createActor } from '../render/archer.js';
@@ -17,15 +18,31 @@ import { showEvent, showInput } from './events.js';
 
 /* the running match; duel === null means we are on the menu */
 export const match = { duel: null, ai: null, actors: [], paused: false, overT: 0, shake: 0, buffered: null, hints: true };
-let models = {};
+let models = {}, loadModel = null, loading = false;
 
 function clearScene(){ normalArrows.clear(); superArrows.clear(); clearParticles(); clearFloats(); }
 function placeActors(ids){ Object.values(models).forEach(m => m.show(false)); match.actors = ids.map((id, side) => createActor(models[id], side)); }
 
-export function start(archer = settings.archer, level = settings.level){
+/* build the fighters that are not ready yet, then carry on (at once when they all are) */
+function withModels(ids, then){
+  const missing = ids.filter(id => !models[id]);
+  if (!missing.length) return void then();
+  loading = true; $('loading').textContent = 'Loading ' + missing.map(id => getCharacter(id).name).join(' and ') + '…'; $('loading').style.display = 'flex';
+  return Promise.all(missing.map(async id => { models[id] = await loadModel(id); })).then(() => { loading = false; $('loading').style.display = 'none'; then(); })
+    .catch(error => { loading = false; $('loading').textContent = 'The fighter could not load: ' + error.message; throw error; });
+}
+
+export function start(archer = settings.archer, level = settings.level, opponent = settings.opponent){
+  if (loading) return;
   settings.archer = archer; settings.level = level;
+  const others = CHARACTERS.map(c => c.id).filter(id => id !== archer), foe = others.includes(opponent) ? opponent : others[Math.floor(Math.random() * others.length)];
+  return withModels([archer, foe], () => begin(archer, foe, level));
+}
+/* the same two fighters once more */
+const rematch = () => start(match.duel.f[0].id, settings.level, match.duel.f[1].id);
+
+function begin(archer, foe, level){
   clearScene();
-  const others = CHARACTERS.filter(c => c.id !== archer), foe = others[Math.floor(Math.random() * others.length)].id;
   Object.assign(match, { duel: createDuel([archer, foe]), ai: createAI(level), paused: false, overT: 0, shake: 0, buffered: null, hints: settings.hints === 'on' });
   placeActors([archer, foe]);
   showMenu(false); showHelp(false); banner('FIGHT'); clearNote();
@@ -79,7 +96,7 @@ function onPress(code){
   }
   if (!d) { if (code === KEYMAP.start && !helpOpen()) start(); return; }
   if (helpOpen()) return;
-  if (code === KEYMAP.restart) return void (d.winner !== null || match.paused ? start() : note('To restart: pause (P), then R', '#fff', 1.2));
+  if (code === KEYMAP.restart) return void (d.winner !== null || match.paused ? rematch() : note('To restart: pause (P), then R', '#fff', 1.2));
   if (code === KEYMAP.pause) return void (d.winner === null && setPause(!match.paused));
   if (match.paused || d.winner !== null) return;
   const move = moveOf(code);
@@ -127,8 +144,8 @@ export function frame(dt, draw = true){
   render(match.shake);
 }
 
-export function init(loadedModels, { onArena }){
-  models = loadedModels;
+export function init(loadedModels, { onArena, load }){
+  models = loadedModels; loadModel = load;
   initKeyboard({ onPress, onBlur: () => { if (match.duel && match.duel.winner === null) setPause(true); } });
   buildMenu({ onStart: () => start(), onHelp: toggleHelp, onSound: toggleMute, onArena });
   buildCounterTable(); soundLabel(soundOn());

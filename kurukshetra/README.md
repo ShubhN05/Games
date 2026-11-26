@@ -1,6 +1,6 @@
 # Kurukshetra — Archery Duel
 
-A one-on-one long-range archery duel in the browser: you against the computer, Arjun and Karna.
+A one-on-one long-range archery duel in the browser: you against the computer, with Arjun, Karna and Bhishma.
 
 **Play:** https://shubhn05.github.io/Games/kurukshetra/ (desktop keyboard)
 
@@ -19,6 +19,8 @@ A one-on-one long-range archery duel in the browser: you against the computer, A
 | **H** / **P** / **Esc** | counter chart / pause / pause, then menu |
 | **R** | restart (when paused or after the match) |
 | **M** | sound on/off |
+
+Choose your archer and your opponent (or a random one) on the menu; **R** fights the same pair again.
 
 A super arrow takes 3 s to prepare and 2.5 s to fly. The opponent cannot see which one it is until release.
 Brahmastra and Pashupata do 30%, other super arrows 10%.
