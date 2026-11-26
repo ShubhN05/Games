@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>MAHABHARAT - Archery Duel</title>
+<link rel="stylesheet" href="styles/game.css">
+<!-- three.js is borrowed from the YUDH game; everything else borrowed from it goes through src/shared/yudh.js -->
+<script type="importmap">
+{ "imports": { "three": "../yudh/lib/three/three.module.js", "three/addons/": "../yudh/lib/three/addons/" } }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div class="side" id="s0"><div class="bar"><i></i><b></b></div><div class="info"></div></div>
+  <div class="side" id="s1"><div class="bar"><i></i><b></b></div><div class="info"></div></div>
+  <div id="top"><div id="incoming"><div class="t"></div><div class="meter"><i></i></div><div class="s"></div><div class="k"></div></div></div>
+  <div id="tag"></div>
+  <div id="foecall"></div><div id="note"></div><div id="msg"></div><div id="mine"></div>
+  <div id="keys">F fast arrow · S normal arrow · ↑+F/S jump shot (escape ←) · D+F/S high shot (escape →) · straight (escape ↓) · 1–5 twice = super / counter · Space clear · H chart · P / Esc pause · M sound</div>
+  <div id="chart"></div>
+</div>
+<div id="menu" class="screen"><div class="box">
+  <h1>MAHABHARAT</h1><p>Archery duel · you against the computer</p>
+  <p><b>Choose your archer</b></p><div id="pickA"></div>
+  <div id="arenaRow" hidden><p><b>Arena</b></p><div id="pickR"></div></div>
+  <p><b>Counter hints</b> (shows which numbers stop the arrow)</p><div id="pickH"></div>
+  <p><b>Computer level</b></p><div id="pickL"></div>
+  <p><button id="bStart">START DUEL</button><button id="bHelp">COUNTER CHART</button></p>
+  <p style="font-size:14px"><b>F</b> fast arrow · <b>S</b> normal arrow · <b>↑</b>+F/S jump shot · <b>D</b>+F/S high shot<br>Escape a straight arrow with <b>↓</b> · a jump shot with <b>←</b> · a high shot with <b>→</b><br><b>1–5 twice</b> = super arrow, or counter when one is coming · <b>Esc</b> pause</p>
+  <p style="font-size:13px;color:#c9b98f">Your super arrow takes 2 s to call and 2.5 s to fly. Press the counter within 2 s of release; one try per arrow.<br>Countering pauses your own call. After a super arrow you rest 1 s.</p>
+  <p><button id="bSound"></button></p>
+</div></div>
+<div id="help" class="screen" style="z-index:12"><div class="box"><h1 style="font-size:30px">COUNTER CHART</h1><div id="table"></div><p style="font-size:13px">* our own game rule (the other pairs follow the epics) · Esc or H = close</p><button id="bClose">CLOSE</button></div></div>
+<div id="loading">Loading archers…</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

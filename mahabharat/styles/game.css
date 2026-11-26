@@ -1,0 +1,47 @@
+/* Look of the menu, health bars, chart and messages. The HUD is laid out on a fixed 1280 x 720 area. */
+  html,body{margin:0;height:100%;background:#07050c;overflow:hidden;font-family:system-ui,sans-serif;color:#f1e6cf}
+  canvas{position:fixed;display:block}
+  #hud{position:fixed;width:1280px;height:720px;left:0;top:0;transform-origin:0 0;pointer-events:none;text-shadow:0 1px 4px #000}
+  .side{position:absolute;top:10px;width:430px}
+  #s0{left:16px} #s1{right:16px;text-align:right}
+  .bar{position:relative;height:24px;background:#140c14cc;border:2px solid #f1e6cf55;border-radius:5px;overflow:hidden}
+  .bar i{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(#ffe066,#e8861a);transition:width .15s}
+  #s1 .bar i{left:auto;right:0;background:linear-gradient(#ff7a5a,#b01a14)}
+  .bar b{position:absolute;left:8px;right:8px;top:2px;font-size:15px}
+  .info{margin-top:5px;font:bold 13px system-ui}
+  #top{position:absolute;left:440px;right:440px;top:8px;text-align:center}
+  #incoming .k{margin-top:6px;font:900 22px system-ui;white-space:nowrap}
+  #incoming .k span{display:table;margin:0 auto 4px;padding:3px 12px;background:#0b0712e0;border:2px solid #ffd24a;border-radius:8px}
+  #incoming .k kbd{display:inline-block;margin-right:5px;padding:0 9px;font:900 24px system-ui;color:#1a0e02;background:#ffd24a;border-radius:5px;text-shadow:none}
+  #tag{position:absolute;display:none;transform:translate(-50%,-100%);padding:2px 10px;font:900 18px system-ui;white-space:nowrap;background:#000b;border:2px solid;border-radius:6px}
+  .col .ans{background:#ffd24a;color:#1a0e02;border-radius:4px;text-shadow:none;animation:pulse .3s infinite alternate}
+  .col .ans u{color:#1a0e02}
+  @keyframes pulse{from{opacity:1}to{opacity:.6}}
+  #incoming{display:none}
+  #incoming .t{font:900 24px system-ui;letter-spacing:1px}
+  #incoming .meter{height:10px;margin:5px 40px;background:#0009;border:1px solid #fff6;border-radius:5px;overflow:hidden}
+  #incoming .meter i{display:block;height:100%;background:#ffd24a}
+  #incoming .s{font:bold 13px system-ui}
+  #foecall{position:absolute;right:16px;top:66px;text-align:right;font:bold 17px system-ui;color:#fff}
+  #mine{position:absolute;left:0;right:0;bottom:138px;text-align:center;font:900 21px system-ui;color:#ffd24a}
+  #note{position:absolute;left:0;right:0;top:190px;text-align:center;font:900 28px system-ui}
+  #msg{position:absolute;left:0;right:0;top:250px;text-align:center;font:900 62px system-ui;color:#fff;text-shadow:0 0 24px #ff6a1a,0 4px 8px #000}
+  #chart{position:absolute;left:10px;right:10px;bottom:8px;display:flex;gap:7px}
+  .col{flex:1;background:#0b0712d8;border:2px solid #f1e6cf33;border-radius:8px;padding:4px 8px;font:bold 13px system-ui;line-height:19px;min-height:100px}
+  .col.on{border-color:#ffd24a;box-shadow:0 0 16px #ffd24a;background:#2a1c08ee}
+  .col u{text-decoration:none;color:#ffd24a;display:inline-block;width:26px}
+  .col .dot{display:inline-block;width:9px;height:9px;border-radius:5px;margin-right:6px}
+  .col .gone{opacity:.28;text-decoration:line-through}
+  #keys{position:absolute;left:0;right:0;bottom:122px;text-align:center;font-size:12px;color:#d8cba8}
+  .float{position:absolute;font:900 24px system-ui;transition:all .9s ease-out;white-space:nowrap}
+  .screen{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,#4a2208e8,#07050cf6 72%)}
+  .box{text-align:center;max-width:900px;padding:0 20px;max-height:96vh;overflow:auto}
+  h1{font:900 56px Georgia,serif;margin:0;color:#ffd24a;text-shadow:0 0 24px #ff7a1a,0 3px 6px #000;letter-spacing:5px}
+  .box p{margin:6px 0;line-height:1.6}
+  button{margin:6px;padding:12px 26px;font:bold 18px system-ui;color:#f1e6cf;background:#33200f;border:2px solid #8a6a2a;border-radius:10px;cursor:pointer}
+  button.sel{background:#ffd24a;color:#1a0e02;border-color:#fff}
+  #bStart{font-size:24px;padding:14px 60px}
+  table{margin:8px auto;border-collapse:collapse;font-size:13px;text-align:left}
+  td,th{border:1px solid #f1e6cf30;padding:2px 12px} th{color:#ffd24a}
+  @media (max-height:700px){.box{zoom:.78}} @media (max-height:520px){.box{zoom:.6}}
+  #loading{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#07050c;font:bold 22px system-ui}

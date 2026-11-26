@@ -10,6 +10,7 @@ A growing collection of small browser games. Every game is a self-contained fold
 |---|---|---|---|
 | 🌙 **Nightrunner — Missile Hero** | 5-level dark platformer: night, underwater, fire, sky, 4-dragon boss. Shoot missiles | [Play](https://shubhn05.github.io/Games/mario/) | [`/mario`](./mario) |
 | ⚔️ **YUDH — Part 1: Arjun vs Ravan** | Tekken-style 3D fighter: bow & arrows, fire super, boss fight, training ground | [Play](https://shubhn05.github.io/Games/yudh/) | [`/yudh`](./yudh) |
+| 🏹 **Mahabharat — Archery Duel** | Arjun vs Karna archery duel: dodge arrows, counter divine weapons (desktop keyboard) | [Play](https://shubhn05.github.io/Games/mahabharat/) | [`/mahabharat`](./mahabharat) |
 
 *More folders are coming — each new game gets its own directory with its own README.*
 
@@ -38,10 +39,14 @@ Games/
 ├── mario/          # Nightrunner — Missile Hero
 │   ├── index.html
 │   └── README.md
-└── yudh/           # YUDH Part 1 — Arjun vs Ravan (3D)
+├── yudh/           # YUDH Part 1 — Arjun vs Ravan (3D)
+│   ├── index.html
+│   ├── README.md
+│   ├── lib/ assets/ arenas.js …
+└── mahabharat/     # Mahabharat archery duel (3D, uses yudh's models and Three.js)
     ├── index.html
     ├── README.md
-    ├── lib/ assets/ arenas.js …
+    └── src/ styles/ tests/
 ```
 
 Each game is plain HTML, CSS and JavaScript with no build step and no dependencies.

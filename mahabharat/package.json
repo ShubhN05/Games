@@ -1,0 +1,4 @@
+{
+  "type": "module",
+  "scripts": { "test": "node tests/rules.test.js && node tests/content.test.js" }
+}

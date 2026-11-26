@@ -1,0 +1,77 @@
+# Mahabharat — Archery Duel
+
+A one-on-one long-range archery duel in the browser: you against the computer, Arjun and Karna.
+
+**Play:** https://shubhn05.github.io/Games/mahabharat/ (desktop keyboard)
+
+## Controls
+
+| Key | Action |
+|---|---|
+| **F** / **S** | fast arrow (0.3%) / normal arrow (1%); 50 arrows in total |
+| **↑** + F/S | jump shot — escape it with **←** |
+| **D** + F/S | high shot — escape it with **→** |
+| F/S alone | straight shot — escape it with **↓** |
+| **1–5, twice** | super arrow, or the counter when one is coming |
+| **Space** | clear the first number |
+| **H** / **P** / **Esc** | counter chart / pause / pause, then menu |
+| **R** | restart (when paused or after the match) |
+| **M** | sound on/off |
+
+A super arrow takes 2 s to call and 2.5 s to fly. The opponent cannot see which one it is until release.
+Brahmastra and Pashupata do 30%, other super arrows 10%.
+
+## Run and test locally
+
+```bash
+cd Games
+python -m http.server 8010     # open http://localhost:8010/mahabharat/
+cd mahabharat && npm test      # needs Node.js; no packages to install
+```
+
+## How the code is organised
+
+```
+index.html            the page (markup only)
+styles/game.css       look of menu and HUD
+src/
+  main.js             loads everything, runs the frame loop
+  content/            ← add things here
+    powers.js           all super arrows and their counters
+    characters/         one file per archer + index.js (the roster)
+    arenas/             one file per arena + index.js
+  core/               the rules (no drawing, no keyboard; runs in Node)
+  ai/                 the computer opponent and its levels
+  game/               match flow: session.js, events.js (what each event looks and sounds like)
+  render/             3D: stage, archers, arrows, effects
+  ui/                 menu, HUD, chart, messages
+  input/              keyboard (KEYMAP)
+  audio/              sound
+  shared/yudh.js      the only file that borrows from the YUDH game
+tests/                rules and content checks
+```
+
+Dependencies go one way: `core` knows only `content`; `ai` uses `core`; `render` and `ui` show what `core` says; `game` connects them.
+
+## Adding things
+
+**A new archer**
+1. Copy `src/content/characters/karna.js` to a new file; set `id`, `name`, `rares` and `look.dress`
+   (a function `dress(root, body)` that clothes the base body).
+2. Import it in `characters/index.js` and add it to `CHARACTERS`.
+
+**A new super arrow** — add one entry to `src/content/powers.js` with a free code (digits 1–5), its colour and
+its counters. The chart, counter table, hints and computer pick it up. An archer may fire a `rare` one only if
+it is listed in their `rares`.
+
+**A new arena**
+1. Copy `src/content/arenas/warbanner-marsh.js`; write `paint(ctx)` on a 960×540 canvas (ground line y = 450).
+2. Import it in `arenas/index.js` and add it to `ARENAS`. The menu then shows an arena choice.
+
+Run `npm test` after adding: it reports missing fields and counters that do not exist.
+
+Fighters with a different style (mace, magic) will need new rules in `core/`, not only content.
+
+## Credits
+
+Uses Three.js, and the CC0 body model and animations by Quaternius, through the `yudh` folder.
