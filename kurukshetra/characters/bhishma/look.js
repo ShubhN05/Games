@@ -183,7 +183,7 @@ function boots(root, body){
 
 function head(root, body){
   const grey = 0x9ea2a8;
-  addCurlyHair(root, body, { strands: 120, segments: 26, sides: 4, toShoulder: false, length: 0.36, seed: 41, curl: 0.045, bun: true, color: grey, topCap: 0.74, tube: 0.15, faceGap: 1.5 });
+  addCurlyHair(root, body, { strands: 120, segments: 26, sides: 4, toShoulder: false, length: 0.36, seed: 41, curl: 0.045, bun: true, color: grey, topCap: 0.9, tube: 0.15, faceGap: 1.5 });
   const hb = boundsOf(root, body, ['Head']), R = hb.size.x / 2, cz = hb.ctr.z - 0.004, depth = hb.size.z / 2 * 0.93, bandY = hb.box.max.y - hb.size.y * 0.225;
   const g = new THREE.Group(), au = silver(), bright = silver({ color: 0xf2f8ff });
   const onBand = (a, lift = 0) => V(Math.sin(a) * (R * 1.07 + lift), bandY - 0.012 * (1 - Math.cos(a)) / 2, cz + Math.cos(a) * (depth * 1.06 + lift));
@@ -196,7 +196,10 @@ function head(root, body){
   const sapphire = silver({ color: 0x1f66d8, emissive: 0x061c50, metalness: 0.35, roughness: 0.12 }), jewel = mesh(new THREE.SphereGeometry(0.0135, 16, 12), sapphire, 0, bandY + 0.012, front + 0.012); jewel.scale.set(0.85, 1.35, 0.55); g.add(jewel);
   g.add(mesh(new THREE.TorusGeometry(0.0155, 0.0035, 8, 24), bright, 0, bandY + 0.012, front + 0.012));
   const tuft = matte({ color: 0x8d9198, emissive: 0x101112 }), top = V(0, hb.box.max.y + R * 0.12, hb.ctr.z - R * 0.18);
-  for (let i = 0; i < 14; i++) { const turn = i / 14 * Math.PI; g.add(rod(Array.from({ length: 13 }, (_, k) => { const a = k / 12 * Math.PI * 1.5 - 0.4, rad = R * 0.52; return top.clone().add(V(Math.cos(turn) * Math.cos(a) * rad, Math.sin(a) * rad * 1.05, Math.sin(turn) * Math.cos(a) * rad)); }), () => 0.0028, tuft, 24, 4)); }
+  for (let i = 0; i < 14; i++) { const turn = i / 14 * Math.PI; g.add(rod(Array.from({ length: 13 }, (_, k) => { const a = k / 12 * Math.PI * 1.5 - 0.4, rad = R * 0.66; return top.clone().add(V(Math.cos(turn) * Math.cos(a) * rad, Math.sin(a) * rad * 1.05, Math.sin(turn) * Math.cos(a) * rad)); }), () => 0.0028, tuft, 24, 4)); }
+  const combed = matte({ color: 0xc2c6cc, emissive: 0x141516 });
+  for (let i = 0; i < 26; i++) { const across = (i / 25 - 0.5) * 2, x = across * R * 0.98, rise = Math.sqrt(Math.max(0, 1 - across * across * 0.72));
+    g.add(rod([V(x, bandY + 0.012, cz + depth * 0.98 * rise), V(x * 0.95, bandY + 0.012 + 0.05 * rise, cz + depth * 0.55 * rise), V(x * 0.7, bandY + 0.02 + 0.056 * rise, cz - depth * 0.1), V(x * 0.25, bandY + 0.045, cz - depth * 0.42)], t => 0.003 * (1 - t * 0.5), i % 3 ? combed : tuft, 18, 4)); }
   /* silver ring round the top-knot */
   const knot = mesh(new THREE.TorusGeometry(0.046, 0.0135, 10, 30), au, 0, hb.box.max.y - 0.012, hb.ctr.z - R * 0.18); knot.rotation.x = Math.PI / 2; g.add(knot);
   /* forehead marks: three pale lines and a red one */
@@ -213,22 +216,22 @@ function beard(root){
   const strandPaint = texture(256, 256, (x, w, h) => { x.fillStyle = '#a4a8ae'; x.fillRect(0, 0, w, h); for (let i = 0; i < 380; i++) { const sx = r() * w; x.strokeStyle = r() < 0.55 ? 'rgba(236,238,242,0.75)' : 'rgba(58,62,72,0.65)'; x.lineWidth = 0.8 + r() * 1.6; x.beginPath(); x.moveTo(sx, r() * h * 0.7); x.bezierCurveTo(sx + 8, h * 0.4, sx - 8, h * 0.7, sx + (r() - 0.5) * 14, h); x.stroke(); } });
   const hair = matte({ map: strandPaint, emissive: 0x141518, roughness: 0.75 }), white = matte({ color: 0xc8cbd0, emissive: 0x16181a, roughness: 0.65 }), grey = matte({ color: 0x84888f, emissive: 0x0c0d0e, roughness: 0.7 });
   /* the body of the beard: rings from the chin down on to the chest [height, half width, front, back] */
-  const rows = [[1.614, 0.064, 0.1, 0.044], [1.598, 0.092, 0.114, 0.022], [1.558, 0.108, 0.126, 0.03], [1.51, 0.114, 0.142, 0.048], [1.46, 0.108, 0.168, 0.082], [1.41, 0.09, 0.19, 0.116], [1.362, 0.064, 0.196, 0.14], [1.322, 0.036, 0.188, 0.156], [1.295, 0.004, 0.176, 0.168]];
-  const surface = (a, t) => { const i = Math.min(rows.length - 2, Math.floor(t * (rows.length - 1))), k = t * (rows.length - 1) - i, m = n => mix(rows[i][n], rows[i + 1][n], k), rz = (m(2) - m(3)) / 2, zc = (m(2) + m(3)) / 2, wave = 1 + 0.11 * Math.sin(a * 9 + t * 11) + 0.07 * Math.sin(a * 17 - t * 23);
+  const rows = [[1.598, 0.052, 0.094, 0.044], [1.578, 0.078, 0.106, 0.024], [1.545, 0.092, 0.116, 0.032], [1.505, 0.096, 0.132, 0.05], [1.46, 0.09, 0.158, 0.084], [1.415, 0.075, 0.178, 0.116], [1.372, 0.053, 0.184, 0.14], [1.335, 0.029, 0.178, 0.154], [1.31, 0.003, 0.168, 0.162]];
+  const surface = (a, t) => { const i = Math.min(rows.length - 2, Math.floor(t * (rows.length - 1))), k = t * (rows.length - 1) - i, m = n => mix(rows[i][n], rows[i + 1][n], k), rz = (m(2) - m(3)) / 2, zc = (m(2) + m(3)) / 2, wave = 1 + 0.05 * Math.sin(a * 9 + t * 11) + 0.03 * Math.sin(a * 17 - t * 23);
     return V(Math.sin(a) * m(1) * wave, m(0), zc + Math.cos(a) * rz * wave); };
   const cols = 40, steps = 32, P = [], U = [], F = [];
   for (let s = 0; s <= steps; s++) for (let c = 0; c <= cols; c++) { const p = surface(c / cols * TAU, s / steps); P.push(p.x, p.y, p.z); U.push(c / cols * 2, s / steps); }
   for (let s = 0; s < steps; s++) for (let c = 0; c < cols; c++) { const a = s * (cols + 1) + c, b = a + cols + 1; F.push(a, b, a + 1, a + 1, b, b + 1); }
   const shell = new THREE.BufferGeometry(); shell.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); shell.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); shell.setIndex(F); shell.computeVertexNormals(); g.add(mesh(shell, hair));
   /* loose locks over it */
-  for (let i = 0; i < 120; i++) { const a = (r() - 0.5) * 4.2, from = r() * 0.5, to = Math.min(1.06, from + 0.4 + r() * 0.55), phase = r() * 6;
-    const pts = Array.from({ length: 12 }, (_, k) => { const t = mix(from, to, k / 11), p = surface(a + 0.2 * Math.sin(k * 0.9 + phase), Math.min(1, t)); p.z += 0.006; p.x *= 1.07 + 0.05 * Math.sin(k + phase); if (k > 8) p.y -= 0.007 * (k - 8); return p; });
-    g.add(rod(pts, t => mix(0.0062, 0.0008, t), i % 3 ? white : grey, 18, 4)); }
+  for (let i = 0; i < 230; i++) { const a = (r() - 0.5) * 4.2, from = 0.04 + r() * 0.55, to = Math.min(1.06, from + 0.35 + r() * 0.5), phase = r() * 6;
+    const pts = Array.from({ length: 10 }, (_, k) => { const t = mix(from, to, k / 9), p = surface(a + 0.13 * Math.sin(k * 0.9 + phase), Math.min(1, t)); p.z += 0.003; p.x *= 1.025 + 0.025 * Math.sin(k + phase); if (k > 6) p.y -= 0.006 * (k - 6); return p; });
+    g.add(rod(pts, t => mix(0.0026, 0.0004, t), i % 3 ? white : grey, 14, 3)); }
   for (const s of [-1, 1]) {
     /* sideburns joining the hair to the beard */
     for (let i = 0; i < 7; i++) g.add(rod([V(s * (0.074 + r() * 0.006), 1.668 - i * 0.004, 0.012 + i * 0.006), V(s * (0.072 + r() * 0.006), 1.628 - i * 0.004, 0.026 + i * 0.008), V(s * (0.052 + r() * 0.01), 1.585, 0.062 + i * 0.006)], t => mix(0.007, 0.002, t), i % 2 ? white : grey, 14, 4));
     /* moustache sweeping out from under the nose */
-    for (let i = 0; i < 6; i++) { const d = i * 0.0028; g.add(rod([V(s * 0.003, 1.639 - d * 0.5, 0.113), V(s * 0.028, 1.634 - d, 0.108), V(s * (0.05 + d), 1.615 - d * 1.4, 0.092), V(s * (0.072 + d * 2), 1.596 - d * 2.2, 0.074), V(s * (0.086 + d * 2), 1.606 - d * 3, 0.062)], t => 0.0058 * Math.sin(Math.PI * (0.12 + t * 0.86)) + 0.0006, i % 3 === 2 ? grey : white, 26, 5)); }
+    for (let i = 0; i < 7; i++) { const d = i * 0.0017; g.add(rod([V(s * 0.003, 1.634 - d * 0.5, 0.108), V(s * 0.025, 1.627 - d, 0.104), V(s * (0.046 + d), 1.608 - d * 1.4, 0.092), V(s * (0.068 + d * 2), 1.588 - d * 2.2, 0.078), V(s * (0.082 + d * 2), 1.594 - d * 3, 0.066)], t => 0.0033 * Math.sin(Math.PI * (0.12 + t * 0.86)) + 0.0004, i % 3 === 2 ? grey : white, 22, 4)); }
     /* heavy eyebrows */
     for (let i = 0; i < 3; i++) g.add(rod([V(s * 0.008, 1.7155 - i * 0.0022, 0.0975), V(s * 0.032, 1.7235 - i * 0.0024, 0.092), V(s * 0.056, 1.7165 - i * 0.003, 0.074)], t => 0.0033 * (1 - t) + 0.0007, white, 14, 4));
   }
