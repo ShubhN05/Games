@@ -1,6 +1,6 @@
 # KARNA - design
 
-**Status: NOT LOCKED - first build from the picture, waiting for Shubham's approval.**
+**Status: APPROVED by Shubham and LOCKED on 2026-11-26.** Change only when he asks: unlock, change, lock again.
 
 ## Built (from the picture in `pictures/`)
 

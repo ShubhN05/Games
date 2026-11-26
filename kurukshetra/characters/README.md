@@ -20,8 +20,8 @@ characters/
 
 | Folder | Name | Side | Tier (proposed) | In the game |
 |---|---|---|---|---|
-| `arjun/` | Arjun | Pandava | Legend | yes, temporary look |
-| `karna/` | Karna | Kaurava | Legend | yes, temporary look |
+| `arjun/` | Arjun | Pandava | Legend | yes, **locked** |
+| `karna/` | Karna | Kaurava | Legend | yes, **locked** |
 | `bhishma/` | Bhishma | Kaurava | Legend | not yet |
 | `drona/` | Drona | Kaurava | Legend | not yet |
 | `ashvatthama/` | Ashvatthama | Kaurava | Legend | not yet |
