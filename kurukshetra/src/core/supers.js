@@ -34,6 +34,7 @@ export function tickLower(d, i, ev){
 export function inputCode(d, i, digit){
   const f = d.f[i];
   if (d.winner !== null || !/^[1-5]$/.test(digit)) return null;
+  if (f.stray > 0) { f.stray = 0; return { type: 'stray' }; }
   f.digits += digit; f.digitT = T.digit;
   if (f.digits.length < 2) return null;
   const code = f.digits; f.digits = '';
@@ -59,24 +60,33 @@ function counter(d, i, code, inc, refuse){
     if (!attack.rare) return refuse(p.name + ' only blocks a rare weapon');
     if (f.used[code]) return refuse(p.name + ' already used');
   }
-  if (inc.left < T.counterExec - 1e-6) { inc.tried = true; return { type: 'late', code }; }
+  if (inc.left < T.counterExec - 1e-6) { inc.tried = true; inc.reply = { code, result: 'late' }; return { type: 'late', code }; }
   if (attack.lower && !p.shield) inc.resisted = true;                  // answering it with a weapon is resisting
   inc.tried = true; const paused = !!f.call; if (paused) f.hold = T.counterExec;     // your own call waits while you counter
   if (p.shield) f.used[code] = true;
   const halves = !!attack.halvedBy?.includes(code);
   const good = halves || attack.counters.includes(code);
+  inc.reply = { code, result: halves ? 'half' : good ? 'good' : 'wrong' };
   d.counters.push({ by: i, code, target: inc.uid, left: T.counterExec, good, halves });
   return { type: 'counter', code, paused };
 }
 
 /* a half-typed code is forgotten after a while */
-export function tickDigits(f, dt){ if (f.digits && done(f.digitT -= dt)) f.digits = ''; }
+export function tickDigits(f, dt){ f.stray = Math.max(0, f.stray - dt); if (f.digits && done(f.digitT -= dt)) f.digits = ''; }
+
+/* the shield that can still stop the weapon coming at archer i, if any */
+export function shieldFor(d, i){
+  const inc = d.incoming[i], f = d.f[i];
+  if (!inc || inc.tried || inc.left < T.counterExec - 1e-6) return null;
+  return POWERS[inc.code].counters.find(c => POWERS[c].shield && !f.used[c]) || null;
+}
 
 /* the call of archer i: when it completes, the super arrow is released (held = waiting for own counter) */
 export function tickCall(d, i, dt, held, ev){
   const f = d.f[i];
   if (!f.call || held || !done(f.call.left -= dt)) return;
-  const code = f.call.code; f.call = null; f.superRest = T.superRest; d.f[1 - i].digits = '';
+  const code = f.call.code; f.call = null; f.superRest = T.superRest;
+  const target = d.f[1 - i]; if (target.digits) { target.digits = ''; target.stray = T.stray; }
   if (POWERS[code].rare) f.used[code] = true;
   resist(d, i);
   const s = { uid: d.uid++, by: i, code, left: T.flight, tried: false, damage: POWERS[code].rare ? DMG.rare : DMG.super };

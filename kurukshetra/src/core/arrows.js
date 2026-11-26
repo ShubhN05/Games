@@ -1,6 +1,6 @@
 /* Normal arrows and moving: shooting, jumping, dodging, knocking down, hitting. */
-import { T, ESCAPE, done } from './constants.js';
-import { tipS, CONTACT, REACH, END, CROSS, JUMP, heightAt, hopHeight } from './path.js';
+import { T, ESCAPE, JUMP_CUE, done } from './constants.js';
+import { tipS, START, CONTACT, REACH, END, CROSS, JUMP, heightAt, hopHeight } from './path.js';
 import { resist } from './supers.js';
 
 export function setStance(d, i, stance){
@@ -24,6 +24,19 @@ export function jump(d, i){
 export function tickHop(f, dt){
   f.hopRest = Math.max(0, f.hopRest - dt);
   if (f.hop !== null && (f.hop += dt) >= JUMP.time - 1e-6) { f.hop = null; f.hopRest = JUMP.rest; }
+}
+
+/* seconds until a flying arrow reaches a standing archer */
+export const arrivesIn = a => a.flight * (1 + CONTACT.mid / START - a.p);
+/* for a low arrow: 'wait', then 'now' while pressing jump will clear it, then nothing */
+export function jumpCue(a){
+  const left = arrivesIn(a);
+  return left > JUMP_CUE.from ? 'wait' : left >= JUMP_CUE.to ? 'now' : null;
+}
+/* seconds in which the opponent can still shoot a slow arrow that reaches archer i before the super arrow leaves */
+export function breakTime(d, i){
+  const call = d.f[i].call;
+  return call ? Math.max(0, call.left - T.hard.draw - T.hard.flight * (1 + CONTACT.mid / START)) : 0;
 }
 
 /* give up the bow draw to move: the arrow goes back into the quiver */
@@ -54,13 +67,19 @@ export function tickDraw(d, i, dt, ev){
 export function stepArrows(d, dt, ev){
   for (const a of d.arrows) { a.prev = a.p; a.p += dt / a.flight; }
   /* opposite arrows on the same path knock each other down if they really meet where they cross */
-  for (const a of d.arrows) for (const b of d.arrows)
-    if (!a.gone && !b.gone && a.by === 0 && b.by === 1 && a.path === b.path && a.prev + b.prev < CROSS && a.p + b.p >= CROSS
-        && Math.abs(heightAt(a.path, tipS(a.p)) - heightAt(b.path, tipS(b.p))) < 0.55) { a.gone = b.gone = true; ev.push({ type: 'clash', a, b }); }
+  for (const a of d.arrows) for (const b of d.arrows) {
+    if (a.gone || b.gone || a.by !== 0 || b.by !== 1 || a.path !== b.path) continue;
+    const before = a.prev + b.prev, after = a.p + b.p;
+    if (before >= CROSS || after < CROSS) continue;
+    const k = (CROSS - before) / (after - before), at = x => tipS(x.prev + (x.p - x.prev) * k);      // their heights at the moment they cross
+    if (Math.abs(heightAt(a.path, at(a)) - heightAt(b.path, at(b))) < 0.55) { a.gone = b.gone = true; ev.push({ type: 'clash', a, b }); }
+  }
   /* an arrow hits when its tip and the body cross, whichever of the two moved */
   for (const a of d.arrows) {
     if (a.gone) continue;
-    const to = 1 - a.by, f = d.f[to], s = tipS(a.p), gap = s - CONTACT[f.stance], touched = a.gap < 0 && gap >= 0 && s <= REACH[a.path] + 1e-6;
+    const to = 1 - a.by, f = d.f[to], s = tipS(a.p), spot = CONTACT[f.stance], gap = s - spot;
+    const where = tipS(a.prev) < spot ? spot : s;              // the arrow flew into the body, or the body stepped into the arrow
+    const touched = a.gap < 0 && gap >= 0 && where <= REACH[a.path] + 1e-6;
     a.gap = gap;
     const airborne = airHeight(f) >= JUMP.clear, escaped = ESCAPE[a.path] === 'jump' ? airborne : !airborne && f.stance === ESCAPE[a.path];
     if (touched && !escaped) {

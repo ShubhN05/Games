@@ -5,12 +5,12 @@ import { POWERS, CHARACTERS, owns } from '../core/index.js';
 const columns = () => ['1', '2', '3', '4', '5'].map(n => Object.keys(POWERS).filter(c => c[0] === n));
 let shown = '';
 
-/* f = the player's fighter, answers = codes to highlight */
-export function drawChart(f, answers){
-  const key = f.id + f.digits + JSON.stringify(f.used) + answers.join(); if (key === shown) return; shown = key;
+/* f = the player's fighter, answers = codes to highlight, seen = the last arrow the computer has watched */
+export function drawChart(f, answers, seen){
+  const key = f.id + f.digits + JSON.stringify(f.used) + answers.join() + seen; if (key === shown) return; shown = key;
   $('chart').innerHTML = columns().map((col, n) => '<div class="col' + (f.digits === String(n + 1) ? ' on' : '') + '">' + col.map(c => {
     const p = POWERS[c], gone = p.rare && (f.used[c] || !owns(f, c));
-    return '<div class="' + (answers.includes(c) ? 'ans' : gone ? 'gone' : '') + '"><u>' + c + '</u><span class="dot" style="background:' + powerColor(c) + '"></span>' + p.name + '</div>';
+    return '<div class="' + (answers.includes(c) ? 'ans' : gone ? 'gone' : '') + '"><u>' + c + '</u><span class="dot" style="background:' + powerColor(c) + '"></span>' + p.name + (c === seen && !gone ? '<small>seen</small>' : '') + '</div>';
   }).join('') + '</div>').join('');
 }
 

@@ -17,7 +17,7 @@ import { digitOf, moveOf, KEYMAP, stanceFromKeys, pathFromKeys, initKeyboard } f
 import { showEvent, showInput } from './events.js';
 
 /* the running match; duel === null means we are on the menu */
-export const match = { duel: null, ai: null, actors: [], paused: false, overT: 0, shake: 0, buffered: null, hints: true };
+export const match = { duel: null, ai: null, actors: [], paused: false, overT: 0, shake: 0, buffered: null, hints: true, lesson: null };
 let models = {}, loadModel = null, loading = false;
 
 function clearScene(){ normalArrows.clear(); superArrows.clear(); clearParticles(); clearFloats(); }
@@ -43,7 +43,7 @@ const rematch = () => start(match.duel.f[0].id, settings.level, match.duel.f[1].
 
 function begin(archer, foe, level){
   clearScene();
-  Object.assign(match, { duel: createDuel([archer, foe]), ai: createAI(level), paused: false, overT: 0, shake: 0, buffered: null, hints: settings.hints === 'on' });
+  Object.assign(match, { duel: createDuel([archer, foe]), ai: createAI(level), paused: false, overT: 0, shake: 0, buffered: null, lesson: null, hints: settings.hints === 'on' });
   placeActors([archer, foe]);
   showMenu(false); showHelp(false); banner('FIGHT'); clearNote();
   play('gong');
@@ -62,11 +62,12 @@ function refresh(dt){
   const secret = match.paused && blind();
   tickMessages(dt);
   if (match.duel.t > 0.9 && bannerText() === 'FIGHT') banner();
-  drawHud(match.duel, { hints: match.hints, secret, arrowSpot: uid => superArrows.position(uid), tipSpot: uid => normalArrows.position(uid) });
+  drawHud(match.duel, { hints: match.hints, secret, seen: match.ai.last, arrowSpot: uid => superArrows.position(uid), tipSpot: uid => normalArrows.position(uid) });
   superArrows.setVisible(!secret);
 }
 
 function setPause(on){
+  if (on && blind()) clearParticles();                 // the glowing trail would tell which arrow it is
   match.paused = on; banner(on ? 'PAUSED' : '', on ? 'P = continue · R = restart · Esc = menu' : '');
   if (match.duel) refresh(0);
 }
@@ -85,7 +86,7 @@ function fire(kind, path){                    // a shot pressed a moment too ear
   if (f.arrows[kind] <= 0) note('No ' + (kind === 'fast' ? 'fast' : 'slow') + ' arrows left', '#ffb0a0', 1); else if (f.call) note('You are calling a super arrow', '#ffb0a0', 0.9); else match.buffered = { kind, path, t: 0.45 };
 }
 
-function onPress(code){
+function onPress(code, event){
   const d = match.duel;
   if (code === KEYMAP.mute) return void note(toggleMute() ? 'Sound on' : 'Sound off', '#fff', 0.8);
   if (code === KEYMAP.help) return void toggleHelp();
@@ -94,7 +95,11 @@ function onPress(code){
     if (!d) return;
     return void (d.winner !== null || match.paused ? openMenu() : setPause(true));
   }
-  if (!d) { if (code === KEYMAP.start && !helpOpen()) start(); return; }
+  if (!d) {
+    const b = document.activeElement, chosen = b?.tagName === 'BUTTON' && b.matches(':focus-visible');     // a button reached with Tab: Enter presses it
+    if (code === KEYMAP.start && !helpOpen() && !chosen) { event?.preventDefault(); start(); }
+    return;
+  }
   if (helpOpen()) return;
   if (code === KEYMAP.restart) return void (d.winner !== null || match.paused ? rematch() : note('To restart: pause (P), then R', '#fff', 1.2));
   if (code === KEYMAP.pause) return void (d.winner === null && setPause(!match.paused));
@@ -108,7 +113,7 @@ function onPress(code){
     if (d.incoming[0] && !d.incoming[0].tried && !POWERS[d.incoming[0].code].lower) note('A super arrow cannot be dodged: press the counter numbers', '#ffe9a0', 1.6);
   }
   const digit = digitOf(code);
-  if (digit) showInput(inputCode(d, 0, digit));
+  if (digit) showInput(inputCode(d, 0, digit), match);
   if (code === KEYMAP.clear) cancelCode(d, 0);
   if (code === KEYMAP.fast || code === KEYMAP.hard) { setStance(d, 0, stanceFromKeys()); fire(code === KEYMAP.fast ? 'fast' : 'hard', pathFromKeys()); }
 }
@@ -126,7 +131,7 @@ function advance(dt){
       if (e.type === 'over') { match.overT = 0.001; match.buffered = null; clearNote(); }
     }
   } else if (match.overT > 0 && (match.overT += dt) > 1.2) {
-    banner(d.winner === 'draw' ? 'DRAW' : d.winner === 0 ? 'VICTORY' : 'DEFEAT', 'R = fight again · Esc = menu'); match.overT = 0;
+    banner(d.winner === 'draw' ? 'DRAW' : d.winner === 0 ? 'VICTORY' : 'DEFEAT', (d.winner === 1 && match.lesson ? match.lesson + '<br>' : '') + 'R = fight again · Esc = menu'); match.overT = 0;
   }
 }
 

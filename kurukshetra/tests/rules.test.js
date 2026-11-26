@@ -1,6 +1,6 @@
 /* the rules of the duel. run all tests: npm test */
 import assert from 'node:assert/strict';
-import { createDuel, step, inputCode, cancelCode, shoot, setStance, jump, cancelDraw, airHeight, answersTo, POWERS, T } from '../src/core/index.js';
+import { createDuel, step, inputCode, cancelCode, shoot, setStance, jump, cancelDraw, airHeight, answersTo, shieldFor, breakTime, jumpCue, POWERS, T } from '../src/core/index.js';
 const run = (d, s) => { const ev = []; for (let i = 0, n = Math.round(s * 100); i < n; i++) ev.push(...step(d, 0.01)); return ev; };
 const code = (d, i, c) => { inputCode(d, i, c[0]); return inputCode(d, i, c[1]); };
 const hp = (d, i) => Math.round(d.f[i].hp * 10) / 10;
@@ -70,6 +70,43 @@ test('lowering the bow drops your own preparation without using it up', () => { 
   assert.ok(e.some(x => x.type === 'lowered' && x.to === 1 && x.code === '51')); assert.equal(d.f[1].used['51'], undefined); assert.equal(e.some(x => x.type === 'release' && x.by === 1), false); assert.equal(hp(d, 1), 100); });
 test('releasing your own super arrow while it flies is resisting', () => { const d = createDuel(['ashvatthama', 'karna']); code(d, 0, '52'); run(d, 1); code(d, 1, '11'); run(d, CALL - 0.98); run(d, 1.2); assert.ok(d.incoming[0], 'karna released'); setStance(d, 1, 'crouch'); run(d, 2); assert.equal(hp(d, 1), 70); });
 test('crouching keeps the preparation against an ordinary arrow', () => { const d = fresh(); code(d, 0, '11'); run(d, 1); code(d, 1, '12'); run(d, CALL - 0.95); setStance(d, 1, 'crouch'); run(d, 0.5); assert.ok(d.f[1].call); });
+/* a slow computer must play by the same rules: uneven, long frames change nothing */
+const seeded = s => () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const frames = (d, fps, s, r) => { const ev = []; for (let t = 0; t < s;) { const dt = (0.85 + 0.3 * r()) / fps; ev.push(...step(d, dt)); t += dt; } return ev; };
+for (const [kind, path, stance] of [['fast', 'high', 'back'], ['hard', 'high', 'back'], ['fast', 'jump', 'mid'], ['hard', 'jump', 'crouch'], ['fast', 'low', 'mid']])
+  test(kind + ' ' + path + ' vs ' + stance + ' hits at any frame rate', () => { const r = seeded(11); for (const fps of [144, 60, 30, 20]) for (let k = 0; k < 80; k++) {
+    const d = createDuel(['arjun', 'karna']); setStance(d, 1, stance); shoot(d, 0, kind, path); frames(d, fps, 3, r); assert.ok(d.f[1].hp < 100, 'missed at ' + fps + ' fps'); } });
+test('knock-downs are the same at any frame rate', () => { for (const [path, gap] of [['high', 0.4], ['high', 0.1], ['jump', 0.25], ['low', 0.3], ['straight', 0.5]]) { const seen = new Set();
+  for (const fps of [1000, 60, 30, 20]) for (let k = 0; k < 20; k++) { const r = seeded(k + 1), d = createDuel(['arjun', 'karna']); shoot(d, 0, 'fast', path); let e = [];
+    for (let t = 0; t < gap - 1e-9; t += 0.01) e.push(...step(d, 0.01)); shoot(d, 1, 'fast', path); e.push(...frames(d, fps, 3, r)); seen.add(e.some(x => x.type === 'clash')); }
+  assert.equal(seen.size, 1, path + ' ' + gap + ' s apart'); } });
+
+/* the release comes between your two numbers: the leftover one must not spoil the counter */
+test('a number left over from before the release is thrown away', () => { const d = fresh(); code(d, 0, '11'); run(d, CALL - 0.1); inputCode(d, 1, '3'); run(d, 0.2);
+  assert.equal(inputCode(d, 1, '1').type, 'stray'); assert.equal(d.incoming[1].tried, false); assert.equal(code(d, 1, '12').type, 'counter'); run(d, 1); assert.equal(hp(d, 1), 100); });
+test('only a quick leftover is thrown away', () => { const d = fresh(); code(d, 0, '11'); run(d, CALL - 0.1); inputCode(d, 1, '3'); run(d, 0.8); assert.equal(code(d, 1, '12').type, 'counter'); });
+test('with nothing half typed, the first number after a release counts', () => { const d = fresh(); code(d, 0, '11'); run(d, CALL + 0.05); assert.equal(code(d, 1, '12').type, 'counter'); });
+
+/* what the screen needs to explain a counter */
+test('a counter remembers whether it was right', () => { for (const [c, result] of [['12', 'good'], ['13', 'wrong']]) { const d = fresh(); code(d, 0, '11'); run(d, CALL + 0.1); code(d, 1, c); assert.deepEqual(d.incoming[1].reply, { code: c, result }); }
+  let d = fresh(); code(d, 0, '53'); run(d, CALL + 0.1); code(d, 1, '51'); assert.equal(d.incoming[1].reply.result, 'half');
+  d = fresh(); code(d, 0, '11'); run(d, CALL + 2.2); code(d, 1, '12'); assert.equal(d.incoming[1].reply.result, 'late'); });
+test('shieldFor names the shield only while it can still help', () => { let d = narayana(); assert.equal(shieldFor(d, 1), '54'); run(d, 2.1); assert.equal(shieldFor(d, 1), null, 'too late');
+  d = narayana(); d.f[1].used['54'] = true; assert.equal(shieldFor(d, 1), null, 'used up'); d = fresh(); code(d, 0, '11'); run(d, CALL + 0.1); assert.equal(shieldFor(d, 1), null, 'ordinary arrow'); });
+test('breakTime says how long a slow arrow can still break a call', () => { const d = fresh(); code(d, 1, '11'); assert.ok(breakTime(d, 1) > 1.2 && breakTime(d, 1) < 1.4); assert.equal(breakTime(d, 0), 0);
+  for (const wait of [0, 0.6, 1.2, 1.4, 2]) { const m = fresh(); code(m, 1, '11'); run(m, wait); const open = breakTime(m, 1) > 0; shoot(m, 0, 'hard', 'straight'); run(m, 3); assert.equal(m.f[1].broken > 0, open, 'shot after ' + wait + ' s'); } });
+test('jumpCue says now exactly when a jump clears the low arrow', () => { for (const kind of ['fast', 'hard']) { let shown = 0;
+  for (let wait = 0.2; wait < 1.8; wait += 0.02) { const d = createDuel(['arjun', 'karna']); shoot(d, 0, kind, 'low'); run(d, wait); const a = d.arrows[0]; if (!a || jumpCue(a) !== 'now') continue; shown++; jump(d, 1); run(d, 2); assert.equal(hp(d, 1), 100, kind + ' jump at ' + wait.toFixed(2)); }
+  assert.ok(shown >= 10, kind + ' cue stays long enough: ' + shown); }
+  const d = createDuel(['arjun', 'karna']); shoot(d, 0, 'hard', 'low'); run(d, 0.75); assert.equal(jumpCue(d.arrows[0]), 'wait'); });
+
+/* the computer preparing its own super arrow when Narayanastra is released */
+test('a computer that is preparing drops it and lowers its bow', () => { let hit = 0; const N = 200;
+  for (let k = 1; k <= N; k++) { const d = createDuel(['ashvatthama', 'karna']), ai = createAI('hard', seeded(k * 7919)); ai.superT = 99; ai.arrowT = 99;
+    code(d, 0, '52'); run(d, 1); code(d, 1, '11'); for (let i = 0; i < 600; i++) { stepAI(d, 1, ai, 0.01); step(d, 0.01); } if (d.f[1].hp <= 70) hit++; }
+  assert.ok(hit / N < 0.25, 'hard computer still takes it: ' + hit / N); });
+test('a computer that was made to resist reaches for its shield', () => { const d = narayana(), ai = createAI('hard', () => 0.5); ai.superT = ai.arrowT = 99; stepAI(d, 1, ai, 0.01); assert.equal(ai.lower, d.incoming[1].uid);
+  d.incoming[1].resisted = true; stepAI(d, 1, ai, 0.01); assert.equal(d.counters[0]?.code, '54'); });
 console.log('OK', n, 'tests');
 
 /* what is drawn agrees with what hits */

@@ -4,17 +4,23 @@ import { tickDraw, tickHop, stepArrows } from './arrows.js';
 import { tickDigits, tickLower, tickCall, stepSupers } from './supers.js';
 import { getCharacter } from '../../characters/index.js';
 
-const fighter = id => ({ id: getCharacter(id).id, hp: 100, arrows: { ...ARROWS }, digits: '', digitT: 0, call: null, draw: null, rest: 0, hold: 0, superRest: 0,
+const fighter = id => ({ id: getCharacter(id).id, hp: 100, arrows: { ...ARROWS }, digits: '', digitT: 0, stray: 0, call: null, draw: null, rest: 0, hold: 0, superRest: 0,
   stance: 'mid', wish: 'mid', hop: null, hopRest: 0, broken: 0, used: {} });
 
 export function createDuel(ids){
   return { t: 0, f: ids.map(fighter), incoming: [null, null], counters: [], arrows: [], winner: null, uid: 1 };
 }
 
-/* advance the match by dt seconds; returns the events that happened */
+/* advance the match by dt seconds; returns the events that happened.
+   Long frames are cut into small pieces, so a slow computer plays by the same rules. */
+const SLICE = 1 / 240;
 export function step(d, dt){
-  const ev = [];
-  if (d.winner !== null) return ev;
+  const ev = [], slices = Math.max(1, Math.ceil(dt / SLICE - 1e-6));
+  for (let k = 0; k < slices; k++) tick(d, dt / slices, ev);
+  return ev;
+}
+function tick(d, dt, ev){
+  if (d.winner !== null) return;
   d.t += dt;
 
   d.f.forEach((f, i) => {
@@ -29,7 +35,6 @@ export function step(d, dt){
   stepSupers(d, dt, ev);
   stepArrows(d, dt, ev);
   checkOver(d, ev);
-  return ev;
 }
 
 function checkOver(d, ev){

@@ -21,7 +21,7 @@ export function initKeyboard({ onPress, onBlur }){
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     if (e.repeat) return;
     held[e.code] = ++presses;
-    onPress(e.code);
+    onPress(e.code, e);
   });
   addEventListener('keyup', e => { held[e.code] = 0; });
   addEventListener('blur', () => { for (const k in held) held[k] = 0; onBlur(); });

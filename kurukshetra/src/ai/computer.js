@@ -1,5 +1,5 @@
 /* The computer archer. It only learns which super arrow is coming after it has been released, like the player. */
-import { setStance, shoot, jump, inputCode, owns, ESCAPE, POWERS, getCharacter } from '../core/index.js';
+import { setStance, shoot, jump, inputCode, owns, shieldFor, ESCAPE, POWERS, getCharacter } from '../core/index.js';
 import { END, START, CONTACT } from '../core/path.js';
 import { LEVELS } from './levels.js';
 
@@ -12,8 +12,13 @@ export function stepAI(d, i, ai, dt){
   if (d.winner !== null) return;
   answerSuper(d, i, ai, dt);
   if (ai.lower !== null) {                                     // bow lowered: hold still until that weapon has gone
-    if (d.incoming[i]?.uid === ai.lower) { ai.superT -= dt; ai.arrowT -= dt; return; }
-    ai.lower = null; setStance(d, i, 'mid');
+    const inc = d.incoming[i];
+    if (inc?.uid === ai.lower) {
+      const shield = inc.resisted && shieldFor(d, i);          // it turned on us after all: only the shield is left
+      if (shield) enter(d, i, shield);
+      ai.superT -= dt; ai.arrowT -= dt; return;
+    }
+    ai.lower = null; ai.dodges.length = 0; d.arrows.forEach(a => ai.seen.add(a.uid)); setStance(d, i, 'mid');
   }
   dodgeArrows(d, i, ai, dt);
   attack(d, i, ai, dt);
@@ -33,7 +38,7 @@ function answerSuper(d, i, ai, dt){
     if (POWERS[inc.code].lower) planLower(d.f[i], inc, ai);
   }
   const waited = (ai.answer.t -= dt) <= 0;
-  if (ai.lower === inc.uid) { if (waited) setStance(d, i, 'crouch'); return; }
+  if (ai.lower === inc.uid) { if (waited || d.f[i].call) setStance(d, i, 'crouch'); return; }      // preparing something: drop it at once
   if (!waited) return;
   if (ai.answer.code) return void enter(d, i, ai.answer.code);
   const attack = POWERS[inc.code], good = rnd() < knows(ai);
