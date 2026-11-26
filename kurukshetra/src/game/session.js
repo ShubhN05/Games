@@ -65,7 +65,7 @@ function fire(kind, path){                    // a shot pressed a moment too ear
   const d = match.duel;
   if (shoot(d, 0, kind, path)) { match.buffered = null; return; }
   const f = d.f[0];
-  if (f.arrows <= 0) note('No arrows left', '#ffb0a0', 1); else if (f.call) note('You are calling a super arrow', '#ffb0a0', 0.9); else match.buffered = { kind, path, t: 0.45 };
+  if (f.arrows[kind] <= 0) note('No ' + (kind === 'fast' ? 'fast' : 'slow') + ' arrows left', '#ffb0a0', 1); else if (f.call) note('You are calling a super arrow', '#ffb0a0', 0.9); else match.buffered = { kind, path, t: 0.45 };
 }
 
 function onPress(code){

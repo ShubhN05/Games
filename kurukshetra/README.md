@@ -8,7 +8,7 @@ A one-on-one long-range archery duel in the browser: you against the computer, A
 
 | Key | Action |
 |---|---|
-| **F** / **S** | fast arrow (0.3%) / normal arrow (1%); 50 arrows in total. Each can be shot four ways: |
+| **F** / **S** | fast arrow (0.3%) / slow arrow (1%); **20 of each**. Each can be shot four ways: |
 | F/S alone | straight shot — escape it with **↓** (crouch, hold) |
 | **A** + F/S | low shot — escape it with **↑** (jump just before it arrives) |
 | **↑** + F/S | jump shot — escape it with **←** (step back, hold) |

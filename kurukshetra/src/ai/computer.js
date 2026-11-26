@@ -71,6 +71,8 @@ function attack(d, i, ai, dt){
     if (r && r.type === 'call') ai.superT = L.superEvery * (0.7 + rnd() * 0.6);
   }
   if (ai.arrowT <= 0 && !ai.dodges.length) {
-    if (shoot(d, i, rnd() < 0.6 ? 'fast' : 'hard', pick(ai, ['straight', 'jump', 'high', 'low']))) ai.arrowT = L.arrowEvery * (0.6 + rnd() * 0.8);
+    let kind = rnd() < 0.6 ? 'fast' : 'hard';
+    if (f.arrows[kind] <= 0) kind = kind === 'fast' ? 'hard' : 'fast';        // that kind is used up
+    if (shoot(d, i, kind, pick(ai, ['straight', 'jump', 'high', 'low']))) ai.arrowT = L.arrowEvery * (0.6 + rnd() * 0.8);
   }
 }

@@ -9,6 +9,6 @@ export const T = {
   hard: { draw: 0.70, flight: 1.0, rest: 0.30, dmg: 1.0 }
 };
 export const DMG = { super: 10, rare: 30 };
-export const ARROWS = 50;
+export const ARROWS = { fast: 20, hard: 20 };      // each archer's quiver: fast arrows and slow ('hard') arrows
 export const ESCAPE = { straight: 'crouch', jump: 'back', high: 'forward', low: 'jump' };   // what escapes which shot
 export const done = left => left <= 1e-6;                                     // a countdown has run out

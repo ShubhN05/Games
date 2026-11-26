@@ -9,6 +9,12 @@
   #s1 .bar i{left:auto;right:0;background:linear-gradient(#ff7a5a,#b01a14)}
   .bar b{position:absolute;left:8px;right:8px;top:2px;font-size:15px}
   .info{margin-top:5px;font:bold 13px system-ui}
+  .quiver{position:absolute;top:8px;display:flex;gap:6px}
+  #q0{left:456px} #q1{right:456px}
+  .quiver div{width:72px;padding:2px 0 3px;text-align:center;background:#0b0712d8;border:2px solid;border-radius:8px}
+  .quiver .fast{border-color:#c8f4ff;color:#c8f4ff} .quiver .hard{border-color:#ffd24a;color:#ffd24a}
+  .quiver span{display:block;font:bold 11px system-ui;letter-spacing:1px} .quiver b{display:block;font:900 26px system-ui;line-height:28px}
+  .quiver .few{border-color:#ff5a4a;color:#ff8a7a;animation:pulse .5s infinite alternate} .quiver .empty{border-color:#6a5a5a;color:#8a7a7a}
   #top{position:absolute;left:16px;top:62px;width:340px;text-align:center}
   #tags b{position:absolute;display:none;transform:translate(-50%,-100%);padding:1px 8px;font:900 17px system-ui;white-space:nowrap;background:#000c;border:2px solid #c8f4ff;border-radius:6px}
   #tags b.hard{border-color:#ffd24a}

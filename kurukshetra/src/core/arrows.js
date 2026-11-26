@@ -29,14 +29,14 @@ export function tickHop(f, dt){
 export function cancelDraw(d, i){
   const f = d.f[i];
   if (d.winner !== null || !f.draw) return false;
-  f.draw = null; f.arrows++; f.rest = 0; f.stance = f.wish;
+  f.arrows[f.draw.kind]++; f.draw = null; f.rest = 0; f.stance = f.wish;
   return true;
 }
 
 export function shoot(d, i, kind, path){
   const f = d.f[i];
-  if (d.winner !== null || f.call || f.draw || f.rest > 0 || f.arrows <= 0) return false;
-  f.arrows--; f.draw = { kind, path, left: T[kind].draw }; f.stance = 'mid';
+  if (d.winner !== null || f.call || f.draw || f.rest > 0 || f.arrows[kind] <= 0) return false;
+  f.arrows[kind]--; f.draw = { kind, path, left: T[kind].draw }; f.stance = 'mid';
   return true;
 }
 

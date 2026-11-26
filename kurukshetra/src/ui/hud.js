@@ -13,7 +13,13 @@ function drawSide(f, i){
   s.querySelector('b').textContent = who.name + (i ? ' (computer)' : ' (you)') + '   ' + (Math.round(f.hp * 10) / 10) + '%';
   const rares = who.rares.map(c => f.used[c] ? '<s style="opacity:.4">' + POWERS[c].name + '</s>' : POWERS[c].name).join(' · ');
   const shields = Object.keys(POWERS).filter(c => POWERS[c].shield).map(c => (POWERS[c].short || POWERS[c].name) + ' ' + (f.used[c] ? '○' : '●')).join('  ·  ');
-  setHtml(s.querySelector('.info'), 'Arrows ' + f.arrows + '  ·  ' + rares + '  ·  ' + shields);
+  setHtml(s.querySelector('.info'), rares + '  ·  ' + shields);
+  setHtml($('q' + i), quiver(f.arrows));
+}
+/* how many arrows of each kind are left (colours match the flying arrows) */
+function quiver(arrows){
+  return [['fast', 'F · FAST'], ['hard', 'S · SLOW']].map(([kind, label]) => { const n = arrows[kind];
+    return '<div class="' + kind + (n === 0 ? ' empty' : n <= 5 ? ' few' : '') + '"><span>' + label + '</span><b>' + n + '</b></div>'; }).join('');
 }
 
 function drawIncoming(inc, answers){

@@ -4,7 +4,7 @@ import { tickDraw, tickHop, stepArrows } from './arrows.js';
 import { tickDigits, tickCall, stepSupers } from './supers.js';
 import { getCharacter } from '../../characters/index.js';
 
-const fighter = id => ({ id: getCharacter(id).id, hp: 100, arrows: ARROWS, digits: '', digitT: 0, call: null, draw: null, rest: 0, hold: 0, superRest: 0,
+const fighter = id => ({ id: getCharacter(id).id, hp: 100, arrows: { ...ARROWS }, digits: '', digitT: 0, call: null, draw: null, rest: 0, hold: 0, superRest: 0,
   stance: 'mid', wish: 'mid', hop: null, hopRest: 0, used: {} });
 
 export function createDuel(ids){
