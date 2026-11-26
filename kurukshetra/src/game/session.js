@@ -88,6 +88,7 @@ function onPress(code){
     if (cancelDraw(d, 0)) note('Shot cancelled', '#fff', 0.7);
     setStance(d, 0, stanceFromKeys());
     if (move === 'jump') jump(d, 0);
+    if (d.incoming[0] && !d.incoming[0].tried) note('A super arrow cannot be dodged: press the counter numbers', '#ffe9a0', 1.6);
   }
   const digit = digitOf(code);
   if (digit) showInput(inputCode(d, 0, digit));

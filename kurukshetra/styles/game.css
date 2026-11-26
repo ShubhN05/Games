@@ -15,22 +15,26 @@
   .quiver .fast{border-color:#c8f4ff;color:#c8f4ff} .quiver .hard{border-color:#ffd24a;color:#ffd24a}
   .quiver span{display:block;font:bold 11px system-ui;letter-spacing:1px} .quiver b{display:block;font:900 26px system-ui;line-height:28px}
   .quiver .few{border-color:#ff5a4a;color:#ff8a7a;animation:pulse .5s infinite alternate} .quiver .empty{border-color:#6a5a5a;color:#8a7a7a}
-  #top{position:absolute;left:16px;top:62px;width:340px;text-align:center}
+  /* the super arrow warning sits in the middle, under the arrows' usual flight */
+  #top{position:absolute;left:310px;width:660px;top:384px;text-align:center}
   #tags b{position:absolute;display:none;transform:translate(-50%,-100%);padding:1px 8px;font:900 17px system-ui;white-space:nowrap;background:#000c;border:2px solid #c8f4ff;border-radius:6px}
   #tags b.hard{border-color:#ffd24a}
-  #incoming .k{margin-top:6px;font:900 22px system-ui;white-space:nowrap}
-  #incoming .k span{display:table;margin:0 auto 4px;padding:3px 12px;background:#0b0712e0;border:2px solid #ffd24a;border-radius:8px}
-  #incoming .k kbd{display:inline-block;margin-right:5px;padding:0 9px;font:900 24px system-ui;color:#1a0e02;background:#ffd24a;border-radius:5px;text-shadow:none}
-  #tag{position:absolute;display:none;transform:translate(-50%,-100%);padding:2px 10px;font:900 18px system-ui;white-space:nowrap;background:#000b;border:2px solid;border-radius:6px}
+  #incoming .k{margin-top:5px;white-space:nowrap}
+  #incoming .k span{display:inline-block;padding:2px 12px 3px;font:900 28px system-ui;background:#0b0712;border:3px solid #ffd24a;border-radius:10px}
+  #incoming .k kbd{display:inline-block;margin-right:6px;padding:0 12px;font:900 34px system-ui;color:#1a0e02;background:#ffd24a;border-radius:6px;text-shadow:none}
+  #incoming .k em{margin:0 12px;font:bold 22px system-ui}
+  #tag{position:absolute;display:none;transform:translate(-50%,-100%);padding:2px 12px;font:900 26px system-ui;white-space:nowrap;background:#000c;border:3px solid;border-radius:8px}
   .col .ans{background:#ffd24a;color:#1a0e02;border-radius:4px;text-shadow:none;animation:pulse .3s infinite alternate}
   .col .ans u{color:#1a0e02}
   @keyframes pulse{from{opacity:1}to{opacity:.6}}
-  #incoming{display:none}
-  #incoming .t{font:900 24px system-ui;letter-spacing:1px}
+  #incoming{display:none;padding:4px 10px 8px;background:#0b07128c;border:3px solid #ffd24a;border-radius:14px}
+  #incoming.waiting{border-color:#ffffff55;padding:4px 10px}
+  #incoming.waiting .meter{display:none}
+  #incoming .t{font:900 36px system-ui;letter-spacing:1px}
+  #incoming.waiting .t{font:900 24px system-ui}
   #incoming .meter{height:10px;margin:5px 40px;background:#0009;border:1px solid #fff6;border-radius:5px;overflow:hidden}
   #incoming .meter i{display:block;height:100%;background:#ffd24a}
-  #incoming .s{font:bold 13px system-ui}
-  #foecall{position:absolute;right:16px;top:66px;text-align:right;font:bold 17px system-ui;color:#fff}
+  #incoming .s{font:900 17px system-ui}
   #mine{position:absolute;left:0;right:0;bottom:138px;text-align:center;font:900 21px system-ui;color:#ffd24a}
   #note{position:absolute;left:0;right:0;top:190px;text-align:center;font:900 28px system-ui}
   #msg{position:absolute;left:0;right:0;top:250px;text-align:center;font:900 62px system-ui;color:#fff;text-shadow:0 0 24px #ff6a1a,0 4px 8px #000}

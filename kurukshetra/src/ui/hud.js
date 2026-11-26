@@ -22,14 +22,20 @@ function quiver(arrows){
     return '<div class="' + kind + (n === 0 ? ' empty' : n <= 5 ? ' few' : '') + '"><span>' + label + '</span><b>' + n + '</b></div>'; }).join('');
 }
 
-function drawIncoming(inc, answers){
-  const box = $('incoming'); box.style.display = inc ? 'block' : 'none';
-  if (!inc) return;
-  const p = POWERS[inc.code], left = clamp((inc.left - T.counterExec) / (T.flight - T.counterExec), 0, 1), title = box.querySelector('.t');
-  title.textContent = p.name.toUpperCase() + ' (' + p.sanskrit + ')'; title.style.color = powerColor(inc.code);
-  box.querySelector('i').style.width = left * 100 + '%';
-  box.querySelector('.s').textContent = inc.tried ? 'Your try is used' : left > 0 ? 'COUNTER NOW' : 'Too late';
-  setHtml(box.querySelector('.k'), answers.map(c => '<span><kbd>' + c[0] + '</kbd><kbd>' + c[1] + '</kbd>' + POWERS[c].name + (p.halvedBy?.includes(c) ? ' (half)' : '') + '</span>').join(''));
+/* the big warning in the middle: first that the opponent is preparing a super arrow, then which one it is */
+function drawIncoming(inc, answers, caller){
+  const box = $('incoming'), title = box.querySelector('.t'), small = box.querySelector('.s'), keys = box.querySelector('.k');
+  box.style.display = inc || caller ? 'block' : 'none';
+  box.classList.toggle('waiting', !inc);
+  if (!inc) {
+    if (caller) { title.textContent = caller + ' is preparing a super arrow…'; title.style.color = '#fff'; small.textContent = 'Get ready on the number keys'; setHtml(keys, ''); box.style.borderColor = ''; }
+    return;
+  }
+  const p = POWERS[inc.code], left = clamp((inc.left - T.counterExec) / (T.flight - T.counterExec), 0, 1);
+  title.textContent = p.name.toUpperCase() + ' (' + p.sanskrit + ')'; title.style.color = box.style.borderColor = powerColor(inc.code);
+  box.querySelector('.meter i').style.width = left * 100 + '%';
+  small.textContent = inc.tried ? 'Your try is used' : left <= 0 ? 'Too late' : answers.length ? 'PRESS THESE NUMBERS NOW (arrow keys cannot dodge it)' : 'PRESS ITS COUNTER NUMBERS NOW (arrow keys cannot dodge it)';
+  setHtml(keys, answers.map(c => '<span><kbd>' + c[0] + '</kbd><kbd>' + c[1] + '</kbd>' + POWERS[c].name + (p.halvedBy?.includes(c) ? ' (half)' : '') + '</span>').join('<em>or</em>'));
 }
 
 /* a name tag that rides on the arrow coming at you (spot = its 3D position) */
@@ -56,10 +62,9 @@ function drawArrowTags(arrows, spot){
 export function drawHud(duel, { hints, secret, arrowSpot, tipSpot }){
   duel.f.forEach(drawSide);
   const me = duel.f[0], inc = secret ? null : duel.incoming[0], answers = hints ? answersTo(duel, 0) : [];
-  drawIncoming(inc, answers);
+  drawIncoming(inc, answers, !secret && duel.f[1].call ? getCharacter(duel.f[1].id).name : null);
   drawTag(inc, inc && arrowSpot(inc.uid));
   drawArrowTags(hints ? duel.arrows.filter(a => a.by === 1) : [], tipSpot);
-  $('foecall').textContent = duel.f[1].call ? getCharacter(duel.f[1].id).name + ' is calling a super arrow…' : '';
   $('mine').textContent = me.digits ? 'Code ' + me.digits + ' _' : me.call ? 'Calling ' + POWERS[me.call.code].name.toUpperCase() + '  ' + me.call.left.toFixed(1) + ' s' : '';
   drawChart(me, answers);
 }
