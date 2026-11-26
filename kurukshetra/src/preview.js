@@ -34,7 +34,7 @@ async function showPicture(){
 
 await loadClips();
 const actor = createActor(await createModel(who), 0);
-const pose = () => drawing ? { winner: null, f: [{ stance: 'mid', draw: { kind: 'hard', path: 'straight', left: 0 }, call: null }] } : null;
+const pose = () => drawing ? { winner: null, f: [{ stance: 'mid', draw: { kind: 'hard', path: 'straight', left: 0 }, call: null, hop: null }] } : null;
 function frame(dt){
   actor.pose(dt, pose());
   const a = VIEWS[view] * Math.PI / 180, x = home(0), far = 4.5;

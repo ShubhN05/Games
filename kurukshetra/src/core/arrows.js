@@ -11,7 +11,7 @@ export function setStance(d, i, stance){
 /* how high archer f's feet are: from a jump, or from rising for a jump shot */
 export function airHeight(f){
   const draw = f.draw?.path === 'jump' ? JUMP.height * Math.sin(Math.PI / 2 * (1 - Math.max(0, f.draw.left) / T[f.draw.kind].draw)) : 0;
-  return Math.max(draw, f.hop === null ? 0 : hopHeight(f.hop));
+  return Math.max(draw, f.hop == null ? 0 : hopHeight(f.hop));
 }
 
 export function jump(d, i){

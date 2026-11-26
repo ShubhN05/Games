@@ -28,7 +28,7 @@ function drawIncoming(inc, answers, caller){
   box.style.display = inc || caller ? 'block' : 'none';
   box.classList.toggle('waiting', !inc);
   if (!inc) {
-    if (caller) { title.textContent = caller + ' is preparing a super arrow…'; title.style.color = '#fff'; small.textContent = 'Hit ' + caller + ' with a slow arrow (S) to break it, or get ready on the number keys'; setHtml(keys, ''); box.style.borderColor = ''; }
+    if (caller) { title.textContent = caller + ' is preparing a super arrow…'; title.style.color = '#fff'; small.textContent = 'Break it with a slow arrow (S), or get your number keys ready'; setHtml(keys, ''); box.style.borderColor = ''; }
     return;
   }
   const p = POWERS[inc.code], left = clamp((inc.left - T.counterExec) / (T.flight - T.counterExec), 0, 1);
