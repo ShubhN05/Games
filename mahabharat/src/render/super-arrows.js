@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { scene } from './stage.js';
 import { V, clamp, face, point } from './layout.js';
 import { glow, drop, burst } from './effects.js';
-import { makeArrow } from '../shared/yudh.js';
+import { makeArrow } from '../../characters/shared/arrow.js';
 import { POWERS, T } from '../core/index.js';
 
 const flying = new Map();      // uid -> { o, by }

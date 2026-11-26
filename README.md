@@ -43,10 +43,10 @@ Games/
 │   ├── index.html
 │   ├── README.md
 │   ├── lib/ assets/ arenas.js …
-└── mahabharat/     # Mahabharat archery duel (3D, uses yudh's models and Three.js)
+└── mahabharat/     # Mahabharat archery duel (3D, self-contained)
     ├── index.html
     ├── README.md
-    └── src/ styles/ tests/
+    └── characters/ src/ lib/ styles/ tests/
 ```
 
 Each game is plain HTML, CSS and JavaScript with no build step and no dependencies.

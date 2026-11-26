@@ -36,9 +36,8 @@ index.html            the page (markup only)
 styles/game.css       look of menu and HUD
 src/
   main.js             loads everything, runs the frame loop
-  content/            ← add things here
+  content/            ← add arrows and arenas here
     powers.js           all super arrows and their counters
-    characters/         one file per archer + index.js (the roster)
     arenas/             one file per arena + index.js
   core/               the rules (no drawing, no keyboard; runs in Node)
   ai/                 the computer opponent and its levels
@@ -47,18 +46,19 @@ src/
   ui/                 menu, HUD, chart, messages
   input/              keyboard (KEYMAP)
   audio/              sound
-  shared/yudh.js      the only file that borrows from the YUDH game
-tests/                rules and content checks
+characters/           one folder per character: data, look, bow, design, pictures (see its README)
+lib/three/            the Three.js 3D library
+tests/                rules, content and design-lock checks
 ```
 
-Dependencies go one way: `core` knows only `content`; `ai` uses `core`; `render` and `ui` show what `core` says; `game` connects them.
+This game is self-contained: it loads nothing from the other games.
+
+Dependencies go one way: `core` knows only `content` and `characters`; `ai` uses `core`; `render` and `ui` show what `core` says; `game` connects them.
 
 ## Adding things
 
-**A new archer**
-1. Copy `src/content/characters/karna.js` to a new file; set `id`, `name`, `rares` and `look.dress`
-   (a function `dress(root, body)` that clothes the base body).
-2. Import it in `characters/index.js` and add it to `CHARACTERS`.
+**A new character** — see [`characters/README.md`](characters/README.md): copy a folder, edit it, add it to
+`characters/index.js`. Approved designs are locked so they cannot change by accident.
 
 **A new super arrow** — add one entry to `src/content/powers.js` with a free code (digits 1–5), its colour and
 its counters. The chart, counter table, hints and computer pick it up. An archer may fire a `rare` one only if
@@ -74,4 +74,5 @@ Fighters with a different style (mace, magic) will need new rules in `core/`, no
 
 ## Credits
 
-Uses Three.js, and the CC0 body model and animations by Quaternius, through the `yudh` folder.
+Uses Three.js (MIT, `lib/three/LICENSE`), and the CC0 body model and animations by Quaternius
+(`characters/shared/LICENSE-Quaternius-CC0.txt`).

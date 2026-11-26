@@ -4,4 +4,4 @@ export { createDuel, step } from './duel.js';
 export { shoot, setStance } from './arrows.js';
 export { inputCode, cancelCode, answersTo, owns } from './supers.js';
 export { POWERS } from '../content/powers.js';
-export { CHARACTERS, getCharacter } from '../content/characters/index.js';
+export { CHARACTERS, getCharacter } from '../../characters/index.js';

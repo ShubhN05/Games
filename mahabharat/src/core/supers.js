@@ -2,7 +2,7 @@
    Everything about a particular power comes from content/powers.js - no power codes are written here. */
 import { T, DMG, done } from './constants.js';
 import { POWERS } from '../content/powers.js';
-import { getCharacter } from '../content/characters/index.js';
+import { getCharacter } from '../../characters/index.js';
 
 export const owns = (f, code) => !POWERS[code].rare || !!POWERS[code].shield || getCharacter(f.id).rares.includes(code);
 

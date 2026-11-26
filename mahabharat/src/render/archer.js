@@ -4,15 +4,16 @@ import * as THREE from 'three';
 import { scene } from './stage.js';
 import { V, clamp, lerp, point, home, face, stanceX } from './layout.js';
 import { sprite, shadowDisc, burst } from './effects.js';
-import { clips, loadBody } from './assets.js';
+import { clips, loadBody } from '../../characters/shared/body.js';
 import { solveLimb } from './ik.js';
-import { findBody, makeBow, makeArrow } from '../shared/yudh.js';
+import { findBody } from '../../characters/shared/helpers.js';
+import { makeArrow } from '../../characters/shared/arrow.js';
 import { T } from '../core/index.js';
 
 export async function createModel(character){
-  const { tint, dress } = character.look;
-  const root = await loadBody(tint); scene.add(root);
-  (await dress())(root, findBody(root));
+  const [{ skinTint, dress }, { makeBow }] = await Promise.all([character.look(), character.bow()]);
+  const root = await loadBody(skinTint); scene.add(root);
+  dress(root, findBody(root));
   const mixer = new THREE.AnimationMixer(root), bones = {}; root.traverse(o => { if (o.isBone) bones[o.name] = o; });
   const bow = makeBow(); scene.add(bow.group);
   const nock = makeArrow(false); scene.add(nock);

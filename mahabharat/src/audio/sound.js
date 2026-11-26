@@ -1,5 +1,5 @@
-/* Sound: YUDH's code-made sounds. Add new sounds here when the game gets its own. */
-import { createSfx } from '../shared/yudh.js';
+/* Sound for the game. The sounds themselves are in sfx.js. */
+import { createSfx } from './sfx.js';
 
 const sfx = createSfx();
 export const play = (name, volume) => sfx.play(name, volume);

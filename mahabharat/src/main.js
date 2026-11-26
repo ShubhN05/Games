@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { CHARACTERS } from './core/index.js';
 import { getArena } from './content/arenas/index.js';
 import { fitToWindow, setArena } from './render/stage.js';
-import { loadClips } from './render/assets.js';
+import { loadClips } from '../characters/shared/body.js';
 import { createModel } from './render/archer.js';
 import { init, frame, start, openMenu, match } from './game/session.js';
 import { settings } from './ui/menu.js';
