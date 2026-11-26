@@ -20,7 +20,7 @@ A one-on-one long-range archery duel in the browser: you against the computer, A
 | **R** | restart (when paused or after the match) |
 | **M** | sound on/off |
 
-A super arrow takes 2 s to call and 2.5 s to fly. The opponent cannot see which one it is until release.
+A super arrow takes 3 s to prepare and 2.5 s to fly. The opponent cannot see which one it is until release.
 Brahmastra and Pashupata do 30%, other super arrows 10%.
 
 ## Run and test locally

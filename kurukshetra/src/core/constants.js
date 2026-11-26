@@ -1,6 +1,6 @@
 /* Timing, damage and other tuning numbers of the duel. */
 export const T = {
-  call: 2.0,            // calling a super arrow
+  call: 3.0,            // preparing a super arrow (a slow arrow that hits breaks it)
   flight: 2.5,          // super arrow in the air
   counterExec: 0.5,     // counter needs this long, so it must be pressed within 2 s of release
   superRest: 1.0,       // pause after releasing a super arrow before the next call
