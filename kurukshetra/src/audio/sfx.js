@@ -1,4 +1,4 @@
-/* Mahabharat sounds. Every sound is made in code with the Web Audio API (no sound files, no copyright).
+/* Kurukshetra sounds. Every sound is made in code with the Web Audio API (no sound files, no copyright).
    Browsers only allow sound after the player has pressed a key or clicked. */
 
 /* one tone: type, start pitch, end pitch, length (s), loudness, delay, fade-in */
@@ -58,7 +58,7 @@ export function buildBus(c){
 
 export function createSfx(){
   let ctx = null, bus = null, on = true; const last = {}, count = {};
-  try { on = localStorage.getItem('mahabharatSound') !== 'off'; } catch (e) {}
+  try { on = localStorage.getItem('kurukshetraSound') !== 'off'; } catch (e) {}
   function unlock(){
     try { if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); bus = buildBus(ctx); } if (ctx.state === 'suspended') ctx.resume(); } catch (e) { ctx = null; }
   }
@@ -76,6 +76,6 @@ export function createSfx(){
     const t = ctx.currentTime; if (t - (last[name] ?? -9) < gap) return false; last[name] = t;       // the same sound does not stack up
     const out = ctx.createGain(); out.gain.value = vol; out.connect(bus.master); RECIPES[name]({ c: ctx, out, t, noise: bus.noise }); return true;
   }
-  function toggle(){ on = !on; try { localStorage.setItem('mahabharatSound', on ? 'on' : 'off'); } catch (e) {} if (!on && window.speechSynthesis) speechSynthesis.cancel(); if (bus) bus.master.gain.value = on ? 1.0 : 0; if (on) unlock(); return on; }
+  function toggle(){ on = !on; try { localStorage.setItem('kurukshetraSound', on ? 'on' : 'off'); } catch (e) {} if (!on && window.speechSynthesis) speechSynthesis.cancel(); if (bus) bus.master.gain.value = on ? 1.0 : 0; if (on) unlock(); return on; }
   return { play, say, toggle, unlock, count, get on() { return on; }, get state() { return ctx ? ctx.state : 'none'; } };
 }

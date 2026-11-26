@@ -1,8 +1,8 @@
-# Mahabharat — Archery Duel
+# Kurukshetra — Archery Duel
 
 A one-on-one long-range archery duel in the browser: you against the computer, Arjun and Karna.
 
-**Play:** https://shubhn05.github.io/Games/mahabharat/ (desktop keyboard)
+**Play:** https://shubhn05.github.io/Games/kurukshetra/ (desktop keyboard)
 
 ## Controls
 
@@ -25,8 +25,8 @@ Brahmastra and Pashupata do 30%, other super arrows 10%.
 
 ```bash
 cd Games
-python -m http.server 8010     # open http://localhost:8010/mahabharat/
-cd mahabharat && npm test      # needs Node.js; no packages to install
+python -m http.server 8010     # open http://localhost:8010/kurukshetra/
+cd kurukshetra && npm test      # needs Node.js; no packages to install
 ```
 
 ## How the code is organised

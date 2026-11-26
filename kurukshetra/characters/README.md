@@ -1,6 +1,6 @@
 # Characters
 
-Every character has its own folder. **Mahabharat is a separate game: nothing here comes from another game while it runs.**
+Every character has its own folder. **Kurukshetra is a separate game: nothing here comes from another game while it runs.**
 
 ```
 characters/

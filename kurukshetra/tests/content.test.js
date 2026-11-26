@@ -29,7 +29,7 @@ for (const c of CHARACTERS) {
 }
 unique(ARENAS.map(a => a.id), 'arenas');
 for (const a of ARENAS) assert.ok(a.name && typeof a.paint === 'function', a.id + ': name and paint are needed');
-/* Mahabharat is its own game: no file may load anything from outside this folder */
+/* Kurukshetra is its own game: no file may load anything from outside this folder */
 const root = fileURLToPath(new URL('../', import.meta.url));
 const ownFiles = ['index.html', ...['src', 'characters'].flatMap(d => readdirSync(root + d, { recursive: true }).map(x => d + '/' + x))];
 for (const f of ownFiles.filter(f => /\.(js|html)$/.test(f)))
