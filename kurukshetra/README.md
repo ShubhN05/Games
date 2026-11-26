@@ -34,6 +34,7 @@ cd kurukshetra && npm test      # needs Node.js; no packages to install
 ```
 index.html            the page (markup only)
 styles/game.css       look of menu and HUD
+preview.html          compares a character with its design picture
 src/
   main.js             loads everything, runs the frame loop
   content/            ← add arrows and arenas here

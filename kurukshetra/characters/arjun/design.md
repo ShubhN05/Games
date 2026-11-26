@@ -1,22 +1,21 @@
 # ARJUN - design
 
-**Status: NOT LOCKED - temporary look.** Waiting for the design from Shubham.
+**Status: NOT LOCKED - first build from the picture, waiting for Shubham's approval.**
 
-## Temporary look (what the game shows now)
-Bare upper body, cream dhoti with orange waist cloth, gold headband with a red jewel, gold earrings, tied-up hair (top-knot) with long curls, gold bow.
-
-## Approved design
-To be filled in from the pictures in `pictures/`:
+## Built (from the picture in `pictures/`)
 
 | Part | Design |
 |---|---|
-| Body and skin | |
-| Face and eyes | |
-| Hair and beard | |
-| Crown or headband | |
-| Earrings and jewellery | |
-| Armour and upper body | |
-| Lower body and cloth | |
-| Footwear | |
-| Bow | |
-| Main colours | |
+| Body and skin | Base body, fair warm skin |
+| Face and eyes | Base face, brown eyes, white and red tilak |
+| Hair and beard | Dark wavy hair to the shoulders, top-knot with gold ring, no beard |
+| Crown or headband | Gold beaded headband with a peaked front and oval red jewel |
+| Earrings and jewellery | Gold drop earrings, gold collar ring |
+| Armour and upper body | Antique gold engraved breastplate, layered gold shoulder plates, red-orange sash, leather quiver strap, jewelled armbands, gold bracers |
+| Lower body and cloth | Cream dhoti with gold hem, orange hip cloth, cream and orange waist bands with knot and two hanging tails |
+| Footwear | Dark brown pointed shoes with gold trim |
+| Bow | Dark wood, curled gold tips, gold bands and leaf ornaments |
+| Main colours | Gold, orange-red, cream, dark brown |
+
+## Simpler than the picture
+Face, fine carving, cloth folds, hair waves.

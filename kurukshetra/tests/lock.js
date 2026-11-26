@@ -1,10 +1,11 @@
-/* Design lock. A locked character's files (its folder and characters/shared) must not change.
+/* Design lock. A locked character's own files, the base body and every shared file it imports must not change.
+   Pictures are not part of the lock. Adding new shared files for other characters does not affect it.
    npm run lock                    show which characters are locked
    npm run lock -- arjun           lock the approved design
    npm run lock -- unlock arjun    allow changes again (only when Shubham asks) */
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join, extname, posix } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const CHARACTERS_DIR = fileURLToPath(new URL('../characters/', import.meta.url));
@@ -15,7 +16,7 @@ function filesIn(folder, base = ''){
   return readdirSync(join(CHARACTERS_DIR, folder, base), { withFileTypes: true }).flatMap(e => {
     const rel = base ? base + '/' + e.name : e.name;
     if (e.isDirectory()) return filesIn(folder, rel);
-    return rel === 'lock.json' ? [] : [folder + '/' + rel];
+    return rel === 'lock.json' || rel.startsWith('pictures') ? [] : [folder + '/' + rel];
   });
 }
 /* Windows may change line endings when files go through git, so text files are compared without them */
@@ -24,7 +25,19 @@ function print(path){
   if (TEXT.has(extname(path))) data = data.toString('utf8').replace(/\r\n/g, '\n');
   return createHash('sha256').update(data).digest('hex');
 }
-export const fingerprint = id => Object.fromEntries([...filesIn(id), ...filesIn('shared')].sort().map(p => [p, print(p)]));
+/* everything every archer is made from, whatever their look imports */
+const BASE = () => ['shared/body.js', 'shared/arrow.js', ...filesIn('shared', 'model'), ...filesIn('shared', 'animations')];
+/* the character's files plus all files they import, and what those import */
+function used(id){
+  const found = new Set(), queue = [...filesIn(id), ...BASE()];
+  while (queue.length) {
+    const path = queue.pop(); if (found.has(path)) continue; found.add(path);
+    if (extname(path) !== '.js') continue;
+    for (const [, to] of readFileSync(join(CHARACTERS_DIR, path), 'utf8').matchAll(/(?:from\s+|import\(\s*)['"](\.[^'"]+)['"]/g)) queue.push(posix.join(posix.dirname(path), to));
+  }
+  return [...found].sort();
+}
+export const fingerprint = id => Object.fromEntries(used(id).map(p => [p, print(p)]));
 export const isLocked = id => existsSync(lockFile(id));
 export function lock(id){ writeFileSync(lockFile(id), JSON.stringify({ lockedOn: new Date().toISOString().slice(0, 10), files: fingerprint(id) }, null, 2) + '\n'); }
 export function unlock(id){ rmSync(lockFile(id), { force: true }); }

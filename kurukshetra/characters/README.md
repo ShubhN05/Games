@@ -13,7 +13,7 @@ characters/
     pictures/       design pictures
     lock.json       appears when the design is locked
   karna/ ...
-  shared/           base body, animations, arrow, building blocks (used by everyone)
+  shared/           base body, animations, arrow, hair helpers and the wardrobe (dressing tools)
 ```
 
 ## All archers
@@ -42,6 +42,10 @@ characters/
 
 A folder without `character.js` is waiting for its design; the game ignores it until it is built.
 
+## Comparing a character with its picture
+With the local server running, open `http://localhost:8010/kurukshetra/preview.html?c=arjun`:
+the design picture is shown beside the 3D character, from the front, angle, side and back, with or without the bow drawn.
+
 ## Locking a design
 When a character's look is approved:
 
@@ -51,9 +55,9 @@ npm run lock -- unlock arjun   # only when Shubham asks for a change
 npm run lock                   # show which characters are locked
 ```
 
-While a character is locked, `npm test` fails if any file in its folder, or anything in `shared/`, is
-changed, added or removed. A new design idea for one character belongs in that character's own folder,
-because changing `shared/` affects all of them.
+While a character is locked, `npm test` fails if a file in its folder, the base body, or any shared file its
+look imports is changed or removed. Pictures are not part of the lock. A new design idea for one character
+belongs in that character's own folder, because changing a shared file affects everyone who uses it.
 
 Not covered by the lock: arm poses (`src/render/archer.js`) and scene lighting (`src/render/stage.js`).
 

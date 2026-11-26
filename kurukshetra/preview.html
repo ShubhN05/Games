@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Kurukshetra - Character Preview</title>
+<style>
+  html,body{margin:0;height:100%;background:#1c212b;color:#f1e6cf;font-family:system-ui,sans-serif;overflow:hidden}
+  main{display:flex;height:calc(100% - 52px)}
+  figure{margin:0;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
+  figure img,figure canvas{max-width:100%;max-height:calc(100% - 22px);object-fit:contain}
+  figcaption{font-size:13px;color:#c9b98f}
+  nav{height:52px;display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
+  button,select{font:bold 14px system-ui;color:#f1e6cf;background:#33200f;border:2px solid #8a6a2a;border-radius:8px;padding:6px 12px;cursor:pointer}
+  button.sel{background:#ffd24a;color:#1a0e02}
+</style>
+<script type="importmap">
+{ "imports": { "three": "./lib/three/three.module.js", "three/addons/": "./lib/three/addons/" } }
+</script>
+</head>
+<body>
+<nav><select id="who"></select><span id="views"></span><button id="draw">DRAW BOW</button></nav>
+<main>
+  <figure id="refBox"><img id="ref" alt="design picture"><figcaption id="refName">Design picture</figcaption></figure>
+  <figure><canvas id="c"></canvas><figcaption>In the game's 3D</figcaption></figure>
+</main>
+<script type="module" src="src/preview.js"></script>
+</body>
+</html>

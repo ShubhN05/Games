@@ -39,7 +39,7 @@ export function addCurlyHair(root, body, opts){
   const cap = (th0, thLen, ph0, phLen) => { const m = new THREE.Mesh(new THREE.SphereGeometry(R, 30, 20, ph0, phLen, th0, thLen), mat); m.position.copy(hc); group.add(m); };
   const FRONT = Math.PI / 2;                                      // +Z is the face direction
   cap(0, opts.topCap ?? 1.0, 0, Math.PI * 2);                     // top of the head
-  cap(0.95, 0.95, FRONT + 0.95, Math.PI * 2 - 1.9);               // sides + back (face stays open)
+  const gap = opts.faceGap ?? 0.95; cap(0.95, 0.95, FRONT + gap, Math.PI * 2 - gap * 2);               // sides + back (face stays open)
   const up = new THREE.Vector3(0, 1, 0);
   for (let s = 0; s < opts.strands; s++) {
     // long curls start only on the BACK of the head (within ~50 deg of straight behind), so the face / side view stays clear
