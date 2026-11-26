@@ -6,6 +6,7 @@
    cloth()  - a free-form sheet or tube (dhoti, drapes, tails) that moves with the bones
    attach() - fix a solid object (crown, pauldron, quiver) to one bone */
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { dominantBones } from './helpers.js';
 
 export const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -63,8 +64,11 @@ function reflections(){
   studio.flipY = false; studio.mapping = THREE.EquirectangularReflectionMapping; return studio;
 }
 export const metal = (o = {}) => new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.75, roughness: 0.36, envMap: reflections(), envMapIntensity: 1.05, side: THREE.DoubleSide, ...o });
-export const gold = (o = {}) => metal({ color: 0xe0aa3c, emissive: 0x2a1a04, ...o });
-export const matte = (o = {}) => new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.04, roughness: 0.82, side: THREE.DoubleSide, ...o });
+/* plain materials asked for twice are the same object, so their parts can be drawn together */
+const made = new Map();
+function once(key, o, build){ if (o.map) return build(); const k = key + JSON.stringify(o); if (!made.has(k)) made.set(k, build()); return made.get(k); }
+export const gold = (o = {}) => once('gold', o, () => metal({ color: 0xe0aa3c, emissive: 0x2a1a04, ...o }));
+export const matte = (o = {}) => once('matte', o, () => new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.04, roughness: 0.82, side: THREE.DoubleSide, ...o }));
 
 /* ---------------- putting things on the body ---------------- */
 function restPose(root, body){
@@ -124,8 +128,22 @@ export function cloth(root, body, { name, cols = 48, rows = 24, closed = false, 
   return skinned(body, g, material, name);
 }
 
+/* join all the solid parts of a group that share a material (far fewer things to draw) */
+export function merge(group){
+  group.updateMatrixWorld(true);
+  const back = group.matrixWorld.clone().invert(), parts = [], sorted = new Map();
+  group.traverse(o => { if (o.isMesh) parts.push(o); });
+  for (const o of parts) {
+    const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(back, o.matrixWorld)); g.clearGroups();
+    if (!sorted.has(o.material)) sorted.set(o.material, []); sorted.get(o.material).push(g); o.removeFromParent();
+  }
+  for (const [material, list] of sorted) group.add(mesh(mergeGeometries(list), material));
+  return group;
+}
+
 export function attach(root, boneName, object){
   const bone = root.getObjectByName(boneName); if (!bone) throw new Error('no bone ' + boneName);
+  if (object.isGroup) merge(object);
   root.add(object); root.updateMatrixWorld(true); bone.attach(object); return object;
 }
 export const mesh = (geometry, material, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geometry, material); m.position.set(x, y, z); m.frustumCulled = false; return m; };

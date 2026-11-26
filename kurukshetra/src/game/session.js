@@ -1,6 +1,6 @@
 /* Runs a match: starting, pausing, key presses and the frame by frame loop.
    Connects rules (core), computer (ai), pictures (render), screen (ui), sound and keyboard. */
-import { createDuel, step, shoot, setStance, inputCode, cancelCode, CHARACTERS } from '../core/index.js';
+import { createDuel, step, shoot, setStance, jump, cancelDraw, inputCode, cancelCode, CHARACTERS } from '../core/index.js';
 import { createAI, stepAI } from '../ai/computer.js';
 import { render } from '../render/stage.js';
 import { createActor } from '../render/archer.js';
@@ -12,11 +12,11 @@ import { buildCounterTable } from '../ui/chart.js';
 import { settings, buildMenu, soundLabel, showMenu, helpOpen, showHelp } from '../ui/menu.js';
 import { note, clearNote, banner, bannerText, tickMessages, clearFloats } from '../ui/messages.js';
 import { play, toggleSound, soundOn } from '../audio/sound.js';
-import { digitOf, KEYMAP, isDown, stanceFromKeys, pathFromKeys, initKeyboard } from '../input/keyboard.js';
+import { digitOf, moveOf, KEYMAP, stanceFromKeys, pathFromKeys, initKeyboard } from '../input/keyboard.js';
 import { showEvent, showInput } from './events.js';
 
 /* the running match; duel === null means we are on the menu */
-export const match = { duel: null, ai: null, actors: [], paused: false, overT: 0, shake: 0, buffered: null };
+export const match = { duel: null, ai: null, actors: [], paused: false, overT: 0, shake: 0, buffered: null, hints: true };
 let models = {};
 
 function clearScene(){ normalArrows.clear(); superArrows.clear(); clearParticles(); clearFloats(); }
@@ -26,7 +26,7 @@ export function start(archer = settings.archer, level = settings.level){
   settings.archer = archer; settings.level = level;
   clearScene();
   const others = CHARACTERS.filter(c => c.id !== archer), foe = others[Math.floor(Math.random() * others.length)].id;
-  Object.assign(match, { duel: createDuel([archer, foe]), ai: createAI(level), paused: false, overT: 0, shake: 0, buffered: null });
+  Object.assign(match, { duel: createDuel([archer, foe]), ai: createAI(level), paused: false, overT: 0, shake: 0, buffered: null, hints: settings.hints === 'on' });
   placeActors([archer, foe]);
   showMenu(false); showHelp(false); banner('FIGHT'); clearNote();
   play('gong');
@@ -45,7 +45,7 @@ function refresh(dt){
   const secret = match.paused && blind();
   tickMessages(dt);
   if (match.duel.t > 0.9 && bannerText() === 'FIGHT') banner();
-  drawHud(match.duel, { hints: settings.hints === 'on', secret, arrowSpot: uid => superArrows.position(uid) });
+  drawHud(match.duel, { hints: match.hints, secret, arrowSpot: uid => superArrows.position(uid), tipSpot: uid => normalArrows.position(uid) });
   superArrows.setVisible(!secret);
 }
 
@@ -77,11 +77,18 @@ function onPress(code){
     if (!d) return;
     return void (d.winner !== null || match.paused ? openMenu() : setPause(true));
   }
-  if (!d) { if (code === KEYMAP.start) start(); return; }
+  if (!d) { if (code === KEYMAP.start && !helpOpen()) start(); return; }
   if (helpOpen()) return;
   if (code === KEYMAP.restart) return void (d.winner !== null || match.paused ? start() : note('To restart: pause (P), then R', '#fff', 1.2));
   if (code === KEYMAP.pause) return void (d.winner === null && setPause(!match.paused));
   if (match.paused || d.winner !== null) return;
+  const move = moveOf(code);
+  if (move) {                                  // moving comes first: it gives up a shot being drawn
+    match.buffered = null;
+    if (cancelDraw(d, 0)) note('Shot cancelled', '#fff', 0.7);
+    setStance(d, 0, stanceFromKeys());
+    if (move === 'jump') jump(d, 0);
+  }
   const digit = digitOf(code);
   if (digit) showInput(inputCode(d, 0, digit));
   if (code === KEYMAP.clear) cancelCode(d, 0);
@@ -111,7 +118,8 @@ export function frame(dt, draw = true){
     advance(dt);
     normalArrows.update(dt); superArrows.update(d, match.actors);
     match.actors.forEach(a => a.pose(dt, d)); stepParticles(dt); refresh(dt);
-  } else if (!d) match.actors.forEach(a => a.pose(dt, null));
+  } else if (d) tickMessages(dt);                 // messages still fade while paused
+  else match.actors.forEach(a => a.pose(dt, null));
   showHud(!!match.duel);
   if (!draw) return;
   match.shake = Math.max(0, match.shake - dt * 0.8);

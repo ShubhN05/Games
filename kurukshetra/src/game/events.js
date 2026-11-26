@@ -4,7 +4,7 @@ import { burst } from '../render/effects.js';
 import { normalArrows } from '../render/normal-arrows.js';
 import { superArrows } from '../render/super-arrows.js';
 import { note, floatText } from '../ui/messages.js';
-import { powerColor } from '../ui/dom.js';
+import { powerColor, ESCAPE_HINT } from '../ui/dom.js';
 import { play } from '../audio/sound.js';
 import { POWERS, getCharacter } from '../core/index.js';
 
@@ -17,7 +17,7 @@ const ON = {
   dodge(e, m){ normalArrows.dodge(e.arrow.uid); floatText(m.actors[e.to].chest(2.3), 'DODGE', '#9fe8ff'); },
   hit(e, m){
     const a = m.actors[e.to]; normalArrows.hit(e.arrow.uid); burst(a.chest(), 7, 0xff5030, 2, 0.35, 0.16);
-    floatText(a.chest(2.3), '-' + e.damage + '%', '#ffb347'); a.hurt = 0.2; play('punch', 0.5);
+    floatText(a.chest(2.3), '-' + e.damage + '%' + (e.to === 0 && m.hints ? '  (needed ' + ESCAPE_HINT[e.arrow.path] + ')' : ''), '#ffb347'); a.hurt = 0.2; play('punch', 0.5);
   },
   clash(e){ normalArrows.clash(e.a, e.b); play('block', 0.7); },
   blocked(e, m){ superArrows.blocked(e.uid, e.code, e.by); note(upper(e.by) + ' stops ' + upper(e.code), '#9fffb0'); m.shake = 0.12; play('explosion', 0.8); },

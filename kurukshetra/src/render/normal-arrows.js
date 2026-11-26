@@ -27,6 +27,7 @@ function build(kind){          // thick, bright and glowing so it can be seen an
 
 export const normalArrows = {
   spawn(a){ const fx = { ...build(a.kind), a }; flying.set(a.uid, fx); place(fx, 0); },
+  position(uid){ const fx = flying.get(uid); return fx && arrowPos(fx.a, fx.a.p); },
   hit(uid){ const fx = flying.get(uid); if (fx) { flying.delete(uid); drop(fx.o); } },
   dodge(uid){ const fx = flying.get(uid); if (fx) { flying.delete(uid); ghosts.push({ ...fx, p: fx.a.p, life: 0.45 }); } },
   clash(...arrows){ for (const a of arrows) { const fx = flying.get(a.uid); if (fx) { burst(fx.o.position, 8, 0xfff0c0, 2.5, 0.35, 0.15); drop(fx.o); flying.delete(a.uid); } } },

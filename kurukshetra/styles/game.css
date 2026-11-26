@@ -9,7 +9,9 @@
   #s1 .bar i{left:auto;right:0;background:linear-gradient(#ff7a5a,#b01a14)}
   .bar b{position:absolute;left:8px;right:8px;top:2px;font-size:15px}
   .info{margin-top:5px;font:bold 13px system-ui}
-  #top{position:absolute;left:440px;right:440px;top:8px;text-align:center}
+  #top{position:absolute;left:16px;top:62px;width:340px;text-align:center}
+  #tags b{position:absolute;display:none;transform:translate(-50%,-100%);padding:1px 8px;font:900 17px system-ui;white-space:nowrap;background:#000c;border:2px solid #c8f4ff;border-radius:6px}
+  #tags b.hard{border-color:#ffd24a}
   #incoming .k{margin-top:6px;font:900 22px system-ui;white-space:nowrap}
   #incoming .k span{display:table;margin:0 auto 4px;padding:3px 12px;background:#0b0712e0;border:2px solid #ffd24a;border-radius:8px}
   #incoming .k kbd{display:inline-block;margin-right:5px;padding:0 9px;font:900 24px system-ui;color:#1a0e02;background:#ffd24a;border-radius:5px;text-shadow:none}

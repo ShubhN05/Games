@@ -30,7 +30,7 @@ const armourPaint = () => texture(CH.w, CH.h, x => {
     const top = side < 34 ? mix(1.36, 1.535, side / 34) : 1.548 - 0.045 * neck * neck;
     x.lineTo(px(d), py(top));
   }
-  x.lineTo(CH.w, py(1.058)); x.lineTo(0, py(1.058)); x.closePath();
+  x.lineTo(CH.w, py(1.032)); x.lineTo(0, py(1.032)); x.closePath();
   const g = x.createLinearGradient(0, 0, 0, CH.h); g.addColorStop(0, '#c4973f'); g.addColorStop(0.45, '#9c6f24'); g.addColorStop(0.7, '#855a1a'); g.addColorStop(1, '#a87c2c');
   x.fillStyle = g; x.fill(); x.save(); x.clip();
   engrave(x, 0, py(1.53), CH.w, py(1.40) - py(1.53), { seed: 3, count: 60, size: 20 });
@@ -96,6 +96,7 @@ const shoePaint = () => texture(256, 128, (x, w, h) => { x.fillStyle = '#4a2210'
 /* ---------------- dressing ---------------- */
 export function dress(root, body){
   root.updateMatrixWorld(true);
+  underCloth(root, body);
   armour(root, body);
   armsAndShoulders(root, body);
   lowerBody(root, body);
@@ -104,6 +105,12 @@ export function dress(root, body){
   quiver(root);
   root.traverse(o => { if (!o.isMesh) return; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.name === 'MI_Hair_1') m.color = new THREE.Color(0x1a0f0a); }); });
   const ring = mesh(new THREE.TorusGeometry(0.045, 0.009, 8, 28), gold(), 0, 1.822, -0.045); ring.rotation.x = Math.PI / 2 - 0.2; attach(root, 'Head', ring);   // gold ring round the top-knot
+}
+
+/* plain cloth next to the skin, so no gap in the dhoti or at the waist ever shows the bare body */
+function underCloth(root, body){
+  layer(root, body, { name: 'ArjunUnderCloth', bones: /^(pelvis|spine_01|spine_02|thigh_[lr]|calf_[lr])$/, where: p => p.y > 0.125 && p.y < 1.16, inflate: p => p.y > 0.96 ? 0.011 : 0.004,
+    wrap: { around: 'y', cz: -0.04, top: 1.16, bottom: 0.125 }, material: matte({ color: 0xe2d0a6, emissive: 0x241e12 }) });
 }
 
 function armour(root, body){
@@ -138,7 +145,7 @@ function lowerBody(root, body){
   for (const s of [1, -1]) cloth(root, body, { name: 'ArjunDhoti' + (s > 0 ? 'L' : 'R'), cols: 56, rows: 44, closed: true, material: dhoti,
     at: (u, v) => { const y = mix(1.0, 0.125, v), a = u * TAU;
       const rx = table([[1.0, 0.08], [0.9, 0.096], [0.74, 0.11], [0.6, 0.108], [0.45, 0.108], [0.3, 0.096], [0.2, 0.072], [0.125, 0.06]], y);
-      const rz = table([[1.0, 0.11], [0.9, 0.116], [0.74, 0.12], [0.6, 0.115], [0.45, 0.122], [0.3, 0.108], [0.2, 0.08], [0.125, 0.066]], y);
+      const rz = table([[1.0, 0.11], [0.9, 0.116], [0.74, 0.12], [0.6, 0.128], [0.45, 0.14], [0.3, 0.118], [0.2, 0.08], [0.125, 0.066]], y);
       const fold = 1 + (0.085 * Math.sin(a * 6 + y * 17 + s) + 0.05 * Math.sin(a * 3 - y * 11)) * clamp01((y - 0.14) * 5) * clamp01((1.0 - y) * 4);
       const cx = s * table([[1.0, 0.07], [0.85, 0.108], [0.5, 0.118], [0.125, 0.115]], y), cz = table([[1.0, -0.03], [0.55, -0.035], [0.35, -0.062], [0.125, -0.085]], y);
       return V(cx + Math.sin(a) * rx * fold, y, cz + Math.cos(a) * rz * fold); },
@@ -162,8 +169,9 @@ function lowerBody(root, body){
   const bandAt = (y0, y1, r) => (u, v) => { const a = (u - 0.5) * TAU, bulge = 1 + 0.05 * Math.sin(v * Math.PI); return V(Math.sin(a) * r * bulge, mix(y0, y1, v) + 0.006 * Math.sin(a * 3), -0.03 + Math.cos(a) * r * 0.85 * bulge); };
   cloth(root, body, { name: 'ArjunBandCream', cols: 64, rows: 6, closed: true, at: bandAt(1.108, 1.062, 0.176), weights: () => [['pelvis', 0.5], ['spine_01', 0.5]], material: matte({ map: clothPaint(C.cream, 'rgba(150,120,70,0.5)', { folds: 24, border: 0, seed: 3, w: 512, h: 64 }) }) });
   cloth(root, body, { name: 'ArjunBandOrange', cols: 64, rows: 6, closed: true, at: bandAt(1.078, 1.015, 0.188), weights: () => [['pelvis', 1]], material: matte({ map: clothPaint(C.orange, 'rgba(110,35,0,0.55)', { folds: 20, border: 0, seed: 6, w: 512, h: 64 }) }) });
-  const knotMat = matte({ color: 0xe46a17 });
-  for (const [x, y, rx, ry, rot] of [[0, 1.045, 0.05, 0.038, 0], [-0.028, 1.058, 0.045, 0.018, 0.6], [0.03, 1.038, 0.042, 0.017, -0.5]]) { const k = mesh(new THREE.SphereGeometry(1, 18, 12), knotMat, x, y, 0.142); k.scale.set(rx, ry, 0.032); k.rotation.z = rot; attach(root, 'pelvis', k); }
+  const knotMat = matte({ color: 0xe46a17 }), knot = new THREE.Group();
+  for (const [x, y, rx, ry, rot] of [[0, 1.045, 0.05, 0.038, 0], [-0.028, 1.058, 0.045, 0.018, 0.6], [0.03, 1.038, 0.042, 0.017, -0.5]]) { const k = mesh(new THREE.SphereGeometry(1, 18, 12), knotMat, x, y, 0.142); k.scale.set(rx, ry, 0.032); k.rotation.z = rot; knot.add(k); }
+  attach(root, 'pelvis', knot);
   /* two tails hanging from the knot */
   const tail = (name, dx, length, width, depth, color) => cloth(root, body, { name, cols: 12, rows: 30, material: matte({ map: clothPaint(color, 'rgba(100,30,0,0.55)', { folds: 5, border: 0.09, seed: length * 100 | 0, w: 128 }) }),
     at: (u, v) => { const point = clamp01((v - 0.82) / 0.18) * 0.09 * (1 - u);      // slanted lower end
@@ -183,7 +191,7 @@ function shoes(root, body){
 }
 
 function head(root, body){
-  addCurlyHair(root, body, { strands: 260, toShoulder: true, seed: 5, curl: 0.11, bun: true, color: 0x1e130d, topCap: 0.72, tube: 0.105, faceGap: 1.5 });
+  addCurlyHair(root, body, { strands: 120, segments: 26, sides: 4, toShoulder: true, seed: 5, curl: 0.11, bun: true, color: 0x1e130d, topCap: 0.72, tube: 0.16, faceGap: 1.5 });
   const hb = boundsOf(root, body, ['Head']), g = new THREE.Group(), au = gold(), bright = gold({ color: 0xf0c056 });
   const R = hb.size.x / 2, cz = hb.ctr.z - 0.004, depth = hb.size.z / 2 * 0.93, bandY = hb.box.max.y - hb.size.y * 0.285;
   const onBand = (a, lift = 0) => V(Math.sin(a) * (R * 1.06 + lift), bandY - 0.014 * (1 - Math.cos(a)) / 2, cz + Math.cos(a) * (depth * 1.05 + lift));

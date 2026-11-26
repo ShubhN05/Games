@@ -1,7 +1,7 @@
 /* ARJUN's bow (Gandiva), from the picture: dark wood, curled gold tips, gold bands and leaf ornaments.
    The game holds it at the middle (0,0,0); it is upright with its back towards +Z (the opponent). */
 import * as THREE from 'three';
-import { V, mix, gold, matte, mesh, rod } from '../shared/wardrobe.js';
+import { V, mix, gold, matte, mesh, rod, merge } from '../shared/wardrobe.js';
 
 const TIP = 0.76;          // the string is tied this far above and below the grip
 export function makeBow(){
@@ -33,6 +33,7 @@ export function makeBow(){
   /* grip */
   group.add(mesh(new THREE.CylinderGeometry(0.029, 0.029, 0.14, 14), matte({ color: 0x7a4422, roughness: 0.7 })));
   for (const y of [-0.075, 0.075]) { const r = mesh(new THREE.TorusGeometry(0.031, 0.008, 8, 20), au, 0, y, 0); r.rotation.x = Math.PI / 2; group.add(r); }
+  merge(group);
   const [top, bottom] = string, rest = V(0, 0, z(1));
   const geometry = new THREE.BufferGeometry().setFromPoints([top, rest, bottom]);
   const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0xd9bf8a })); group.add(line);

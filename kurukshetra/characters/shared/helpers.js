@@ -50,7 +50,7 @@ export function addCurlyHair(root, body, opts){
     for (let i = 0; i <= 44; i++) { const t = i / 44, ang = t * turns * 6.2832 + p, grow = Math.min(1, t * 4);
       const q = p0.clone().addScaledVector(up, -L * t).addScaledVector(o, R * 0.12 * Math.sin(Math.PI * Math.min(1, t * 1.3)) + R * 0.1 * t)
         .addScaledVector(e1, rc * Math.cos(ang) * grow).addScaledVector(o, rc * Math.sin(ang) * grow); pts.push(q); }
-    geos.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 70, R * (opts.tube ?? 0.075), 5, false));
+    geos.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), opts.segments ?? 70, R * (opts.tube ?? 0.075), opts.sides ?? 5, false));
   }
   const curls = new THREE.Mesh(mergeGeometries(geos), mat); group.add(curls);
   if (opts.bun) {                                                  // top-knot (hair tied up) with a small gold tie

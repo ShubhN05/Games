@@ -1,5 +1,5 @@
 /* Everything drawn over the match: health bars, the incoming arrow panel, its name tag and your own call. */
-import { $, powerColor } from './dom.js';
+import { $, powerColor, ESCAPE_HINT } from './dom.js';
 import { drawChart } from './chart.js';
 import { camera } from '../render/stage.js';
 import { clamp } from '../render/layout.js';
@@ -35,12 +35,24 @@ function drawTag(inc, spot){
   tag.style.left = clamp((q.x + 1) * 640, 80, 1200) + 'px'; tag.style.top = ((1 - q.y) * 360 - 36) + 'px';
 }
 
+/* a tag on each ordinary arrow coming at you, saying which key escapes it */
+function drawArrowTags(arrows, spot){
+  const box = $('tags');
+  while (box.children.length < arrows.length) box.appendChild(document.createElement('b'));
+  [...box.children].forEach((el, i) => {
+    const a = arrows[i], p = a && spot(a.uid); el.style.display = p ? 'block' : 'none'; if (!p) return;
+    const q = p.clone().project(camera); el.textContent = ESCAPE_HINT[a.path]; el.className = a.kind;
+    el.style.left = clamp((q.x + 1) * 640, 70, 1210) + 'px'; el.style.top = clamp((1 - q.y) * 360 - 22, 60, 520) + 'px';
+  });
+}
+
 /* secret = hide the incoming arrow (paused with hints off); arrowSpot(uid) = position of a flying super arrow */
-export function drawHud(duel, { hints, secret, arrowSpot }){
+export function drawHud(duel, { hints, secret, arrowSpot, tipSpot }){
   duel.f.forEach(drawSide);
   const me = duel.f[0], inc = secret ? null : duel.incoming[0], answers = hints ? answersTo(duel, 0) : [];
   drawIncoming(inc, answers);
   drawTag(inc, inc && arrowSpot(inc.uid));
+  drawArrowTags(hints ? duel.arrows.filter(a => a.by === 1) : [], tipSpot);
   $('foecall').textContent = duel.f[1].call ? getCharacter(duel.f[1].id).name + ' is calling a super arrow…' : '';
   $('mine').textContent = me.digits ? 'Code ' + me.digits + ' _' : me.call ? 'Calling ' + POWERS[me.call.code].name.toUpperCase() + '  ' + me.call.left.toFixed(1) + ' s' : '';
   drawChart(me, answers);

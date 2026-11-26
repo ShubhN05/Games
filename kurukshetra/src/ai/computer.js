@@ -1,6 +1,6 @@
 /* The computer archer. It only learns which super arrow is coming after it has been released, like the player. */
-import { setStance, shoot, inputCode, owns, ESCAPE, POWERS, getCharacter } from '../core/index.js';
-import { END } from '../core/path.js';
+import { setStance, shoot, jump, inputCode, owns, ESCAPE, POWERS, getCharacter } from '../core/index.js';
+import { END, START, CONTACT } from '../core/path.js';
 import { LEVELS } from './levels.js';
 
 export function createAI(level, rnd = Math.random){
@@ -49,13 +49,16 @@ function dodgeArrows(d, i, ai, dt){
   const { L, rnd } = ai;
   for (const a of d.arrows) if (a.by !== i && !ai.seen.has(a.uid)) {
     ai.seen.add(a.uid);
-    if (rnd() < L.dodge) ai.dodges.push({ stance: ESCAPE[a.path], start: L.react, end: a.flight * END });
+    if (rnd() < L.dodge) ai.dodges.push({ stance: ESCAPE[a.path], start: L.react, end: a.flight * END, arrives: a.flight * (1 + CONTACT.mid / START) });
   }
   if (!ai.dodges.length) return;
-  for (const x of ai.dodges) { x.start -= dt; x.end -= dt; }
+  for (const x of ai.dodges) { x.start -= dt; x.end -= dt; x.arrives -= dt; }
   ai.dodges = ai.dodges.filter(x => x.end > 0);
   const next = ai.dodges.filter(x => x.start <= 0).sort((a, b) => a.end - b.end)[0];
-  if (next) setStance(d, i, next.stance); else if (!ai.dodges.length) setStance(d, i, 'mid');
+  if (!next) { if (!ai.dodges.length) setStance(d, i, 'mid'); return; }
+  if (next.stance !== 'jump') return setStance(d, i, next.stance);
+  setStance(d, i, 'mid');                                       // a low arrow: jump just before it arrives
+  if (!next.jumped && next.arrives <= 0.3) next.jumped = jump(d, i);
 }
 
 function attack(d, i, ai, dt){
@@ -68,6 +71,6 @@ function attack(d, i, ai, dt){
     if (r && r.type === 'call') ai.superT = L.superEvery * (0.7 + rnd() * 0.6);
   }
   if (ai.arrowT <= 0 && !ai.dodges.length) {
-    if (shoot(d, i, rnd() < 0.6 ? 'fast' : 'hard', pick(ai, ['straight', 'jump', 'high']))) ai.arrowT = L.arrowEvery * (0.6 + rnd() * 0.8);
+    if (shoot(d, i, rnd() < 0.6 ? 'fast' : 'hard', pick(ai, ['straight', 'jump', 'high', 'low']))) ai.arrowT = L.arrowEvery * (0.6 + rnd() * 0.8);
   }
 }

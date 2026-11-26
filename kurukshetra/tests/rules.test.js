@@ -1,6 +1,6 @@
 /* the rules of the duel. run all tests: npm test */
 import assert from 'node:assert/strict';
-import { createDuel, step, inputCode, cancelCode, shoot, setStance, POWERS, T } from '../src/core/index.js';
+import { createDuel, step, inputCode, cancelCode, shoot, setStance, jump, cancelDraw, airHeight, POWERS, T } from '../src/core/index.js';
 const run = (d, s) => { const ev = []; for (let i = 0, n = Math.round(s * 100); i < n; i++) ev.push(...step(d, 0.01)); return ev; };
 const code = (d, i, c) => { inputCode(d, i, c[0]); return inputCode(d, i, c[1]); };
 const hp = (d, i) => Math.round(d.f[i].hp * 10) / 10;
@@ -29,6 +29,17 @@ test('normal arrows damage 0.3 and 1, stock shared', () => { const d = fresh(); 
 test('only 50 arrows', () => { const d = fresh(); let k = 0; for (let i = 0; i < 80; i++) { if (shoot(d, 0, 'fast', 'straight')) k++; run(d, 1); } assert.equal(k, 50); });
 for (const [path, stance] of [['straight', 'crouch'], ['jump', 'back'], ['high', 'forward']])
   test(path + ' shot escaped only by ' + stance, () => { for (const s of ['mid', 'crouch', 'back', 'forward']) { const d = fresh(); setStance(d, 1, s); shoot(d, 0, 'hard', path); run(d, 3); assert.equal(hp(d, 1), s === stance ? 100 : 99, path + ' vs ' + s); } });
+test('low shot hits every standing or crouching stance', () => { for (const s of ['mid', 'crouch', 'back', 'forward']) { const d = fresh(); setStance(d, 1, s); shoot(d, 0, 'hard', 'low'); run(d, 3); assert.equal(hp(d, 1), 99, 'low vs ' + s); } });
+/* seconds from the shot until a hard arrow reaches the middle position */
+const ARRIVE = T.hard.draw + T.hard.flight * 0.983;
+test('a well-timed jump clears a low shot', () => { for (const before of [0.5, 0.35, 0.15]) { const d = fresh(); shoot(d, 0, 'hard', 'low'); run(d, ARRIVE - before); assert.ok(jump(d, 1)); run(d, 2); assert.equal(hp(d, 1), 100, 'jump ' + before + ' s early'); } });
+test('a jump far too early or too late does not clear it', () => { for (const before of [1.2, 0.02]) { const d = fresh(); shoot(d, 0, 'hard', 'low'); run(d, ARRIVE - before); jump(d, 1); run(d, 2); assert.equal(hp(d, 1), 99, 'jump ' + before + ' s early'); } });
+test('jumping does not escape the other shots', () => { for (const path of ['straight', 'jump', 'high']) { const d = fresh(); shoot(d, 0, 'hard', path); run(d, ARRIVE - 0.35); jump(d, 1); run(d, 2); assert.equal(hp(d, 1), 99, 'jump vs ' + path); } });
+test('stepping forward in mid-air does not escape a high shot', () => { const d = fresh(); setStance(d, 1, 'forward'); shoot(d, 0, 'hard', 'high'); run(d, ARRIVE - 0.45); jump(d, 1); run(d, 2); assert.equal(hp(d, 1), 99); });
+test('cannot jump again in mid-air; lands after 0.7 s', () => { const d = fresh(); assert.ok(jump(d, 0)); run(d, 0.3); assert.ok(airHeight(d.f[0]) > 0.6); assert.equal(jump(d, 0), false); run(d, 0.6); assert.equal(airHeight(d.f[0]), 0); assert.ok(jump(d, 0)); });
+test('crouching drops you out of a jump', () => { const d = fresh(); jump(d, 0); run(d, 0.3); setStance(d, 0, 'crouch'); assert.equal(airHeight(d.f[0]), 0); });
+test('jump shot is airborne while drawing and lands after', () => { const d = fresh(); shoot(d, 0, 'hard', 'jump'); run(d, 0.65); assert.ok(airHeight(d.f[0]) > 0.6); run(d, 0.5); assert.equal(airHeight(d.f[0]), 0); });
+test('cancelling a draw returns the arrow and allows dodging', () => { const d = fresh(); shoot(d, 1, 'hard', 'straight'); assert.equal(d.f[1].arrows, 49); setStance(d, 1, 'crouch'); assert.equal(d.f[1].stance, 'mid'); assert.ok(cancelDraw(d, 1)); assert.equal(d.f[1].arrows, 50); assert.equal(d.f[1].stance, 'crouch'); run(d, 2); assert.equal(d.arrows.length, 0); assert.equal(cancelDraw(d, 1), false); });
 test('cannot dodge while drawing', () => { const d = fresh(); shoot(d, 0, 'fast', 'straight'); run(d, T.fast.draw + 0.05); shoot(d, 1, 'hard', 'jump'); setStance(d, 1, 'crouch'); assert.equal(d.f[1].stance, 'mid'); run(d, T.hard.draw + 0.05); assert.equal(d.f[1].stance, 'crouch'); });
 test('same-path arrows knock each other down, different paths do not', () => { let d = fresh(); shoot(d, 0, 'hard', 'high'); shoot(d, 1, 'hard', 'high'); run(d, 3); assert.equal(hp(d, 0) + hp(d, 1), 200);
   d = fresh(); shoot(d, 0, 'hard', 'high'); shoot(d, 1, 'hard', 'straight'); run(d, 3); assert.equal(hp(d, 0) + hp(d, 1), 198); });
@@ -38,11 +49,15 @@ console.log('OK', n, 'tests');
 
 /* what is drawn agrees with what hits */
 import { heightAt, CONTACT, REACH, BODY } from '../src/core/path.js';
-for (const [path, escape] of [['straight', 'crouch'], ['jump', 'back'], ['high', 'forward']])
+for (const [path, escape] of [['straight', 'crouch'], ['jump', 'back'], ['high', 'forward'], ['low', 'jump']])
   for (const st of ['mid', 'crouch', 'back', 'forward']) {
     const s = CONTACT[st], h = heightAt(path, s), inBody = s <= REACH[path] && h < (st === 'crouch' ? BODY.crouch : BODY.stand) && h > 0.2;
     assert.equal(inBody, st !== escape, path + ' ' + st + ' picture');
   }
+/* in mid-air the feet clear only the low arrow */
+import { JUMP } from '../src/core/path.js';
+for (const path of ['straight', 'jump', 'high']) assert.ok(heightAt(path, CONTACT.mid) > JUMP.height && heightAt(path, CONTACT.mid) < BODY.stand + JUMP.clear, path + ' must hit a jumping body');
+assert.ok(heightAt('low', CONTACT.mid) < JUMP.clear, 'low arrow passes under the feet');
 /* stepping forward into an arrow that already passed the front spot still counts */
 { const d = fresh(); shoot(d, 0, 'hard', 'straight'); run(d, 0.7 + 0.93); setStance(d, 1, 'forward'); run(d, 1); assert.equal(hp(d, 1), 99, 'late step forward'); }
 

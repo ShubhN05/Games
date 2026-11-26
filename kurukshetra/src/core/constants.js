@@ -10,5 +10,5 @@ export const T = {
 };
 export const DMG = { super: 10, rare: 30 };
 export const ARROWS = 50;
-export const ESCAPE = { straight: 'crouch', jump: 'back', high: 'forward' };   // which stance escapes which shot
+export const ESCAPE = { straight: 'crouch', jump: 'back', high: 'forward', low: 'jump' };   // what escapes which shot
 export const done = left => left <= 1e-6;                                     // a countdown has run out
