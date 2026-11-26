@@ -1,6 +1,6 @@
 # Kurukshetra — Archery Duel
 
-A one-on-one long-range archery duel in the browser: you against the computer, with Arjun, Karna and Bhishma.
+A one-on-one long-range archery duel in the browser: you against the computer, with Arjun, Karna, Bhishma and Drona.
 
 **Play:** https://shubhn05.github.io/Games/kurukshetra/ (desktop keyboard)
 
