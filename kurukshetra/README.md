@@ -1,6 +1,6 @@
 # Kurukshetra — Archery Duel
 
-A one-on-one long-range archery duel in the browser: you against the computer, with Arjun, Karna, Bhishma and Drona.
+A one-on-one long-range archery duel in the browser: you against the computer, with Arjun, Karna, Bhishma, Drona and Ashvatthama.
 
 **Play:** https://shubhn05.github.io/Games/kurukshetra/ (desktop keyboard)
 
@@ -9,13 +9,14 @@ A one-on-one long-range archery duel in the browser: you against the computer, w
 | Key | Action |
 |---|---|
 | **F** / **S** | fast arrow (0.3%, **20**) / slow arrow (1%, **15**). A slow arrow that hits breaks the opponent's super arrow call. Each can be shot four ways: |
-| F/S alone | straight shot — escape it with **↓** (crouch, hold) |
-| **A** + F/S | low shot — escape it with **↑** (jump just before it arrives) |
-| **↑** + F/S | jump shot — escape it with **←** (step back, hold) |
-| **D** + F/S | high shot — escape it with **→** (step forward, hold; not while in the air) |
+| F/S alone (or **←** held) | straight shot — escape it with **↓** (crouch, hold) |
+| **↓** held + F/S | low shot — escape it with **↑** (jump just before it arrives) |
+| **↑** held + F/S | jump shot — escape it with **←** (step back, hold) |
+| **→** held + F/S | high shot — escape it with **→** (step forward, hold; not while in the air) |
 | arrow keys | move; the newest key wins, and pressing one gives up a shot being drawn (the arrow is kept) |
-| **1–5, twice** | super arrow, or the counter when one is coming |
-| **Space** | clear the first number |
+| **1–5** | super arrow, or a counter when one is coming |
+| **6** / **7** | your big weapons, once each |
+| **Space** | Brahma Danda shield (blocks one big weapon) |
 | **H** / **P** / **Esc** | counter chart / pause / pause, then menu |
 | **R** | restart (when paused or after the match) |
 | **M** | sound on/off |
@@ -24,6 +25,17 @@ Choose your archer and your opponent (or a random one) on the menu; **R** fights
 
 A super arrow takes 3 s to prepare and 2.5 s to fly. The opponent cannot see which one it is until release.
 Brahmastra, Pashupata and Narayanastra do 30%, other super arrows 10%.
+
+| Key | Super arrow | Stopped by |
+|---|---|---|
+| 1 | Fire | 2 Water |
+| 2 | Water | 3 Wind |
+| 3 | Wind | 4 Mountain |
+| 4 | Mountain | 5 Thunder |
+| 5 | Thunder | 1 Fire |
+| 6 | Brahmastra (every archer) | 6, or Space |
+| 7 | Pashupata (Arjun) | Space; 6 halves it |
+| 7 | Narayanastra (Ashvatthama) | lower your bow (hold ↓), or Space |
 
 **Narayanastra** (Ashvatthama, once per match): hold **↓** to lower your bow and do not attack, and it passes you by.
 Shooting, releasing your own super arrow or trying another counter while it flies turns it on you (an attack begun
@@ -70,8 +82,8 @@ Dependencies go one way: `core` knows only `content` and `characters`; `ai` uses
 **A new character** — see [`characters/README.md`](characters/README.md): copy a folder, edit it, add it to
 `characters/index.js`. Approved designs are locked so they cannot change by accident.
 
-**A new super arrow** — add one entry to `src/content/powers.js` with a free code (digits 1–5), its colour and
-its counters. The chart, counter table, hints and computer pick it up. An archer may fire a `rare` one only if
+**A new weapon** — add one entry to `src/content/powers.js` with an id, its key, colour and counters. Keys 1–5 are
+the ordinary circle; a big weapon uses 6 or 7. The chart, counter table, hints and computer pick it up. An archer may fire a `rare` one only if
 it is listed in their `rares`.
 
 **A new arena**

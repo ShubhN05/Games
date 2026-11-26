@@ -29,8 +29,18 @@
   #incoming .k kbd{display:inline-block;margin-right:6px;padding:0 12px;font:900 34px system-ui;color:#1a0e02;background:#ffd24a;border-radius:6px;text-shadow:none}
   #incoming .k em{margin:0 12px;font:bold 22px system-ui}
   #tag{position:absolute;display:none;transform:translate(-50%,-100%);padding:2px 12px;font:900 26px system-ui;white-space:nowrap;background:#000c;border:3px solid;border-radius:8px}
-  .col .ans{background:#ffd24a;color:#1a0e02;border-radius:4px;text-shadow:none;animation:pulse .3s infinite alternate}
-  .col .ans u{color:#1a0e02}
+  #chart{position:absolute;left:10px;right:10px;bottom:8px;display:flex;justify-content:center;gap:8px}
+  #chart .group{padding:2px 6px 7px;background:#0b0712d8;border:2px solid #f1e6cf33;border-radius:10px;text-align:center}
+  #chart p{margin:0;font:bold 14px system-ui;color:#d8cba8}
+  #chart .row{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:3px}
+  #chart i{font-style:normal;font-size:13px;color:#ffd24a}
+  #chart .w{display:flex;align-items:center;gap:5px;height:42px;padding:0 6px;font:800 16px system-ui;white-space:nowrap;background:#1c1018;border:2px solid #f1e6cf40;border-radius:8px}
+  #chart .w u{text-decoration:none;min-width:22px;padding:0 3px;font:900 21px system-ui;color:#1a0e02;background:#ffd24a;border-radius:5px;text-shadow:none}
+  #chart .w.again{padding:0 4px;opacity:.65}
+  #chart .w.gone{opacity:.3;text-decoration:line-through}
+  #chart .w.ans{background:#ffd24a;border-color:#fff;opacity:1;animation:pulse .3s infinite alternate}
+  #chart .w.ans span{color:#1a0e02 !important;text-shadow:none} #chart .w.ans u{background:#fff}
+  #chart small{padding:0 5px;font-size:12px;color:#1a0e02;background:#ff9a3a;border-radius:4px;text-shadow:none}
   @keyframes pulse{from{opacity:1}to{opacity:.6}}
   #incoming{display:none;flex-direction:column;justify-content:center;min-width:760px;max-width:100%;box-sizing:border-box;padding:0 14px 2px;background:#0b0712;line-height:1.2;border:3px solid #ffd24a;border-radius:14px}
   #incoming.full{width:100%;min-height:186px}
@@ -48,14 +58,7 @@
   #mine{position:absolute;left:16px;top:70px;font:900 22px system-ui;color:#ffd24a}
   #note{position:absolute;left:0;right:0;top:190px;text-align:center;font:900 28px system-ui}
   #msg{position:absolute;left:0;right:0;top:250px;text-align:center;font:900 62px system-ui;color:#fff;text-shadow:0 0 24px #ff6a1a,0 4px 8px #000}
-  #chart{position:absolute;left:10px;right:10px;bottom:8px;display:flex;gap:7px}
-  .col{flex:1;background:#0b0712d8;border:2px solid #f1e6cf33;border-radius:8px;padding:3px 8px;font:bold 16px system-ui;line-height:21px;min-height:105px;white-space:nowrap}
-  .col small{margin-left:6px;padding:0 5px;font-size:12px;color:#1a0e02;background:#ff9a3a;border-radius:4px;text-shadow:none}
-  .col.on{border-color:#ffd24a;box-shadow:0 0 16px #ffd24a;background:#2a1c08ee}
-  .col u{text-decoration:none;color:#ffd24a;display:inline-block;width:26px}
-  .col .dot{display:inline-block;width:9px;height:9px;border-radius:5px;margin-right:6px}
-  .col .gone{opacity:.28;text-decoration:line-through}
-  #keys{position:absolute;left:0;right:0;bottom:128px;text-align:center;font-size:15px;color:#e6d9b8}
+  #keys{position:absolute;left:0;right:0;bottom:104px;text-align:center;font-size:15px;color:#e6d9b8}
   .float{position:absolute;font:900 28px system-ui;transition:all .9s ease-out;white-space:nowrap}
   .screen{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,#4a2208e8,#07050cf6 72%)}
   .box{text-align:center;max-width:900px;padding:0 20px;max-height:96vh;overflow:auto}

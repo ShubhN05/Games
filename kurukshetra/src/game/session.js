@@ -1,6 +1,6 @@
 /* Runs a match: starting, pausing, key presses and the frame by frame loop.
    Connects rules (core), computer (ai), pictures (render), screen (ui), sound and keyboard. */
-import { createDuel, step, shoot, setStance, jump, cancelDraw, inputCode, cancelCode, CHARACTERS, getCharacter, POWERS } from '../core/index.js';
+import { createDuel, step, shoot, setStance, jump, cancelDraw, press, CHARACTERS, getCharacter, POWERS } from '../core/index.js';
 import { $ } from '../ui/dom.js';
 import { createAI, stepAI } from '../ai/computer.js';
 import { render } from '../render/stage.js';
@@ -13,7 +13,7 @@ import { buildCounterTable } from '../ui/chart.js';
 import { settings, buildMenu, soundLabel, showMenu, helpOpen, showHelp } from '../ui/menu.js';
 import { note, clearNote, banner, bannerText, tickMessages, clearFloats } from '../ui/messages.js';
 import { play, toggleSound, soundOn } from '../audio/sound.js';
-import { digitOf, moveOf, KEYMAP, stanceFromKeys, pathFromKeys, initKeyboard } from '../input/keyboard.js';
+import { powerKeyOf, moveOf, KEYMAP, stanceFromKeys, pathFromKeys, initKeyboard } from '../input/keyboard.js';
 import { showEvent, showInput } from './events.js';
 
 /* the running match; duel === null means we are on the menu */
@@ -110,11 +110,10 @@ function onPress(code, event){
     if (cancelDraw(d, 0)) note('Shot cancelled', '#fff', 0.7);
     setStance(d, 0, stanceFromKeys());
     if (move === 'jump') jump(d, 0);
-    if (d.incoming[0] && !d.incoming[0].tried && !POWERS[d.incoming[0].code].lower) note('A super arrow cannot be dodged: press the counter numbers', '#ffe9a0', 1.6);
+    if (d.incoming[0] && !d.incoming[0].tried && !POWERS[d.incoming[0].code].lower) note('A super arrow cannot be dodged: press its counter', '#ffe9a0', 1.6);
   }
-  const digit = digitOf(code);
-  if (digit) showInput(inputCode(d, 0, digit), match);
-  if (code === KEYMAP.clear) cancelCode(d, 0);
+  const weapon = powerKeyOf(code);
+  if (weapon) showInput(press(d, 0, weapon), match);
   if (code === KEYMAP.fast || code === KEYMAP.hard) { setStance(d, 0, stanceFromKeys()); fire(code === KEYMAP.fast ? 'fast' : 'hard', pathFromKeys()); }
 }
 

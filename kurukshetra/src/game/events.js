@@ -32,7 +32,7 @@ const ON = {
   weakened(e, m){ burst(m.actors[e.to].chest(1.9), 30, 0xffffff, 4, 0.6); note(POWERS[e.by].name + ' weakens ' + POWERS[e.code].name + ': half damage', '#ffe9a0'); play('explosion', 0.6); },
   lowered(e){ if (e.to === 0) note('Bow lowered: your ' + upper(e.code) + ' is dropped', '#ffe9a0', 1.6); },
   resisted(e, m){
-    const left = shieldFor(m.duel, 0) ? 'only the Brahma Danda stops it now' : 'nothing can stop it now';
+    const left = shieldFor(m.duel, 0) ? 'only the shield (Space) stops it now' : 'nothing can stop it now';
     note(e.to === 0 ? 'You resisted the ' + upper(e.code) + ': ' + left : getCharacter(m.duel.f[e.to].id).name + ' resisted your ' + upper(e.code), e.to === 0 ? '#ff8a7a' : '#9fffb0', 2); play('warn', 0.8);
   },
   spared(e, m){
@@ -53,10 +53,9 @@ const ON = {
 };
 export function showEvent(e, match){ ON[e.type]?.(e, match); }
 
-/* feedback for the player's own number keys */
+/* feedback for the player's own weapon keys */
 export function showInput(result, m){
   if (!result) return;
-  if (result.type === 'stray') note('The arrow left while you were typing: start your counter again', '#ffe9a0', 1.6);
   if (result.type === 'refused') note(result.why, '#ffb0a0', 1.1);
   if (result.type === 'late') { note('Too late!', '#ff8a7a', 1); play('warn', 0.6); }
   if (result.type === 'counter') { play('chi'); if (result.paused) note('Your call is paused while you counter', '#ffe9a0', 0.9); }

@@ -42,7 +42,7 @@ function drawIncoming(duel, inc, answers, caller, hints){
     meter.style.width = clamp(open / (T.call - T.hard.draw - T.hard.flight), 0, 1) * 100 + '%';
     if (can) say('BREAK IT: shoot a slow arrow (S) NOW', 'good');
     else if (me.call) say('Finish your own arrow, then be ready to counter');
-    else say(open > 0 ? 'No slow arrows left: get your number keys ready' : 'Too late to break it: get your number keys ready');
+    else say(open > 0 ? 'No slow arrows left: get your counter ready' : 'Too late to break it: get your counter ready');
     return;
   }
   const p = POWERS[inc.code], canLower = p.lower && !inc.resisted && !inc.tried;
@@ -55,10 +55,10 @@ function drawIncoming(duel, inc, answers, caller, hints){
   else if (reply?.result === 'half') say('✓ ' + sent + ' will halve it', 'good');
   else if (lowering && bowLowered(me)) say('BOW LOWERED: keep holding ↓ and do not attack', 'good');
   else if (reply) say((reply.result === 'late' ? '✗ TOO LATE. ' : '✗ WRONG: ' + sent + ' cannot stop it. ') + 'Needed: ' + answerText(inc.code, me), 'bad');
-  else if (p.lower && inc.resisted) say(shieldFor(duel, 0) ? 'It turned on you: only the Brahma Danda stops it now' : 'It turned on you: nothing can stop it now', 'bad');
+  else if (p.lower && inc.resisted) say(shieldFor(duel, 0) ? 'It turned on you: only the shield (Space) stops it now' : 'It turned on you: nothing can stop it now', 'bad');
   else if (canLower) say(hints ? 'LOWER YOUR BOW: hold ↓ and do not attack' : 'ANSWER IT NOW');
-  else say(left <= 0 ? 'Too late' : answers.length ? 'PRESS THESE NUMBERS NOW (moving cannot dodge it)' : 'PRESS ITS COUNTER NUMBERS NOW (moving cannot dodge it)');
-  const choices = answers.map(c => '<span><kbd>' + c[0] + '</kbd><kbd>' + c[1] + '</kbd>' + POWERS[c].name + (p.halvedBy?.includes(c) ? ' (half)' : '') + '</span>');
+  else say(left <= 0 ? 'Too late' : 'PRESS ITS COUNTER NOW (moving cannot dodge it)');
+  const choices = answers.map(c => '<span><kbd>' + POWERS[c].key + '</kbd>' + POWERS[c].name + (p.halvedBy?.includes(c) ? ' (half)' : '') + '</span>');
   if (lowering && !inc.tried && hints) choices.unshift('<span><kbd>↓</kbd>lower your bow</span>');
   setHtml(keys, choices.join('<em>or</em>'));
   box.classList.toggle('full', choices.length > 0);
@@ -93,7 +93,7 @@ export function drawHud(duel, { hints, secret, seen, arrowSpot, tipSpot }){
   drawIncoming(duel, inc, answers, !secret && duel.f[1].call ? getCharacter(duel.f[1].id).name : null, hints);
   drawTag(inc, inc && arrowSpot(inc.uid));
   drawArrowTags(hints ? duel.arrows.filter(a => a.by === 1) : [], tipSpot);
-  $('mine').textContent = me.digits ? 'Code ' + me.digits + ' _' : me.call ? 'Calling ' + POWERS[me.call.code].name.toUpperCase() + '  ' + me.call.left.toFixed(1) + ' s' : '';
+  $('mine').textContent = me.call ? 'Calling ' + POWERS[me.call.code].name.toUpperCase() + '  ' + me.call.left.toFixed(1) + ' s' : '';
   drawChart(me, answers, seen);
 }
 export function showHud(on){ $('hud').style.visibility = on ? 'visible' : 'hidden'; }

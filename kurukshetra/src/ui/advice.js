@@ -4,7 +4,7 @@ import { POWERS, JUMP, owns } from '../core/index.js';
 /* the key that escapes each ordinary shot */
 export const ESCAPE_HINT = { straight: 'hold ↓', low: 'jump ↑', jump: 'hold ←', high: 'hold →' };
 
-const named = code => code + ' ' + (POWERS[code].short || POWERS[code].name);
+const named = code => POWERS[code].key + ' ' + (POWERS[code].short || POWERS[code].name);
 
 /* everything archer f could have used against a super arrow, e.g. "12 Water or 33 Sun discs" */
 export function answerText(code, f){

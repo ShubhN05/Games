@@ -1,4 +1,4 @@
-/* Super arrows: number codes, calling, countering, hitting.
+/* Super arrows: weapon keys, calling, countering, hitting.
    Everything about a particular power comes from content/powers.js - no power codes are written here. */
 import { T, DMG, done } from './constants.js';
 import { POWERS } from '../content/powers.js';
@@ -14,8 +14,6 @@ export function answersTo(d, i){
   return [...attack.counters, ...(attack.halvedBy || [])].filter(c => owns(f, c) && !(POWERS[c].shield && f.used[c]));
 }
 
-export function cancelCode(d, i){ d.f[i].digits = ''; }
-
 /* Some weapons also pass by an archer who lowers the bow. Attacking while one flies at you gives that up. */
 const lowerable = inc => !!inc && !!POWERS[inc.code].lower;
 export function resist(d, i){
@@ -30,26 +28,22 @@ export function tickLower(d, i, ev){
   ev.push({ type: 'lowered', to: i, code: f.call.code }); f.call = null; f.hold = 0;
 }
 
-/* one number key. Returns null after the first number, else what the two-number code did */
-export function inputCode(d, i, digit){
-  const f = d.f[i];
-  if (d.winner !== null || !/^[1-5]$/.test(digit)) return null;
-  if (f.stray > 0) { f.stray = 0; return { type: 'stray' }; }
-  f.digits += digit; f.digitT = T.digit;
-  if (f.digits.length < 2) return null;
-  const code = f.digits; f.digits = '';
-  const p = POWERS[code], refuse = why => ({ type: 'refused', code, why });
-  if (!p) return refuse('no such power');
-  if (!owns(f, code)) return refuse(getCharacter(f.id).name + ' does not have ' + p.name);
+/* one weapon key ('1'-'7' or 'Space'): shoots that super arrow, or counters the one coming at you.
+   Returns null for a key that means nothing, else what happened. */
+export function press(d, i, key){
+  const f = d.f[i], ids = Object.keys(POWERS).filter(c => POWERS[c].key === key);
+  if (d.winner !== null || !ids.length) return null;
+  const refuse = (why, code) => ({ type: 'refused', code, why });
+  const code = ids.find(c => owns(f, c));
+  if (!code) return refuse(getCharacter(f.id).name + ' has no weapon on ' + key);
+  const p = POWERS[code], inc = d.incoming[i];
+  if (inc) return inc.tried ? refuse('Your try is used: wait for this arrow', code) : counter(d, i, code, inc, why => refuse(why, code));
 
-  const inc = d.incoming[i];
-  if (inc) return inc.tried ? refuse('Your try is used: wait for this arrow') : counter(d, i, code, inc, refuse);
-
-  if (p.shield) return refuse(p.name + ' only blocks a rare weapon');
-  if (p.rare && f.used[code]) return refuse(p.name + ' already used');
-  if (f.call) return refuse('already calling');
-  if (f.draw) return refuse('finish your arrow first');
-  if (f.superRest > 0) return refuse('Rest a moment');
+  if (p.shield) return refuse(p.name + ' only blocks a rare weapon', code);
+  if (p.rare && f.used[code]) return refuse(p.name + ' already used', code);
+  if (f.call) return refuse('already calling', code);
+  if (f.draw) return refuse('finish your arrow first', code);
+  if (f.superRest > 0) return refuse('Rest a moment', code);
   f.call = { code, left: T.call };
   return { type: 'call', code };
 }
@@ -71,9 +65,6 @@ function counter(d, i, code, inc, refuse){
   return { type: 'counter', code, paused };
 }
 
-/* a half-typed code is forgotten after a while */
-export function tickDigits(f, dt){ f.stray = Math.max(0, f.stray - dt); if (f.digits && done(f.digitT -= dt)) f.digits = ''; }
-
 /* the shield that can still stop the weapon coming at archer i, if any */
 export function shieldFor(d, i){
   const inc = d.incoming[i], f = d.f[i];
@@ -86,7 +77,6 @@ export function tickCall(d, i, dt, held, ev){
   const f = d.f[i];
   if (!f.call || held || !done(f.call.left -= dt)) return;
   const code = f.call.code; f.call = null; f.superRest = T.superRest;
-  const target = d.f[1 - i]; if (target.digits) { target.digits = ''; target.stray = T.stray; }
   if (POWERS[code].rare) f.used[code] = true;
   resist(d, i);
   const s = { uid: d.uid++, by: i, code, left: T.flight, tried: false, damage: POWERS[code].rare ? DMG.rare : DMG.super };

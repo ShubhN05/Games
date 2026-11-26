@@ -1,5 +1,5 @@
 /* The computer archer. It only learns which super arrow is coming after it has been released, like the player. */
-import { setStance, shoot, jump, inputCode, owns, shieldFor, ESCAPE, POWERS, getCharacter } from '../core/index.js';
+import { setStance, shoot, jump, press, owns, shieldFor, ESCAPE, POWERS, getCharacter } from '../core/index.js';
 import { END, START, CONTACT } from '../core/path.js';
 import { LEVELS } from './levels.js';
 
@@ -26,7 +26,7 @@ export function stepAI(d, i, ai, dt){
 
 const pick = (ai, list) => list[Math.floor(ai.rnd() * list.length)];
 const ordinary = () => Object.keys(POWERS).filter(c => !POWERS[c].rare);
-function enter(d, i, code){ d.f[i].digits = ''; inputCode(d, i, code[0]); return inputCode(d, i, code[1]); }
+const enter = (d, i, code) => press(d, i, POWERS[code].key);
 
 function answerSuper(d, i, ai, dt){
   const { L, rnd } = ai, inc = d.incoming[i];
