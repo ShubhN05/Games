@@ -1,6 +1,6 @@
 /* the rules of the duel. run all tests: npm test */
 import assert from 'node:assert/strict';
-import { createDuel, step, inputCode, cancelCode, shoot, setStance, jump, cancelDraw, airHeight, POWERS, T } from '../src/core/index.js';
+import { createDuel, step, inputCode, cancelCode, shoot, setStance, jump, cancelDraw, airHeight, answersTo, POWERS, T } from '../src/core/index.js';
 const run = (d, s) => { const ev = []; for (let i = 0, n = Math.round(s * 100); i < n; i++) ev.push(...step(d, 0.01)); return ev; };
 const code = (d, i, c) => { inputCode(d, i, c[0]); return inputCode(d, i, c[1]); };
 const hp = (d, i) => Math.round(d.f[i].hp * 10) / 10;
@@ -54,6 +54,22 @@ test('a dodged slow arrow does not break the call', () => { const d = fresh(); c
 test('a slow arrow arriving after the release does not stop the super arrow', () => { const d = fresh(); code(d, 1, '11'); run(d, CALL - 1.2); shoot(d, 0, 'hard', 'straight'); run(d, 2); assert.equal(d.incoming[0].code, '11'); assert.equal(hp(d, 1), 99); });
 test('no normal shot while calling', () => { const d = fresh(); code(d, 0, '11'); assert.equal(shoot(d, 0, 'fast', 'straight'), false); });
 test('match ends at 0 and freezes', () => { const d = fresh(); d.f[1].hp = 5; code(d, 0, '11'); const e = run(d, CALL + 2.6); assert.equal(d.winner, 0); assert.ok(e.some(x => x.type === 'over')); assert.equal(shoot(d, 0, 'fast', 'straight'), false); });
+/* Narayanastra: lower your bow (crouch) and do not attack, and it passes by */
+const narayana = () => { const d = createDuel(['ashvatthama', 'karna']); code(d, 0, '52'); run(d, CALL + 0.02); assert.equal(d.incoming[1]?.code, '52'); return d; };
+const GRACE = T.lowerGrace;
+test('only Ashvatthama has Narayanastra, besides Brahmastra', () => { const d = createDuel(['ashvatthama', 'ashvatthama']); assert.equal(code(d, 0, '52').type, 'call'); assert.equal(code(d, 1, '51').type, 'call'); assert.equal(code(createDuel(['drona', 'karna']), 0, '52').type, 'refused'); });
+test('Narayanastra: 30% on a standing archer, once per match', () => { const d = narayana(); run(d, 3); assert.equal(hp(d, 1), 70); assert.equal(code(d, 0, '52').type, 'refused'); });
+test('Narayanastra passes by a lowered bow', () => { const d = narayana(); run(d, 1.5); setStance(d, 1, 'crouch'); const e = run(d, 1.5); assert.equal(hp(d, 1), 100); assert.equal(d.incoming[1], null); assert.ok(e.some(x => x.type === 'spared' && x.to === 1)); });
+test('the bow must still be lowered when it arrives', () => { const d = narayana(); setStance(d, 1, 'crouch'); run(d, 1.5); setStance(d, 1, 'mid'); run(d, 1.5); assert.equal(hp(d, 1), 70); });
+test('stepping aside does not escape Narayanastra', () => { for (const s of ['back', 'forward']) { const d = narayana(); setStance(d, 1, s); run(d, 3); assert.equal(hp(d, 1), 70, s); } });
+test('shooting at it makes Narayanastra strike even a lowered bow', () => { const d = narayana(); run(d, GRACE + 0.1); assert.ok(shoot(d, 1, 'fast', 'straight')); const e = run(d, 0.5); assert.ok(e.some(x => x.type === 'resisted' && x.to === 1)); assert.equal(e.filter(x => x.type === 'resisted').length, 1); setStance(d, 1, 'crouch'); run(d, 2); assert.equal(hp(d, 1), 70); });
+test('a shot begun in the first moment is forgiven', () => { const d = narayana(); run(d, GRACE - 0.2); shoot(d, 1, 'fast', 'straight'); run(d, 0.5); setStance(d, 1, 'crouch'); run(d, 2); assert.equal(hp(d, 1), 100); });
+test('trying another astra against it is resisting', () => { for (const c of ['11', '51']) { const d = narayana(); code(d, 1, c); setStance(d, 1, 'crouch'); const e = run(d, 3); assert.equal(hp(d, 1), 70, c); assert.ok(e.some(x => x.type === 'resisted')); } });
+test('Brahma Danda stops Narayanastra, also after resisting', () => { const d = narayana(); run(d, GRACE + 0.1); shoot(d, 1, 'fast', 'straight'); run(d, 0.5); assert.deepEqual(answersTo(d, 1), ['54']); code(d, 1, '54'); run(d, 2); assert.equal(hp(d, 1), 100); });
+test('lowering the bow drops your own preparation without using it up', () => { const d = createDuel(['ashvatthama', 'karna']); code(d, 0, '52'); run(d, 1); assert.equal(code(d, 1, '51').type, 'call'); run(d, CALL - 0.98); assert.ok(d.f[1].call); setStance(d, 1, 'crouch'); const e = run(d, 3);
+  assert.ok(e.some(x => x.type === 'lowered' && x.to === 1 && x.code === '51')); assert.equal(d.f[1].used['51'], undefined); assert.equal(e.some(x => x.type === 'release' && x.by === 1), false); assert.equal(hp(d, 1), 100); });
+test('releasing your own super arrow while it flies is resisting', () => { const d = createDuel(['ashvatthama', 'karna']); code(d, 0, '52'); run(d, 1); code(d, 1, '11'); run(d, CALL - 0.98); run(d, 1.2); assert.ok(d.incoming[0], 'karna released'); setStance(d, 1, 'crouch'); run(d, 2); assert.equal(hp(d, 1), 70); });
+test('crouching keeps the preparation against an ordinary arrow', () => { const d = fresh(); code(d, 0, '11'); run(d, 1); code(d, 1, '12'); run(d, CALL - 0.95); setStance(d, 1, 'crouch'); run(d, 0.5); assert.ok(d.f[1].call); });
 console.log('OK', n, 'tests');
 
 /* what is drawn agrees with what hits */
@@ -70,12 +86,21 @@ assert.ok(heightAt('low', CONTACT.mid) < JUMP.clear, 'low arrow passes under the
 /* stepping forward into an arrow that already passed the front spot still counts */
 { const d = fresh(); shoot(d, 0, 'hard', 'straight'); run(d, 0.7 + 0.93); setStance(d, 1, 'forward'); run(d, 1); assert.equal(hp(d, 1), 99, 'late step forward'); }
 
+/* the computer against Narayanastra: a strong one usually knows to lower its bow, a weak one often does not */
+{ const rate = lv => { let safe = 0; for (let k = 1; k <= 200; k++) { let s = k * 7919; const rnd = () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+      const d = narayana(), ai = createAI(lv, rnd); ai.superT = 99; ai.arrowT = 0.9;      // it would shoot soon, if it did not know better
+      for (let i = 0; i < 300; i++) { stepAI(d, 1, ai, 0.01); step(d, 0.01); }
+      assert.notEqual(d.f[1].stance, 'crouch', 'stands up again');
+      if (d.f[1].hp > 90) safe++; } return safe / 200; };
+  const hard = rate('hard'), easy = rate('easy'); assert.ok(hard > 0.75, 'hard defends it: ' + hard); assert.ok(easy > 0.15 && easy < 0.6, 'easy often fails: ' + easy);
+  console.log('computer survives Narayanastra: easy', easy, 'hard', hard); }
+
 /* computer against computer: every level finishes a match and never breaks a rule */
 import { createAI, stepAI } from '../src/ai/computer.js';
-for (const lv of ['easy', 'normal', 'hard']) {
+for (const lv of ['easy', 'normal', 'hard']) for (const pair of [['arjun', 'karna'], ['ashvatthama', 'drona']]) {
   let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  const d = createDuel(['arjun', 'karna']), a = createAI(lv, rnd), b = createAI(lv, rnd), seen = {};
+  const d = createDuel(pair), a = createAI(lv, rnd), b = createAI(lv, rnd), seen = {};
   for (let i = 0; i < 100 * 900 && d.winner === null; i++) { stepAI(d, 0, a, 0.01); stepAI(d, 1, b, 0.01); for (const e of step(d, 0.01)) seen[e.type] = (seen[e.type] || 0) + 1; }
   assert.notEqual(d.winner, null, lv + ' match must end'); assert.ok(d.f.every(f => f.arrows.fast >= 0 && f.arrows.hard >= 0));
-  console.log(lv, 'ended at', d.t.toFixed(0), 's', JSON.stringify(seen));
+  console.log(lv, pair.join(' v '), 'ended at', d.t.toFixed(0), 's', JSON.stringify(seen));
 }

@@ -1,6 +1,7 @@
 /* Normal arrows and moving: shooting, jumping, dodging, knocking down, hitting. */
 import { T, ESCAPE, done } from './constants.js';
 import { tipS, CONTACT, REACH, END, CROSS, JUMP, heightAt, hopHeight } from './path.js';
+import { resist } from './supers.js';
 
 export function setStance(d, i, stance){
   const f = d.f[i]; f.wish = stance;
@@ -36,7 +37,7 @@ export function cancelDraw(d, i){
 export function shoot(d, i, kind, path){
   const f = d.f[i];
   if (d.winner !== null || f.call || f.draw || f.rest > 0 || f.arrows[kind] <= 0) return false;
-  f.arrows[kind]--; f.draw = { kind, path, left: T[kind].draw }; f.stance = 'mid';
+  f.arrows[kind]--; f.draw = { kind, path, left: T[kind].draw }; f.stance = 'mid'; resist(d, i);
   return true;
 }
 

@@ -16,6 +16,20 @@ export function answersTo(d, i){
 
 export function cancelCode(d, i){ d.f[i].digits = ''; }
 
+/* Some weapons also pass by an archer who lowers the bow. Attacking while one flies at you gives that up. */
+const lowerable = inc => !!inc && !!POWERS[inc.code].lower;
+export function resist(d, i){
+  const inc = d.incoming[i];
+  if (lowerable(inc) && T.flight - inc.left >= T.lowerGrace - 1e-6) inc.resisted = true;
+}
+export const bowLowered = f => f.stance === 'crouch' && !f.draw && !f.call;
+/* lowering the bow against such a weapon drops the super arrow you were preparing (a rare one is not used up) */
+export function tickLower(d, i, ev){
+  const f = d.f[i], inc = d.incoming[i];
+  if (!f.call || !lowerable(inc) || inc.resisted || f.stance !== 'crouch') return;
+  ev.push({ type: 'lowered', to: i, code: f.call.code }); f.call = null; f.hold = 0;
+}
+
 /* one number key. Returns null after the first number, else what the two-number code did */
 export function inputCode(d, i, digit){
   const f = d.f[i];
@@ -46,6 +60,7 @@ function counter(d, i, code, inc, refuse){
     if (f.used[code]) return refuse(p.name + ' already used');
   }
   if (inc.left < T.counterExec - 1e-6) { inc.tried = true; return { type: 'late', code }; }
+  if (attack.lower && !p.shield) inc.resisted = true;                  // answering it with a weapon is resisting
   inc.tried = true; const paused = !!f.call; if (paused) f.hold = T.counterExec;     // your own call waits while you counter
   if (p.shield) f.used[code] = true;
   const halves = !!attack.halvedBy?.includes(code);
@@ -63,6 +78,7 @@ export function tickCall(d, i, dt, held, ev){
   if (!f.call || held || !done(f.call.left -= dt)) return;
   const code = f.call.code; f.call = null; f.superRest = T.superRest; d.f[1 - i].digits = '';
   if (POWERS[code].rare) f.used[code] = true;
+  resist(d, i);
   const s = { uid: d.uid++, by: i, code, left: T.flight, tried: false, damage: POWERS[code].rare ? DMG.rare : DMG.super };
   d.incoming[1 - i] = s; ev.push({ type: 'release', by: i, shot: s });
 }
@@ -79,8 +95,12 @@ export function stepSupers(d, dt, ev){
     return false;
   });
   d.incoming.forEach((s, to) => {
-    if (!s || !done(s.left -= dt)) return;
-    d.incoming[to] = null; d.f[to].hp = Math.max(0, d.f[to].hp - s.damage);
+    if (!s) return;
+    if (s.resisted && !s.told) { s.told = true; ev.push({ type: 'resisted', to, code: s.code }); }
+    if (!done(s.left -= dt)) return;
+    d.incoming[to] = null;
+    if (lowerable(s) && !s.resisted && bowLowered(d.f[to])) return void ev.push({ type: 'spared', to, code: s.code, uid: s.uid });
+    d.f[to].hp = Math.max(0, d.f[to].hp - s.damage);
     ev.push({ type: 'superhit', to, code: s.code, damage: s.damage, uid: s.uid });
   });
 }

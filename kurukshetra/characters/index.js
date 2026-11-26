@@ -4,8 +4,9 @@ import arjun from './arjun/character.js';
 import karna from './karna/character.js';
 import bhishma from './bhishma/character.js';
 import drona from './drona/character.js';
+import ashvatthama from './ashvatthama/character.js';
 
-export const CHARACTERS = [arjun, karna, bhishma, drona];
+export const CHARACTERS = [arjun, karna, bhishma, drona, ashvatthama];
 export const getCharacter = id => {
   const c = CHARACTERS.find(x => x.id === id);
   if (!c) throw new Error('unknown character: ' + id);

@@ -3,7 +3,7 @@ import { $, powerColor, ESCAPE_HINT } from './dom.js';
 import { drawChart } from './chart.js';
 import { camera } from '../render/stage.js';
 import { clamp } from '../render/layout.js';
-import { POWERS, T, answersTo, getCharacter } from '../core/index.js';
+import { POWERS, T, answersTo, bowLowered, getCharacter } from '../core/index.js';
 
 function setHtml(el, html){ if (el.dataset.h !== html) { el.dataset.h = html; el.innerHTML = html; } }
 
@@ -23,7 +23,7 @@ function quiver(arrows){
 }
 
 /* the big warning in the middle: first that the opponent is preparing a super arrow, then which one it is */
-function drawIncoming(inc, answers, caller){
+function drawIncoming(inc, answers, caller, hints, me){
   const box = $('incoming'), title = box.querySelector('.t'), small = box.querySelector('.s'), keys = box.querySelector('.k');
   box.style.display = inc || caller ? 'block' : 'none';
   box.classList.toggle('waiting', !inc);
@@ -31,11 +31,16 @@ function drawIncoming(inc, answers, caller){
     if (caller) { title.textContent = caller + ' is preparing a super arrow…'; title.style.color = '#fff'; small.textContent = 'Break it with a slow arrow (S), or get your number keys ready'; setHtml(keys, ''); box.style.borderColor = ''; }
     return;
   }
-  const p = POWERS[inc.code], left = clamp((inc.left - T.counterExec) / (T.flight - T.counterExec), 0, 1);
+  const p = POWERS[inc.code], canLower = p.lower && !inc.resisted;
+  const left = canLower ? clamp(inc.left / T.flight, 0, 1) : clamp((inc.left - T.counterExec) / (T.flight - T.counterExec), 0, 1);     // a bow can be lowered until it arrives
   title.textContent = p.name.toUpperCase() + ' (' + p.sanskrit + ')'; title.style.color = box.style.borderColor = powerColor(inc.code);
   box.querySelector('.meter i').style.width = left * 100 + '%';
-  small.textContent = inc.tried ? 'Your try is used' : left <= 0 ? 'Too late' : answers.length ? 'PRESS THESE NUMBERS NOW (arrow keys cannot dodge it)' : 'PRESS ITS COUNTER NUMBERS NOW (arrow keys cannot dodge it)';
-  setHtml(keys, answers.map(c => '<span><kbd>' + c[0] + '</kbd><kbd>' + c[1] + '</kbd>' + POWERS[c].name + (p.halvedBy?.includes(c) ? ' (half)' : '') + '</span>').join('<em>or</em>'));
+  if (canLower) small.textContent = !hints ? 'ANSWER IT NOW' : bowLowered(me) ? 'BOW LOWERED: keep holding ↓ and do not attack' : 'LOWER YOUR BOW: hold ↓ and do not attack';
+  else if (p.lower && !inc.tried) small.textContent = 'It turned on you: only the Brahma Danda stops it now';
+  else small.textContent = inc.tried ? 'Your try is used' : left <= 0 ? 'Too late' : answers.length ? 'PRESS THESE NUMBERS NOW (arrow keys cannot dodge it)' : 'PRESS ITS COUNTER NUMBERS NOW (arrow keys cannot dodge it)';
+  const choices = answers.map(c => '<span><kbd>' + c[0] + '</kbd><kbd>' + c[1] + '</kbd>' + POWERS[c].name + (p.halvedBy?.includes(c) ? ' (half)' : '') + '</span>');
+  if (canLower && hints) choices.unshift('<span><kbd>↓</kbd>lower your bow</span>');
+  setHtml(keys, choices.join('<em>or</em>'));
 }
 
 /* a name tag that rides on the arrow coming at you (spot = its 3D position) */
@@ -62,7 +67,7 @@ function drawArrowTags(arrows, spot){
 export function drawHud(duel, { hints, secret, arrowSpot, tipSpot }){
   duel.f.forEach(drawSide);
   const me = duel.f[0], inc = secret ? null : duel.incoming[0], answers = hints ? answersTo(duel, 0) : [];
-  drawIncoming(inc, answers, !secret && duel.f[1].call ? getCharacter(duel.f[1].id).name : null);
+  drawIncoming(inc, answers, !secret && duel.f[1].call ? getCharacter(duel.f[1].id).name : null, hints, me);
   drawTag(inc, inc && arrowSpot(inc.uid));
   drawArrowTags(hints ? duel.arrows.filter(a => a.by === 1) : [], tipSpot);
   $('mine').textContent = me.digits ? 'Code ' + me.digits + ' _' : me.call ? 'Calling ' + POWERS[me.call.code].name.toUpperCase() + '  ' + me.call.left.toFixed(1) + ' s' : '';

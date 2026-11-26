@@ -4,6 +4,7 @@ export const T = {
   flight: 2.5,          // super arrow in the air
   counterExec: 0.5,     // counter needs this long, so it must be pressed within 2 s of release
   superRest: 1.0,       // pause after releasing a super arrow before the next call
+  lowerGrace: 0.6,      // an attack begun this soon after a 'lower your bow' weapon is released is forgiven
   digit: 1.5,           // a first number is forgotten after this long
   fast: { draw: 0.15, flight: 0.7, rest: 0.30, dmg: 0.3 },
   hard: { draw: 0.70, flight: 1.0, rest: 0.30, dmg: 1.0, breaksCall: true }     // a slow arrow that hits breaks a super arrow call

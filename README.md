@@ -10,7 +10,7 @@ A growing collection of small browser games. Every game is a self-contained fold
 |---|---|---|---|
 | 🌙 **Nightrunner — Missile Hero** | 5-level dark platformer: night, underwater, fire, sky, 4-dragon boss. Shoot missiles | [Play](https://shubhn05.github.io/Games/mario/) | [`/mario`](./mario) |
 | ⚔️ **YUDH — Part 1: Arjun vs Ravan** | Tekken-style 3D fighter: bow & arrows, fire super, boss fight, training ground | [Play](https://shubhn05.github.io/Games/yudh/) | [`/yudh`](./yudh) |
-| 🏹 **Kurukshetra — Archery Duel** | Arjun, Karna, Bhishma and Drona archery duel: dodge arrows, counter divine weapons (desktop keyboard) | [Play](https://shubhn05.github.io/Games/kurukshetra/) | [`/kurukshetra`](./kurukshetra) |
+| 🏹 **Kurukshetra — Archery Duel** | Arjun, Karna, Bhishma, Drona and Ashvatthama archery duel: dodge arrows, counter divine weapons (desktop keyboard) | [Play](https://shubhn05.github.io/Games/kurukshetra/) | [`/kurukshetra`](./kurukshetra) |
 
 *More folders are coming — each new game gets its own directory with its own README.*
 

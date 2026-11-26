@@ -19,7 +19,7 @@ export function buildCounterTable(){
   $('table').innerHTML = '<table><tr><th>Code</th><th>Power</th><th>Stopped by</th></tr>' + Object.entries(POWERS).filter(([, p]) => !p.shield).map(([code, p]) => {
     const owners = CHARACTERS.filter(a => a.rares.includes(code)).map(a => a.name).join(', ');
     const who = p.rare ? ' <small>(' + (owners || 'not in this version') + ' · once)</small>' : '';
-    const by = p.counters.map(named).join(' or ') + (p.halvedBy || []).map(c => ' · ' + named(c) + ' halves it').join('') + (p.game ? ' *' : '');
+    const by = (p.lower ? 'Hold ↓ (lower your bow) and do not attack, or ' : '') + p.counters.map(named).join(' or ') + (p.halvedBy || []).map(c => ' · ' + named(c) + ' halves it').join('') + (p.game ? ' *' : '');
     return '<tr><td><b>' + code + '</b></td><td style="color:' + powerColor(code) + '">' + p.name + who + '</td><td>' + by + '</td></tr>';
   }).join('') + '</table>';
 }

@@ -28,6 +28,15 @@ const ON = {
   blocked(e, m){ superArrows.blocked(e.uid, e.code, e.by); note(upper(e.by) + ' stops ' + upper(e.code), '#9fffb0'); m.shake = 0.12; play('explosion', 0.8); },
   failed(e, m){ burst(m.actors[e.to].chest(1.9), 14, POWERS[e.by].color, 3, 0.5); note(upper(e.by) + ' cannot stop ' + upper(e.code), '#ff8a7a'); },
   weakened(e, m){ burst(m.actors[e.to].chest(1.9), 30, 0xffffff, 4, 0.6); note(POWERS[e.by].name + ' weakens ' + POWERS[e.code].name + ': half damage', '#ffe9a0'); play('explosion', 0.6); },
+  lowered(e){ if (e.to === 0) note('Bow lowered: your ' + upper(e.code) + ' is dropped', '#ffe9a0', 1.6); },
+  resisted(e, m){
+    note(e.to === 0 ? 'You resisted the ' + upper(e.code) + ': only the Brahma Danda stops it now' : getCharacter(m.duel.f[e.to].id).name + ' resisted your ' + upper(e.code), e.to === 0 ? '#ff8a7a' : '#9fffb0', 2); play('warn', 0.8);
+  },
+  spared(e, m){
+    superArrows.remove(e.uid); const a = m.actors[e.to], who = getCharacter(m.duel.f[e.to].id).name;
+    burst(a.chest(2.1), 45, POWERS[e.code].color, 4, 0.9, 0.3); floatText(a.chest(2.3), 'PASSES BY', '#9fe8ff');
+    note(e.to === 0 ? 'Bow lowered: ' + upper(e.code) + ' passes you by' : who + ' lowered the bow: your ' + upper(e.code) + ' passes by', e.to === 0 ? '#9fffb0' : '#ffb0a0', 2); play('block', 0.8);
+  },
   superhit(e, m){
     superArrows.remove(e.uid);
     const a = m.actors[e.to], big = e.damage >= 15;

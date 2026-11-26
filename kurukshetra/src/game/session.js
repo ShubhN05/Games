@@ -1,6 +1,6 @@
 /* Runs a match: starting, pausing, key presses and the frame by frame loop.
    Connects rules (core), computer (ai), pictures (render), screen (ui), sound and keyboard. */
-import { createDuel, step, shoot, setStance, jump, cancelDraw, inputCode, cancelCode, CHARACTERS, getCharacter } from '../core/index.js';
+import { createDuel, step, shoot, setStance, jump, cancelDraw, inputCode, cancelCode, CHARACTERS, getCharacter, POWERS } from '../core/index.js';
 import { $ } from '../ui/dom.js';
 import { createAI, stepAI } from '../ai/computer.js';
 import { render } from '../render/stage.js';
@@ -105,7 +105,7 @@ function onPress(code){
     if (cancelDraw(d, 0)) note('Shot cancelled', '#fff', 0.7);
     setStance(d, 0, stanceFromKeys());
     if (move === 'jump') jump(d, 0);
-    if (d.incoming[0] && !d.incoming[0].tried) note('A super arrow cannot be dodged: press the counter numbers', '#ffe9a0', 1.6);
+    if (d.incoming[0] && !d.incoming[0].tried && !POWERS[d.incoming[0].code].lower) note('A super arrow cannot be dodged: press the counter numbers', '#ffe9a0', 1.6);
   }
   const digit = digitOf(code);
   if (digit) showInput(inputCode(d, 0, digit));

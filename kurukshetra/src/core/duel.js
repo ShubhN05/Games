@@ -1,7 +1,7 @@
 /* One match: its state and the clock that drives it. No drawing, no keyboard - runs in Node for tests. */
 import { ARROWS } from './constants.js';
 import { tickDraw, tickHop, stepArrows } from './arrows.js';
-import { tickDigits, tickCall, stepSupers } from './supers.js';
+import { tickDigits, tickLower, tickCall, stepSupers } from './supers.js';
 import { getCharacter } from '../../characters/index.js';
 
 const fighter = id => ({ id: getCharacter(id).id, hp: 100, arrows: { ...ARROWS }, digits: '', digitT: 0, call: null, draw: null, rest: 0, hold: 0, superRest: 0,
@@ -23,6 +23,7 @@ export function step(d, dt){
     const held = f.hold > 1e-6; f.hold = Math.max(0, f.hold - dt);
     tickHop(f, dt);
     tickDraw(d, i, dt, ev);
+    tickLower(d, i, ev);
     tickCall(d, i, dt, held, ev);
   });
   stepSupers(d, dt, ev);

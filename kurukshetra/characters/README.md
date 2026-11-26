@@ -24,7 +24,7 @@ characters/
 | `karna/` | Karna | Kaurava | Legend | yes, **locked** |
 | `bhishma/` | Bhishma | Kaurava | Legend | yes, **locked** |
 | `drona/` | Drona | Kaurava | Legend | yes, **locked** |
-| `ashvatthama/` | Ashvatthama | Kaurava | Legend | not yet |
+| `ashvatthama/` | Ashvatthama | Kaurava | Legend | yes, awaiting approval |
 | `abhimanyu/` | Abhimanyu | Pandava | Elite | not yet |
 | `satyaki/` | Satyaki | Pandava | Elite | not yet |
 | `kripa/` | Kripa | Kaurava | Elite | not yet |

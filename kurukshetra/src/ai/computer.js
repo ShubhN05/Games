@@ -5,12 +5,16 @@ import { LEVELS } from './levels.js';
 
 export function createAI(level, rnd = Math.random){
   const L = LEVELS[level];
-  return { L, rnd, arrowT: 2.0, superT: 4.0, answer: null, seen: new Set(), dodges: [], last: null, repeats: 0, broken: 0 };
+  return { L, rnd, arrowT: 2.0, superT: 4.0, answer: null, lower: null, seen: new Set(), dodges: [], last: null, repeats: 0, broken: 0 };
 }
 
 export function stepAI(d, i, ai, dt){
   if (d.winner !== null) return;
   answerSuper(d, i, ai, dt);
+  if (ai.lower !== null) {                                     // bow lowered: hold still until that weapon has gone
+    if (d.incoming[i]?.uid === ai.lower) { ai.superT -= dt; ai.arrowT -= dt; return; }
+    ai.lower = null; setStance(d, i, 'mid');
+  }
   dodgeArrows(d, i, ai, dt);
   attack(d, i, ai, dt);
 }
@@ -26,14 +30,27 @@ function answerSuper(d, i, ai, dt){
     ai.answer = { uid: inc.uid, t: L.think[0] + rnd() * (L.think[1] - L.think[0]) };
     ai.repeats = inc.code === ai.last ? ai.repeats + 1 : 0; ai.last = inc.code;      // the same arrow again and again gets read
     if (ai.repeats >= 2) ai.answer.t = Math.min(ai.answer.t, L.think[1] * 0.7);
+    if (POWERS[inc.code].lower) planLower(d.f[i], inc, ai);
   }
-  if ((ai.answer.t -= dt) > 0) return;
-  const attack = POWERS[inc.code], good = rnd() < Math.min(0.97, L.right + 0.2 * ai.repeats);
+  const waited = (ai.answer.t -= dt) <= 0;
+  if (ai.lower === inc.uid) { if (waited) setStance(d, i, 'crouch'); return; }
+  if (!waited) return;
+  if (ai.answer.code) return void enter(d, i, ai.answer.code);
+  const attack = POWERS[inc.code], good = rnd() < knows(ai);
   let code;
   if (!good) code = pick(ai, ordinary().filter(c => !attack.counters.includes(c)));
   else if (!attack.rare) code = pick(ai, attack.counters);
   else code = answerRare(d.f[i], attack, ai);
   enter(d, i, code);
+}
+
+const knows = ai => Math.min(0.97, ai.L.right + 0.2 * ai.repeats);
+/* a weapon that passes a lowered bow: one who knows it stops attacking (or uses the shield), one who does not resists */
+function planLower(f, inc, ai){
+  const attack = POWERS[inc.code], shield = attack.counters.find(c => POWERS[c].shield && !f.used[c]);
+  if (ai.rnd() >= knows(ai)) ai.answer.code = pick(ai, ordinary());
+  else if (shield && ai.rnd() < 0.35) ai.answer.code = shield;
+  else ai.lower = inc.uid;
 }
 
 /* a rare weapon: use a shield, or an own weapon that stops it, or at least one that weakens it */

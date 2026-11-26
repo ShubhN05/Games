@@ -23,7 +23,12 @@ A one-on-one long-range archery duel in the browser: you against the computer, w
 Choose your archer and your opponent (or a random one) on the menu; **R** fights the same pair again.
 
 A super arrow takes 3 s to prepare and 2.5 s to fly. The opponent cannot see which one it is until release.
-Brahmastra and Pashupata do 30%, other super arrows 10%.
+Brahmastra, Pashupata and Narayanastra do 30%, other super arrows 10%.
+
+**Narayanastra** (Ashvatthama, once per match): hold **↓** to lower your bow and do not attack, and it passes you by.
+Shooting, releasing your own super arrow or trying another counter while it flies turns it on you (an attack begun
+in its first 0.6 s is forgiven). Lowering your bow drops a super arrow you were preparing, without using it up.
+The Brahma Danda also stops it.
 
 ## Run and test locally
 
