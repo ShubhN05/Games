@@ -1,0 +1,27 @@
+{
+  "lockedOn": "2026-11-26",
+  "files": {
+    "ashvatthama/bow.js": "d6f4f4332c2f75942583b0eb6ea151ed4a1fa2b73ebbdb109abbecfb435de46e",
+    "ashvatthama/character.js": "ba03b33a30db2f59011a87aa546e52dc74fa17bf57362f602c8ec27971d95378",
+    "ashvatthama/design.md": "308a438afcc794504dd521d7b673843f6ee8debaf9fb7875d58b6815368baf79",
+    "ashvatthama/hair.js": "0e0562d35a2d88500f6acb47d178fcccdf7385f3d61773f4330fb4cf3410f3ad",
+    "ashvatthama/look.js": "e6341c553262614282673d2683426ea9d40edb3ddc3c2857a25ef7ebc9b1f08f",
+    "ashvatthama/metals.js": "8002b8d1264e90565a3d028f5c47051ddf9df7e779912099dd91c2b794d6d01f",
+    "shared/animations/UAL1_Standard.glb": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
+    "shared/animations/UAL2_Standard.glb": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8",
+    "shared/arrow.js": "084a53adc92d20b80a19b4da859ee7e8fe08f0b95422189d0cc22e4e3df49266",
+    "shared/body.js": "7fd2eba8bce2f0fce57858e22e5b196c64540791c16ffe5837a27f030d07671b",
+    "shared/helpers.js": "d46487965a466dd5c7edb14aacdd3b039db220523d03803346683c0b0283071f",
+    "shared/model/Superhero_Male_FullBody.bin": "459003f9745853ae562a85506a2b94dd56515c1f37728f9fa3d2ce1a3e4cd92f",
+    "shared/model/Superhero_Male_FullBody.gltf": "e7fcea214ecf8855afbf910b50de6f9c7d1decfb71ca28bad8a4481452dafeb4",
+    "shared/model/T_Eye_Brown.png": "d08e3356a83211bc6ca21fe3a8e39f4b5c1a3b8f85457fc2c0fb57be09935025",
+    "shared/model/T_Eye_Normal_png.png": "9ed61f7726a54fe346a78b9e5a18905d8e2b88f86235d97f53cd207a26f3f8c7",
+    "shared/model/T_Hair_1_BaseColor.png": "bc7aa863bd22ab0a995cd838cceb4d3a5186ee54ee2fb0108fad85d20c057e6e",
+    "shared/model/T_Hair_1_Normal_png.png": "57fd0ad8c96a4d01b38769637e066cecaa285b456f6e48ce00863754a457affb",
+    "shared/model/T_Superhero_Male_Dark.png": "df680cbc1967a61e85998bfafb8f7bc0a36dd604bb3266486c4b06b1a184bb45",
+    "shared/model/T_Superhero_Male_Light.png": "419f96dbb8811511e2d515bcdabc085ff2f219ec7b8b4e91050a84cba6888fe9",
+    "shared/model/T_Superhero_Male_Normal.png": "9b25cf9200216eb754b79cf4c63b5380c419780788322f3c57cdd2b3e02679a6",
+    "shared/model/T_Superhero_Male_Roughness.png": "c70dabf48574cda55644d556beae1ee7cf1bdcf68a50d259d20f2f2358f27991",
+    "shared/wardrobe.js": "ab11b29a91583d8c5724e5a732023e2bb3238ab103249bb56f7d0621b4022532"
+  }
+}
