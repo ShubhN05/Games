@@ -1,5 +1,6 @@
 /* The weapon strip at the bottom of the screen and the counter table. Both are built from content/powers.js. */
 import { $, powerColor } from './dom.js';
+import { HOLD, keyLabel } from './advice.js';
 import { POWERS, CHARACTERS, owns } from '../core/index.js';
 
 const ordinary = () => Object.keys(POWERS).filter(c => !POWERS[c].rare);
@@ -20,11 +21,11 @@ export function drawChart(f, answers, seen){
 }
 
 export function buildCounterTable(){
-  const named = c => POWERS[c].key + ' ' + POWERS[c].name;
+  const named = c => keyLabel(c) + ' ' + POWERS[c].name;
   $('table').innerHTML = '<table><tr><th>Key</th><th>Power</th><th>Stopped by</th></tr>' + Object.entries(POWERS).filter(([, p]) => !p.shield).map(([code, p]) => {
     const owners = CHARACTERS.filter(a => a.rares.includes(code)).map(a => a.name).join(', ');
     const who = p.rare ? ' <small>(' + (owners || 'not in this version') + ' · once)</small>' : '';
-    const by = (p.lower ? 'Hold ↓ (lower your bow) and do not attack, or ' : '') + p.counters.map(named).join(' or ') + (p.halvedBy || []).map(c => ' · ' + named(c) + ' halves it').join('') + (p.game ? ' *' : '');
-    return '<tr><td><b>' + p.key + '</b></td><td style="color:' + powerColor(code) + '">' + p.name + who + '</td><td>' + by + '</td></tr>';
+    const by = (p.lower ? HOLD[0].toUpperCase() + HOLD.slice(1) + ' ↓ (lower your bow) and do not attack, or ' : '') + p.counters.map(named).join(' or ') + (p.halvedBy || []).map(c => ' · ' + named(c) + ' halves it').join('') + (p.game ? ' *' : '');
+    return '<tr><td><b>' + keyLabel(code) + '</b></td><td style="color:' + powerColor(code) + '">' + p.name + who + '</td><td>' + by + '</td></tr>';
   }).join('') + '</table>';
 }

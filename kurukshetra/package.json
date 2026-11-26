@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "test": "node tests/rules.test.js && node tests/content.test.js && node tests/lock.test.js",
+    "test": "node tests/rules.test.js && node tests/touch.test.js && node tests/content.test.js && node tests/lock.test.js",
     "lock": "node tests/lock.js"
   }
 }

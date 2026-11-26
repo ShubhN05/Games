@@ -1,6 +1,6 @@
 /* Everything drawn over the match: health bars, the incoming arrow panel, its name tag and your own call. */
 import { $, powerColor } from './dom.js';
-import { ESCAPE_HINT, answerText } from './advice.js';
+import { ESCAPE_HINT, HOLD, HOLDING, SHIELD, keyLabel, answerText } from './advice.js';
 import { drawChart } from './chart.js';
 import { camera } from '../render/stage.js';
 import { clamp } from '../render/layout.js';
@@ -53,12 +53,12 @@ function drawIncoming(duel, inc, answers, caller, hints){
   const reply = inc.reply, sent = reply && POWERS[reply.code].name;
   if (reply?.result === 'good') say('✓ RIGHT: ' + sent + ' will stop it', 'good');
   else if (reply?.result === 'half') say('✓ ' + sent + ' will halve it', 'good');
-  else if (lowering && bowLowered(me)) say('BOW LOWERED: keep holding ↓ and do not attack', 'good');
+  else if (lowering && bowLowered(me)) say('BOW LOWERED: keep ' + HOLDING + ' ↓ and do not attack', 'good');
   else if (reply) say((reply.result === 'late' ? '✗ TOO LATE. ' : '✗ WRONG: ' + sent + ' cannot stop it. ') + 'Needed: ' + answerText(inc.code, me), 'bad');
-  else if (p.lower && inc.resisted) say(shieldFor(duel, 0) ? 'It turned on you: only the shield (Space) stops it now' : 'It turned on you: nothing can stop it now', 'bad');
-  else if (canLower) say(hints ? 'LOWER YOUR BOW: hold ↓ and do not attack' : 'ANSWER IT NOW');
+  else if (p.lower && inc.resisted) say(shieldFor(duel, 0) ? 'It turned on you: only the ' + SHIELD + ' stops it now' : 'It turned on you: nothing can stop it now', 'bad');
+  else if (canLower) say(hints ? 'LOWER YOUR BOW: ' + HOLD + ' ↓ and do not attack' : 'ANSWER IT NOW');
   else say(left <= 0 ? 'Too late' : 'PRESS ITS COUNTER NOW (moving cannot dodge it)');
-  const choices = answers.map(c => '<span><kbd>' + POWERS[c].key + '</kbd>' + POWERS[c].name + (p.halvedBy?.includes(c) ? ' (half)' : '') + '</span>');
+  const choices = answers.map(c => '<span><kbd>' + keyLabel(c) + '</kbd>' + POWERS[c].name + (p.halvedBy?.includes(c) ? ' (half)' : '') + '</span>');
   if (lowering && !inc.tried && hints) choices.unshift('<span><kbd>↓</kbd>lower your bow</span>');
   setHtml(keys, choices.join('<em>or</em>'));
   box.classList.toggle('full', choices.length > 0);

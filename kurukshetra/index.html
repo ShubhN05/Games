@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <link rel="icon" href="data:,">
 <title>KURUKSHETRA - Archery Duel</title>
 <link rel="stylesheet" href="styles/game.css">
+<link rel="stylesheet" href="styles/touch.css">
 <script type="importmap">
 { "imports": { "three": "./lib/three/three.module.js", "three/addons/": "./lib/three/addons/" } }
 </script>
@@ -30,7 +31,8 @@
   <p><b>Hints</b> (shows the escape key and the counter for incoming arrows)</p><div id="pickH"></div>
   <p><b>Computer level</b></p><div id="pickL"></div>
   <p><button id="bStart">START DUEL</button><button id="bHelp">COUNTER CHART</button></p>
-  <p style="font-size:15px"><b>F</b> fast arrow (0.3%, <b>20</b>) · <b>S</b> slow arrow (1%, <b>15</b>). Hold a direction while shooting:<br><b>nothing</b> = straight · <b>↓</b> = low · <b>↑</b> = jump shot · <b>→</b> = high<br><b>1–5</b> = super arrow. To stop one, press the <b>next number</b> (1 stops 5).<br><b>6 / 7</b> = your big weapons (once each) · <b>Space</b> = shield · <b>Esc</b> = pause</p>
+  <p class="touch-only"><b>Left thumb:</b> <b>F</b> fast arrow (0.3%) · <b>S</b> slow arrow (1%)<br><b>SUPER</b>: hold, slide to a number, let go. The <b>next number</b> stops a super arrow (1 stops 5)<br><b>★</b>: hold and slide to a big weapon or the shield<br><b>Right thumb:</b> joystick ↑ jump · ↓ duck · ← → step<br>Pull the stick while tapping F or S: ↓ low · ↑ jump shot · → high</p>
+  <p class="keys-only" style="font-size:15px"><b>F</b> fast arrow (0.3%, <b>20</b>) · <b>S</b> slow arrow (1%, <b>15</b>). Hold a direction while shooting:<br><b>nothing</b> = straight · <b>↓</b> = low · <b>↑</b> = jump shot · <b>→</b> = high<br><b>1–5</b> = super arrow. To stop one, press the <b>next number</b> (1 stops 5).<br><b>6 / 7</b> = your big weapons (once each) · <b>Space</b> = shield · <b>Esc</b> = pause</p>
   <p style="font-size:13px;color:#c9b98f">Your super arrow takes 3 s to prepare and 2.5 s to fly. Press the counter within 2 s of release; one try per arrow.<br>Countering pauses your own call. After a super arrow you rest 1 s.<br><b>Narayanastra</b> passes you by if you <b>hold ↓</b> to lower your bow and do not attack.</p>
   <p><button id="bSound"></button></p>
 </div></div>

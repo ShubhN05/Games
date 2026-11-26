@@ -23,13 +23,18 @@ export function pathFromKeys(){
   return newest ? SHOT_BY_DIRECTION[newest] : 'straight';
 }
 
+/* keys can be pressed by the keyboard or by the phone controls */
+let listener = () => {};
+export function keyDown(code, event){ held[code] = ++presses; listener(code, event); }
+export function keyUp(code){ held[code] = 0; }
+
 export function initKeyboard({ onPress, onBlur }){
+  listener = onPress;
   addEventListener('keydown', e => {
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     if (e.repeat) return;
-    held[e.code] = ++presses;
-    onPress(e.code, e);
+    keyDown(e.code, e);
   });
-  addEventListener('keyup', e => { held[e.code] = 0; });
+  addEventListener('keyup', e => keyUp(e.code));
   addEventListener('blur', () => { for (const k in held) held[k] = 0; onBlur(); });
 }

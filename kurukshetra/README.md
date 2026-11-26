@@ -2,7 +2,7 @@
 
 A one-on-one long-range archery duel in the browser: you against the computer, with Arjun, Karna, Bhishma, Drona and Ashvatthama.
 
-**Play:** https://shubhn05.github.io/Games/kurukshetra/ (desktop keyboard)
+**Play:** https://shubhn05.github.io/Games/kurukshetra/ (computer keyboard, or a phone held sideways)
 
 ## Controls
 
@@ -42,6 +42,21 @@ Shooting, releasing your own super arrow or trying another counter while it flie
 in its first 0.6 s is forgiven). Lowering your bow drops a super arrow you were preparing, without using it up.
 The Brahma Danda also stops it.
 
+## On a phone
+
+Hold it sideways. The controls appear by themselves on touch screens.
+
+| Control | Action |
+|---|---|
+| **F** / **S** (left) | fast / slow arrow |
+| **SUPER** (left) | hold, slide to one of the five circles, let go (let go in the middle to cancel) |
+| **★** (left) | hold and slide to a big weapon or the shield |
+| joystick (right) | ↑ jump · ↓ duck · ← step back · → step forward; held while tapping F or S it chooses the shot |
+| **Ⅱ** (top) | pause: continue, restart, chart, sound, menu |
+
+The first visit downloads about 30 MB, so use Wi-Fi. To try the phone controls on a computer, add `?touch=1`
+to the address.
+
 ## Run and test locally
 
 ```bash
@@ -66,11 +81,11 @@ src/
   game/               match flow: session.js, events.js (what each event looks and sounds like)
   render/             3D: stage, archers, arrows, effects
   ui/                 menu, HUD, chart, messages
-  input/              keyboard (KEYMAP)
+  input/              keyboard (KEYMAP) and finger gestures
   audio/              sound
 characters/           one folder per character: data, look, bow, design, pictures (see its README)
 lib/three/            the Three.js 3D library
-tests/                rules, content and design-lock checks
+tests/                rules, touch gesture, content and design-lock checks
 ```
 
 This game is self-contained: it loads nothing from the other games.

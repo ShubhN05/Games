@@ -1,0 +1,70 @@
+/* Phones and tablets only: everything here needs body.touch (set by ui/touch-controls.js). */
+body.touch{overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+body.touch #c,body.touch #hud,#touch{touch-action:none}
+
+#touch{--b:clamp(48px,15vh,74px);--j:clamp(108px,32vh,164px);--edge-l:calc(env(safe-area-inset-left,0px) + 8px);--edge-r:calc(env(safe-area-inset-right,0px) + 10px);--edge-b:calc(env(safe-area-inset-bottom,0px) + 8px);color:#f1e6cf;font-family:system-ui,sans-serif}
+/* shorter phones (16:9): smaller controls, so no arrow flies behind them */
+@media (max-aspect-ratio:19/10){ #touch{--b:clamp(46px,12.5vh,70px);--j:clamp(104px,29vh,160px);--gap:6px} }
+#tPlay{display:none}
+#tPlay .btn{position:fixed;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;width:var(--b);height:var(--b);border-radius:50%;background:#1c1018b8;border:3px solid #f1e6cf80;font:900 calc(var(--b)*.38) system-ui;line-height:1;touch-action:none}
+#tPlay .btn small{font-size:calc(var(--b)*.17);letter-spacing:1px}
+#tPlay .btn.down{background:#ffd24a;color:#1a0e02;border-color:#fff}
+#tPlay .btn.call{border-color:#ffd24a;box-shadow:0 0 14px 4px #ffd24a;animation:pulse .3s infinite alternate}
+#tFast{left:var(--edge-l);bottom:var(--edge-b);border-color:#c8f4ff !important}
+#tSlow{left:calc(var(--edge-l) + var(--b) + var(--gap,8px));bottom:var(--edge-b);border-color:#ffd24a !important}
+#tPlay #tSuper{left:var(--edge-l);bottom:calc(var(--edge-b) + var(--b) + var(--gap,8px));font-size:calc(var(--b)*.23)}
+#tStar{left:calc(var(--edge-l) + var(--b) + var(--gap,8px));bottom:calc(var(--edge-b) + var(--b) + var(--gap,8px))}
+#tPlay #tPause{left:50%;top:calc(env(safe-area-inset-top,0px) + 2px);margin-left:-18px;width:36px;height:36px;font-size:16px;border-width:2px}
+
+#tStick{position:fixed;z-index:6;right:var(--edge-r);bottom:var(--edge-b);width:var(--j);height:var(--j);border-radius:50%;background:#1c101890;border:3px solid #f1e6cf60;touch-action:none}
+#tStick i{position:absolute;font:900 calc(var(--j)*.15) system-ui;font-style:normal;color:#f1e6cfcc;pointer-events:none}
+#tStick .u{left:50%;top:3%;transform:translateX(-50%)} #tStick .d{left:50%;bottom:3%;transform:translateX(-50%)}
+#tStick .l{left:5%;top:50%;transform:translateY(-50%)} #tStick .r{right:5%;top:50%;transform:translateY(-50%)}
+#tStick[data-dir=jump] .u,#tStick[data-dir=crouch] .d,#tStick[data-dir=back] .l,#tStick[data-dir=forward] .r{color:#ffd24a;text-shadow:0 0 12px #ffd24a}
+#tKnob{position:absolute;left:31%;top:31%;width:38%;height:38%;border-radius:50%;background:#ffd24acc;border:3px solid #fff;pointer-events:none}
+
+#tWheel{display:none;position:fixed;inset:0;z-index:7;pointer-events:none}
+#tWheel .item{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;width:calc(var(--b)*.86);height:calc(var(--b)*.86);transform:translate(-50%,-50%);border-radius:50%;background:#140a12f0;border:3px solid;text-shadow:0 1px 3px #000}
+#tWheel .item b{font:900 calc(var(--b)*.34) system-ui;line-height:1}
+#tWheel .item span{font:800 calc(var(--b)*.15) system-ui;white-space:nowrap;padding:0 3px;background:#000a;border-radius:4px}
+#tWheel .item.ans span,#tWheel .item.pick span{background:none}
+#tWheel .item.ans{background:#ffd24a;color:#1a0e02;text-shadow:none;box-shadow:0 0 16px 5px #ffd24a}
+#tWheel .item.pick{transform:translate(-50%,-50%) scale(1.3);background:#fff;color:#1a0e02;text-shadow:none;z-index:1}
+#tWheel .item.gone{opacity:.35}
+#tPick{position:fixed;left:50%;top:22%;transform:translateX(-50%);padding:4px 14px;font:900 18px system-ui;white-space:nowrap;background:#000c;border:2px solid #ffd24a;border-radius:10px}
+
+#tBar{display:none;position:fixed;left:0;right:0;bottom:calc(var(--edge-b) + 19vh);z-index:8;justify-content:center;flex-wrap:wrap;gap:4px}
+#tBar button{margin:3px;padding:10px 16px;font-size:15px}
+
+#rotate{display:none;position:fixed;inset:0;z-index:40;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#07050c;font:900 22px system-ui;text-align:center;padding:20px}
+#rotate b{font-size:64px;color:#ffd24a}
+@media (orientation:portrait){ body.touch #rotate{display:flex} }
+
+/* the fight screen: no keyboard help, bigger words, the warning panel between the two thumbs */
+body.touch #keys,body.touch #chart .group.big{display:none}
+body.touch .side{width:408px} body.touch #q0{left:432px} body.touch #q1{right:432px}      /* room for the pause button */
+body.touch #top{left:300px;right:300px}
+body.touch #incoming{min-width:0;width:100%}
+body.touch #incoming .t{font-size:28px} body.touch #incoming.full .t{font-size:32px}
+body.touch #incoming .s{font-size:23px} body.touch #incoming .k em{margin:0 8px}
+body.touch #incoming .k kbd{font-size:32px;padding:0 9px;margin-right:5px} body.touch #incoming .k span{font-size:25px;padding:2px 8px 3px}
+body.touch #tags b{font-size:34px} body.touch #tags b.now{font-size:44px} body.touch #tags b.wait{font-size:28px}
+body.touch #tag{font-size:36px}
+body.touch #note{font-size:36px} body.touch .float{font-size:36px}
+body.touch #mine{font-size:32px;top:74px}
+body.touch .bar b{font-size:21px} body.touch .info{font-size:20px}
+body.touch .quiver span{font-size:14px} body.touch .quiver b{font-size:30px}
+body.touch #chart p{font-size:19px} body.touch #chart .w{font-size:19px}
+
+/* the menu: readable and tappable on a short screen, scrolled with a finger */
+.touch-only{display:none}
+body.touch .touch-only{display:block}
+body.touch .keys-only{display:none}
+body.touch .box{zoom:1 !important;max-height:100vh;max-height:100dvh;overflow:auto;touch-action:pan-y;padding:6px 14px 14px}
+body.touch h1{font-size:24px}
+body.touch .box h1+p{display:none}
+body.touch .box p{margin:1px 0;line-height:1.35;font-size:13px}
+body.touch .box button{margin:2px;padding:7px 12px;font-size:14px}
+body.touch #pickA button,body.touch #pickO button{margin:2px;padding:7px 10px;font-size:13px}
+body.touch #bStart{font-size:18px;padding:9px 34px}
+body.touch #help table{font-size:12px}

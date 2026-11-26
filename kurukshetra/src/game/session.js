@@ -15,6 +15,14 @@ import { note, clearNote, banner, bannerText, tickMessages, clearFloats } from '
 import { play, toggleSound, soundOn } from '../audio/sound.js';
 import { powerKeyOf, moveOf, KEYMAP, stanceFromKeys, pathFromKeys, initKeyboard } from '../input/keyboard.js';
 import { showEvent, showInput } from './events.js';
+import { TOUCH } from '../ui/device.js';
+import { initTouch, updateTouch, releaseTouch } from '../ui/touch-controls.js';
+
+/* a phone gives the game the whole screen, held sideways (not every phone allows it) */
+function fillScreen(){
+  if (!TOUCH || document.fullscreenElement) return;
+  document.documentElement.requestFullscreen?.().then(() => screen.orientation?.lock?.('landscape')).catch(() => {});
+}
 
 /* the running match; duel === null means we are on the menu */
 export const match = { duel: null, ai: null, actors: [], paused: false, overT: 0, shake: 0, buffered: null, hints: true, lesson: null };
@@ -34,6 +42,7 @@ function withModels(ids, then){
 
 export function start(archer = settings.archer, level = settings.level, opponent = settings.opponent){
   if (loading) return;
+  if (navigator.userActivation?.isActive) fillScreen();         // only allowed straight after a tap
   settings.archer = archer; settings.level = level;
   const others = CHARACTERS.map(c => c.id).filter(id => id !== archer), foe = others.includes(opponent) ? opponent : others[Math.floor(Math.random() * others.length)];
   return withModels([archer, foe], () => begin(archer, foe, level));
@@ -68,7 +77,8 @@ function refresh(dt){
 
 function setPause(on){
   if (on && blind()) clearParticles();                 // the glowing trail would tell which arrow it is
-  match.paused = on; banner(on ? 'PAUSED' : '', on ? 'P = continue · R = restart · Esc = menu' : '');
+  match.paused = on; banner(on ? 'PAUSED' : '', on && !TOUCH ? 'P = continue · R = restart · Esc = menu' : '');
+  if (on) releaseTouch();
   if (match.duel) refresh(0);
 }
 function toggleHelp(){
@@ -130,7 +140,7 @@ function advance(dt){
       if (e.type === 'over') { match.overT = 0.001; match.buffered = null; clearNote(); }
     }
   } else if (match.overT > 0 && (match.overT += dt) > 1.2) {
-    banner(d.winner === 'draw' ? 'DRAW' : d.winner === 0 ? 'VICTORY' : 'DEFEAT', (d.winner === 1 && match.lesson ? match.lesson + '<br>' : '') + 'R = fight again · Esc = menu'); match.overT = 0;
+    banner(d.winner === 'draw' ? 'DRAW' : d.winner === 0 ? 'VICTORY' : 'DEFEAT', (d.winner === 1 && match.lesson ? match.lesson : '') + (TOUCH ? '' : (d.winner === 1 && match.lesson ? '<br>' : '') + 'R = fight again · Esc = menu')); match.overT = 0;
   }
 }
 
@@ -143,6 +153,7 @@ export function frame(dt, draw = true){
   } else if (d) tickMessages(dt);                 // messages still fade while paused
   else match.actors.forEach(a => a.pose(dt, null));
   showHud(!!match.duel);
+  updateTouch({ duel: match.duel, paused: match.paused, help: helpOpen(), hints: match.hints, over: !!match.duel && match.duel.winner !== null && match.overT === 0 });
   if (!draw) return;
   match.shake = Math.max(0, match.shake - dt * 0.8);
   render(match.shake);
@@ -152,6 +163,7 @@ export function init(loadedModels, { onArena, load }){
   models = loadedModels; loadModel = load;
   initKeyboard({ onPress, onBlur: () => { if (match.duel && match.duel.winner === null) setPause(true); } });
   buildMenu({ onStart: () => start(), onHelp: toggleHelp, onSound: toggleMute, onArena });
+  initTouch({ onPortrait: () => setPause(true) });
   buildCounterTable(); soundLabel(soundOn());
   openMenu();
 }
