@@ -19,6 +19,11 @@ const ON = {
     const a = m.actors[e.to]; normalArrows.hit(e.arrow.uid); burst(a.chest(), 7, 0xff5030, 2, 0.35, 0.16);
     floatText(a.chest(2.3), '-' + e.damage + '%' + (e.to === 0 && m.hints ? '  (needed ' + ESCAPE_HINT[e.arrow.path] + ')' : ''), '#ffb347'); a.hurt = 0.2; play('punch', 0.5);
   },
+  interrupted(e, m){
+    const a = m.actors[e.to]; burst(a.chest(1.6), 40, 0xffffff, 4.5, 0.7, 0.3); a.hurt = 0.4; m.shake = 0.14;
+    note(e.to === 0 ? 'Your ' + upper(e.code) + ' was broken by a slow arrow: call it again' : 'You broke ' + getCharacter(m.duel.f[e.to].id).name + "'s super arrow!", e.to === 0 ? '#ff8a7a' : '#9fffb0', 1.8);
+    play('block', 1);
+  },
   clash(e){ normalArrows.clash(e.a, e.b); play('block', 0.7); },
   blocked(e, m){ superArrows.blocked(e.uid, e.code, e.by); note(upper(e.by) + ' stops ' + upper(e.code), '#9fffb0'); m.shake = 0.12; play('explosion', 0.8); },
   failed(e, m){ burst(m.actors[e.to].chest(1.9), 14, POWERS[e.by].color, 3, 0.5); note(upper(e.by) + ' cannot stop ' + upper(e.code), '#ff8a7a'); },

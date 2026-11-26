@@ -5,7 +5,7 @@ import { LEVELS } from './levels.js';
 
 export function createAI(level, rnd = Math.random){
   const L = LEVELS[level];
-  return { L, rnd, arrowT: 2.0, superT: 4.0, answer: null, seen: new Set(), dodges: [], last: null, repeats: 0 };
+  return { L, rnd, arrowT: 2.0, superT: 4.0, answer: null, seen: new Set(), dodges: [], last: null, repeats: 0, broken: 0 };
 }
 
 export function stepAI(d, i, ai, dt){
@@ -65,6 +65,7 @@ function attack(d, i, ai, dt){
   const { L, rnd } = ai, f = d.f[i];
   const busy = d.incoming[i] && !d.incoming[i].tried;
   ai.superT -= dt; ai.arrowT -= dt;
+  if (f.broken > ai.broken) { ai.broken = f.broken; ai.superT = 0.8; }        // the call was broken: start it again soon
   if (ai.superT <= 0 && !busy && !f.call && !f.draw) {
     const rare = getCharacter(f.id).rares.filter(c => !f.used[c]);
     const r = enter(d, i, rare.length && d.t > 20 && rnd() < 0.25 ? pick(ai, rare) : pick(ai, ordinary()));

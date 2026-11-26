@@ -62,7 +62,10 @@ export function stepArrows(d, dt, ev){
     const to = 1 - a.by, f = d.f[to], s = tipS(a.p), gap = s - CONTACT[f.stance], touched = a.gap < 0 && gap >= 0 && s <= REACH[a.path] + 1e-6;
     a.gap = gap;
     const airborne = airHeight(f) >= JUMP.clear, escaped = ESCAPE[a.path] === 'jump' ? airborne : !airborne && f.stance === ESCAPE[a.path];
-    if (touched && !escaped) { a.gone = true; f.hp = Math.max(0, Math.round((f.hp - T[a.kind].dmg) * 10) / 10); ev.push({ type: 'hit', to, damage: T[a.kind].dmg, arrow: a }); }
+    if (touched && !escaped) {
+      a.gone = true; f.hp = Math.max(0, Math.round((f.hp - T[a.kind].dmg) * 10) / 10); ev.push({ type: 'hit', to, damage: T[a.kind].dmg, arrow: a });
+      if (T[a.kind].breaksCall && f.call) { ev.push({ type: 'interrupted', to, code: f.call.code }); f.call = null; f.hold = 0; f.broken++; }    // a rare weapon is not used up
+    }
     else if (a.p >= END) { a.gone = true; ev.push({ type: 'dodge', to, arrow: a }); }
   }
   d.arrows = d.arrows.filter(a => !a.gone);
