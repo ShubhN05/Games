@@ -1,9 +1,12 @@
 """Record the intro video from the real game and write media/intro.mp4.
 
     python tools/intro/record.py            (the game must be served at http://127.0.0.1:8010/kurukshetra/)
+    python tools/intro/record.py --sound    only put new sound on the film already made (events.json remembers
+                                            when things happen; the scenes are replayed, unfilmed, if it is missing)
 
-Needs Google Chrome and the Python packages websockets and imageio-ffmpeg. Frames go to a temporary folder.
-Run it again after a character or the battlefield changes."""
+Music: put it in tools/intro/music.mp3 (see sound.py; it is not uploaded).
+Needs Google Chrome and the Python packages websockets, imageio-ffmpeg and numpy. Frames go to a temporary folder.
+Record again after a character or the battlefield changes."""
 import base64, json, shutil, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 
@@ -17,6 +20,7 @@ GAME = HERE.parent.parent
 URL = 'http://127.0.0.1:8010/kurukshetra/index.html?touch=0&intro=0'
 CHROME = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
 FPS, PORT = 30, 9333
+MUSIC, EVENTS, FILM = HERE / 'music.mp3', HERE / 'events.json', GAME / 'media' / 'intro.mp4'
 
 
 class Page:
@@ -60,8 +64,8 @@ class Page:
 
 
 class Film:
-    def __init__(self, page, work):
-        self.page, self.frames, self.events = page, 0, []
+    def __init__(self, page, work, pictures=True):
+        self.page, self.frames, self.events, self.pictures = page, 0, [], pictures
         self.dir = work / 'frames'
         self.dir.mkdir()
 
@@ -80,8 +84,9 @@ class Film:
             self.call('fade', max(0, 1 - t / 0.2, 1 - (seconds - t) / 0.2) if seconds > 1 else 0)
             for name in self.call('frame', view):
                 self.sound(name)
-            image = self.page.send('Page.captureScreenshot', format='jpeg', quality=93)
-            (self.dir / f'{self.frames:05d}.jpg').write_bytes(base64.b64decode(image['data']))
+            if self.pictures:
+                image = self.page.send('Page.captureScreenshot', format='jpeg', quality=93)
+                (self.dir / f'{self.frames:05d}.jpg').write_bytes(base64.b64decode(image['data']))
             self.frames += 1
 
 
@@ -185,8 +190,8 @@ def film_scenes(film):
     film.shoot(3.8, closing)
 
 
-def main():
-    work = Path(tempfile.mkdtemp(prefix='kurukshetra-intro-'))
+def play_scenes(work, pictures):
+    """run the staged scenes in the real game; returns the Film (with its pictures, or only its timings)"""
     page = Page(work)
     try:
         page.send('Page.enable')
@@ -200,19 +205,39 @@ def main():
         else:
             raise RuntimeError('the game did not load')
         page.js((HERE / 'stage.js').read_text(encoding='utf-8'))
-        film = Film(page, work)
+        film = Film(page, work, pictures)
         film_scenes(film)
     finally:
         page.close()
-    seconds = film.frames / FPS
-    wav = work / 'sound.wav'
-    make_sound(wav, seconds, film.events)
-    out = GAME / 'media' / 'intro.mp4'
-    out.parent.mkdir(exist_ok=True)
-    subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), '-y', '-loglevel', 'error', '-framerate', str(FPS), '-i', str(film.dir / '%05d.jpg'), '-i', str(wav),
-                    '-vf', 'scale=in_range=full:out_range=tv,format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', '26', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', str(out)], check=True)
+    EVENTS.write_text(json.dumps({'seconds': film.frames / FPS, 'events': film.events}), encoding='utf-8')
+    return film
+
+
+def ffmpeg(*args):
+    subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), '-y', '-loglevel', 'error', *map(str, args)], check=True)
+
+
+def main():
+    work = Path(tempfile.mkdtemp(prefix='kurukshetra-intro-'))
+    sound_only = '--sound' in sys.argv
+    film = None
+    if not sound_only or not EVENTS.exists():
+        film = play_scenes(work, pictures=not sound_only)
+    timings = json.loads(EVENTS.read_text(encoding='utf-8'))
+    seconds, wav = timings['seconds'], work / 'sound.wav'
+    make_sound(wav, seconds, timings['events'], MUSIC)
+    FILM.parent.mkdir(exist_ok=True)
+    sound = ['-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart']
+    if sound_only:                       # keep the pictures exactly as they are
+        new = work / 'intro.mp4'
+        ffmpeg('-i', FILM, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', *sound, new)
+        shutil.copyfile(new, FILM)
+    else:
+        ffmpeg('-framerate', FPS, '-i', film.dir / '%05d.jpg', '-i', wav, '-vf', 'scale=in_range=full:out_range=tv,format=yuv420p',
+               '-c:v', 'libx264', '-preset', 'slow', '-crf', '26', *sound, FILM)
     keep = '--keep' in sys.argv
-    print(f'{out}  {seconds:.1f} s  {out.stat().st_size / 1e6:.1f} MB  {len(film.events)} sounds' + (f'  frames in {work}' if keep else ''))
+    print(f'{FILM}  {seconds:.1f} s  {FILM.stat().st_size / 1e6:.1f} MB  {len(timings["events"])} sounds  '
+          f'music: {"music.mp3" if MUSIC.exists() else "made by script"}' + (f'  working files in {work}' if keep else ''))
     if not keep:
         shutil.rmtree(work, ignore_errors=True)
 

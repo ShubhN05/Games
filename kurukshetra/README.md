@@ -60,8 +60,9 @@ to the address.
 ## Intro film
 
 The game opens with a 46-second film (**PLAY INTRO** / **SKIP**; **WATCH INTRO** on the menu replays it).
-It is recorded from the game itself, with sound made by script. To record it again after changing a character or
-the battlefield, serve the games folder on port 8010 and run:
+It is recorded from the game itself, with the music *Before the Temple Bell* (kept locally as
+`tools/intro/music.mp3`) and sounds made by script. To record it again after changing a character or the
+battlefield, serve the games folder on port 8010 and run (add `--sound` to change only the sound):
 
 ```bash
 python kurukshetra/tools/intro/record.py     # needs Google Chrome, and: pip install websockets imageio-ffmpeg numpy

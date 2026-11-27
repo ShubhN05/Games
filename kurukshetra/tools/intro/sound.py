@@ -1,7 +1,10 @@
-"""The intro's sound track, made from nothing but sums (so it is ours): a drone, war drums, a plucked tune, a conch,
-and a sound for each thing that happens on screen."""
+"""The intro's sound track: the music in music.mp3, with a quiet sound for each thing that happens on screen.
+
+Without music.mp3 a stand-in is made from nothing but sums: a drone, war drums, a plucked tune and a conch."""
+import subprocess
 import wave
 
+import imageio_ffmpeg
 import numpy as np
 
 RATE = 44100
@@ -94,8 +97,58 @@ def add(track, sound, at):
         track[i:i + len(sound)] += sound[:len(track) - i]
 
 
-def make_sound(path, seconds, events):
+# Where music.mp3 ("Before the Temple Bell", 62 s) is shortened to the film's length: at JOIN seconds it jumps
+# SKIP seconds ahead, over a CROSS-second blend. The quiet passage stays at 36-39 s and the ending rings out under
+# the closing title. These three numbers belong to that track; measure again for another one.
+JOIN, SKIP, CROSS = 41.1, 12.05, 0.35
+QUIET = 0.34                      # how loud the screen sounds are against the music
+UNDER_MUSIC = ('bow', 'charge', 'release', 'counter', 'hit', 'boom', 'clash', 'pass')      # the music has its own drums
+
+
+def load(path):
+    """any sound file as stereo samples between -1 and 1"""
+    raw = subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), '-loglevel', 'error', '-i', str(path), '-vn', '-ac', '2', '-ar', str(RATE), '-f', 'f32le', '-'],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(raw, np.float32).reshape(-1, 2).astype(float)
+
+
+def shortened(music, seconds):
+    half = CROSS / 2
+    first, rest = music[:int((JOIN + half) * RATE)], music[int((JOIN + SKIP - half) * RATE):]
+    n = int(CROSS * RATE)
+    blend = np.linspace(0, np.pi / 2, n)[:, None]                                  # equal loudness through the join
+    joined = np.concatenate([first[:-n], first[-n:] * np.cos(blend) + rest[:n] * np.sin(blend), rest[n:]])
+    out = np.zeros((int(seconds * RATE), 2))
+    out[:min(len(out), len(joined))] = joined[:len(out)]
+    return out
+
+
+def save(path, stereo):
+    data = (np.clip(stereo, -1, 1) * 32767).astype('<i2')
+    with wave.open(str(path), 'wb') as w:
+        w.setnchannels(2)
+        w.setsampwidth(2)
+        w.setframerate(RATE)
+        w.writeframes(data.tobytes())
+
+
+def with_music(path, seconds, events, music):
+    track = shortened(load(music), seconds)
+    track *= 0.8 / np.max(np.abs(track))
+    screen = np.zeros(len(track))
+    for at, name in events:
+        if name in UNDER_MUSIC:
+            add(screen, effect(name), at)
+    track += QUIET * screen[:, None]
+    track *= swell(times(seconds), 0.05, 0.9)[:, None]
+    track = np.tanh(track * 0.95)                                 # gentle limiting
+    save(path, track * (0.70 / np.max(np.abs(track))))              # headroom: compression raises the peaks
+
+
+def make_sound(path, seconds, events, music=None):
     """events: [(time in seconds, name)] from the recording"""
+    if music and music.exists():
+        return with_music(path, seconds, events, music)
     t = times(seconds)
     track = np.zeros(len(t))
     # drone on D and A, breathing slowly
@@ -122,10 +175,4 @@ def make_sound(path, seconds, events):
     track *= swell(t, 0.3, 1.2)
     track = np.tanh(track * 1.15)                                 # gentle limiting
     track *= 0.89 / np.max(np.abs(track))
-    left, right = track, np.roll(track, int(0.009 * RATE)) * 0.97       # a little width
-    data = (np.stack([left, right], axis=1) * 32767).astype('<i2')
-    with wave.open(str(path), 'wb') as w:
-        w.setnchannels(2)
-        w.setsampwidth(2)
-        w.setframerate(RATE)
-        w.writeframes(data.tobytes())
+    save(path, np.stack([track, np.roll(track, int(0.009 * RATE)) * 0.97], axis=1))       # a little width
