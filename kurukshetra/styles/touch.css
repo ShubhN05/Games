@@ -68,3 +68,5 @@ body.touch .box button{margin:2px;padding:7px 12px;font-size:14px}
 body.touch #pickA button,body.touch #pickO button{margin:2px;padding:7px 10px;font-size:13px}
 body.touch #bStart{font-size:18px;padding:9px 34px}
 body.touch #help table{font-size:12px}
+/* the phone film shows the thumbs in the bottom corners: keep SKIP out of their way */
+body.touch #iSkip{bottom:auto;top:27%;padding:7px 12px;font-size:13px}

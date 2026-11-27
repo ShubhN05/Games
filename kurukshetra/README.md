@@ -59,10 +59,11 @@ to the address.
 
 ## Intro film
 
-The game opens with a 46-second film (**PLAY INTRO** / **SKIP**; **WATCH INTRO** on the menu replays it).
+The game opens with a 46-second film (**PLAY INTRO** / **SKIP**; **WATCH INTRO** on the menu replays it). Computers
+get `media/intro.mp4`; touch screens get `media/intro-phone.mp4`, which shows thumbs on the phone controls.
 It is recorded from the game itself, with the music *Before the Temple Bell* (kept locally as
 `tools/intro/music.mp3`) as its only sound. To record it again after changing a character or the
-battlefield, serve the games folder on port 8010 and run (add `--sound` to change only the sound):
+battlefield, serve the games folder on port 8010 and run (`--phone` or `--pc` records one of the two; `--sound` changes only the sound):
 
 ```bash
 python kurukshetra/tools/intro/record.py     # needs Google Chrome, and: pip install websockets imageio-ffmpeg numpy
@@ -99,7 +100,7 @@ src/
 characters/           one folder per character: data, look, bow, design, pictures (see its README)
 lib/three/            the Three.js 3D library
 tests/                rules, touch gesture, content and design-lock checks
-media/                the intro film
+media/                the intro films (computer and phone)
 tools/intro/          records the intro film (not loaded by the game)
 ```
 

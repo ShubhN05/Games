@@ -1,8 +1,8 @@
-"""Record the intro video from the real game and write media/intro.mp4.
+"""Record the intro films from the real game: media/intro.mp4 (keyboard) and media/intro-phone.mp4 (touch screens).
 
     python tools/intro/record.py            (the game must be served at http://127.0.0.1:8010/kurukshetra/)
-    python tools/intro/record.py --sound    only put new sound on the film already made (events.json remembers
-                                            when things happen; the scenes are replayed, unfilmed, if it is missing)
+    python tools/intro/record.py --phone    only the phone film (--pc: only the keyboard film)
+    python tools/intro/record.py --sound    only put new sound on the films already made
 
 Music: put it in tools/intro/music.mp3 (see sound.py; it is not uploaded).
 Needs Google Chrome and the Python packages websockets, imageio-ffmpeg and numpy. Frames go to a temporary folder.
@@ -17,10 +17,24 @@ from sound import make_sound
 
 HERE = Path(__file__).resolve().parent
 GAME = HERE.parent.parent
-URL = 'http://127.0.0.1:8010/kurukshetra/index.html?touch=0&intro=0'
+URL = 'http://127.0.0.1:8010/kurukshetra/index.html?intro=0&touch='
 CHROME = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
 FPS, PORT = 30, 9333
-MUSIC, EVENTS, FILM = HERE / 'music.mp3', HERE / 'events.json', GAME / 'media' / 'intro.mp4'
+MUSIC = HERE / 'music.mp3'
+# one film for each kind of player; the phone one is drawn at a phone's size and enlarged to the same 1280 x 720
+VERSIONS = {
+    'pc':    {'touch': 0, 'width': 1280, 'height': 720, 'film': GAME / 'media' / 'intro.mp4',       'events': HERE / 'events.json'},
+    'phone': {'touch': 1, 'width': 667,  'height': 375, 'film': GAME / 'media' / 'intro-phone.mp4', 'events': HERE / 'events-phone.json'},
+}
+# what the captions say differs between keys and thumbs
+WORDS = {
+    'pc': {'moves': 'Fast and slow arrows: straight, low, jumping and high',
+           'stop': 'The next number stops it: 2 Water stops 1 Fire', 'strike': 'One key for each of the five elements',
+           'great': 'Brahmastra · Pashupata · Narayanastra: once in a match', 'lower': 'Lower your bow, and it passes you by'},
+    'phone': {'moves': 'Left thumb shoots with F and S · Right thumb jumps and ducks',
+              'stop': 'Hold SUPER and slide to the next number: 2 Water stops 1 Fire', 'strike': 'Slide to any of the five elements',
+              'great': 'Hold ★ and slide: your great weapons and the shield', 'lower': 'Pull the stick down, and it passes you by'},
+}
 
 
 class Page:
@@ -99,7 +113,18 @@ def once(t, when):
     return when <= t < when + 1 / FPS - 1e-9
 
 
-def film_scenes(film):
+def thumb(film, t, start, length, button, index):
+    """phone film: a thumb lands on a wheel at `start`, slides to circle `index` and lifts `length` seconds later"""
+    if once(t, start):
+        film.call('wheel', button, index, 0)
+    elif once(t, start + length):
+        film.call('wheel', button, index, 1)
+    elif start < t < start + length:
+        film.call('wheel', button, index, min(0.95, (t - start) / length))
+
+
+def film_scenes(film, kind):
+    words, phone = WORDS[kind], kind == 'phone'
     # 1. the title over the battlefield
     film.call('scene', 'arjun', 'karna', False)
     film.sound('gong')
@@ -122,7 +147,7 @@ def film_scenes(film):
 
         def portrait(t, length, name=name, title=title, weapons=weapons):
             if once(t, 0.8):
-                film.call('key', 'Digit3')        # he raises the bow and the arrow starts to glow
+                film.call('meKey', '3')           # he raises the bow and the arrow starts to glow
             film.call('text', 'card', f'<h2>{name}</h2><p>{title}</p><span>{weapons}</span>', ramp(t, 0.15, length, 0.3))
             return {'close': 62 - 34 * t / length, 'far': 4.7 - 0.45 * t / length}
         film.shoot(2.6, portrait)
@@ -143,7 +168,7 @@ def film_scenes(film):
             film.call('key', 'KeyF')
         if once(t, 5.3):
             film.call('key', 'KeyS')
-        film.call('text', 'cap', 'Shoot. Jump. Duck.<small>Fast and slow arrows: straight, low, jumping and high</small>', ramp(t, 0.3, length - 0.2))
+        film.call('text', 'cap', f'Shoot. Jump. Duck.<small>{words["moves"]}</small>', ramp(t, 0.3, length - 0.2))
         return None
     film.shoot(7.4, moves)
 
@@ -153,14 +178,18 @@ def film_scenes(film):
     def supers(t, length):
         if once(t, 0.2):
             film.call('foeKey', '1')
-        if once(t, 3.9):
-            film.call('key', 'Digit2')
-        if once(t, 4.8):
-            film.call('key', 'Digit4')
-        if t < 4.8:
-            film.call('text', 'cap', 'Super arrows<small>The next number stops it: 2 Water stops 1 Fire</small>', ramp(t, 0.3, 4.8))
+        if phone:
+            thumb(film, t, 3.4, 0.8, 'tSuper', 1)      # slide to 2 Water
+            thumb(film, t, 4.85, 0.45, 'tSuper', 3)    # slide to 4 Mountain
         else:
-            film.call('text', 'cap', 'Now strike back<small>One key for each of the five elements</small>', ramp(t, 4.8, length - 0.2))
+            if once(t, 3.9):
+                film.call('meKey', '2')
+            if once(t, 4.8):
+                film.call('meKey', '4')
+        if t < 4.8:
+            film.call('text', 'cap', f'Super arrows<small>{words["stop"]}</small>', ramp(t, 0.3, 4.8))
+        else:
+            film.call('text', 'cap', f'Now strike back<small>{words["strike"]}</small>', ramp(t, 4.8, length - 0.2))
         return None
     film.shoot(11.8, supers)
 
@@ -170,12 +199,14 @@ def film_scenes(film):
     def great(t, length):
         if once(t, 0.2):
             film.call('foeKey', '7')
+        if phone:
+            thumb(film, t, 0.9, 1.9, 'tStar', None)    # open the star wheel, look, and let go in the middle
         if once(t, 4.3):
             film.call('hold', 'ArrowDown', True)
         if t < 3.3:
-            film.call('text', 'cap', 'Great weapons<small>Brahmastra · Pashupata · Narayanastra: once in a match</small>', ramp(t, 0.3, 3.3))
+            film.call('text', 'cap', f'Great weapons<small>{words["great"]}</small>', ramp(t, 0.3, 3.3))
         else:
-            film.call('text', 'cap', 'Narayanastra<small>Lower your bow, and it passes you by</small>', ramp(t, 3.3, length - 0.2))
+            film.call('text', 'cap', f'Narayanastra<small>{words["lower"]}</small>', ramp(t, 3.3, length - 0.2))
         return None
     film.shoot(7.2, great)
     film.call('text', 'cap', None, 0)
@@ -190,14 +221,14 @@ def film_scenes(film):
     film.shoot(3.8, closing)
 
 
-def play_scenes(work, pictures):
+def play_scenes(work, kind, pictures):
     """run the staged scenes in the real game; returns the Film (with its pictures, or only its timings)"""
-    page = Page(work)
+    v, page = VERSIONS[kind], Page(work)
     try:
         page.send('Page.enable')
-        page.send('Emulation.setDeviceMetricsOverride', width=1280, height=720, deviceScaleFactor=1, mobile=False)
+        page.send('Emulation.setDeviceMetricsOverride', width=v['width'], height=v['height'], deviceScaleFactor=1280 / v['width'], mobile=False)
         page.send('Page.addScriptToEvaluateOnNewDocument', source='window.requestAnimationFrame = () => 0;')   # only the recording moves time
-        page.send('Page.navigate', url=URL)
+        page.send('Page.navigate', url=URL + str(v['touch']))
         for _ in range(300):
             if page.js('!!window.__m && getComputedStyle(document.getElementById("loading")).display === "none"'):
                 break
@@ -206,10 +237,10 @@ def play_scenes(work, pictures):
             raise RuntimeError('the game did not load')
         page.js((HERE / 'stage.js').read_text(encoding='utf-8'))
         film = Film(page, work, pictures)
-        film_scenes(film)
+        film_scenes(film, kind)
     finally:
         page.close()
-    EVENTS.write_text(json.dumps({'seconds': film.frames / FPS, 'events': film.events}), encoding='utf-8')
+    v['events'].write_text(json.dumps({'seconds': film.frames / FPS, 'events': film.events}), encoding='utf-8')
     return film
 
 
@@ -217,29 +248,34 @@ def ffmpeg(*args):
     subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), '-y', '-loglevel', 'error', *map(str, args)], check=True)
 
 
-def main():
-    work = Path(tempfile.mkdtemp(prefix='kurukshetra-intro-'))
-    sound_only = '--sound' in sys.argv
-    film = None
-    if not sound_only or not EVENTS.exists():
-        film = play_scenes(work, pictures=not sound_only)
-    timings = json.loads(EVENTS.read_text(encoding='utf-8'))
+def make(kind, sound_only):
+    v, work = VERSIONS[kind], Path(tempfile.mkdtemp(prefix='kurukshetra-intro-'))
+    out, film = v['film'], None
+    if not sound_only or not v['events'].exists():
+        film = play_scenes(work, kind, pictures=not sound_only)
+    timings = json.loads(v['events'].read_text(encoding='utf-8'))
     seconds, wav = timings['seconds'], work / 'sound.wav'
     make_sound(wav, seconds, timings['events'], MUSIC)
-    FILM.parent.mkdir(exist_ok=True)
+    out.parent.mkdir(exist_ok=True)
     sound = ['-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart']
     if sound_only:                       # keep the pictures exactly as they are
-        new = work / 'intro.mp4'
-        ffmpeg('-i', FILM, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', *sound, new)
-        shutil.copyfile(new, FILM)
+        new = work / out.name
+        ffmpeg('-i', out, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', *sound, new)
+        shutil.copyfile(new, out)
     else:
-        ffmpeg('-framerate', FPS, '-i', film.dir / '%05d.jpg', '-i', wav, '-vf', 'scale=in_range=full:out_range=tv,format=yuv420p',
-               '-c:v', 'libx264', '-preset', 'slow', '-crf', '26', *sound, FILM)
+        ffmpeg('-framerate', FPS, '-i', film.dir / '%05d.jpg', '-i', wav, '-vf', 'scale=1280:720:in_range=full:out_range=tv,format=yuv420p',
+               '-c:v', 'libx264', '-preset', 'slow', '-crf', '26', *sound, out)
     keep = '--keep' in sys.argv
-    print(f'{FILM}  {seconds:.1f} s  {FILM.stat().st_size / 1e6:.1f} MB  {len(timings["events"])} sounds  '
-          f'music: {"music.mp3" if MUSIC.exists() else "made by script"}' + (f'  working files in {work}' if keep else ''))
+    print(f'{out}  {seconds:.1f} s  {out.stat().st_size / 1e6:.1f} MB  music: {"music.mp3" if MUSIC.exists() else "made by script"}'
+          + (f'  working files in {work}' if keep else ''), flush=True)
     if not keep:
         shutil.rmtree(work, ignore_errors=True)
+
+
+def main():
+    chosen = [kind for kind in VERSIONS if '--' + kind in sys.argv] or list(VERSIONS)
+    for kind in chosen:
+        make(kind, '--sound' in sys.argv)
 
 
 if __name__ == '__main__':

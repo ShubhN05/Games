@@ -1,10 +1,11 @@
-/* The introduction film, shown before the menu while the game loads behind it. The film is media/intro.mp4
+/* The introduction film, shown before the menu while the game loads behind it. The films are in media/
    (made by tools/intro/record.py). Browsers allow sound only after a tap, so it waits for PLAY.
    Add ?intro=0 to the address to go straight to the menu. */
 import { $ } from './dom.js';
+import { TOUCH } from './device.js';
 import { soundOn } from '../audio/sound.js';
 
-const FILE = 'media/intro.mp4';
+const FILE = TOUCH ? 'media/intro-phone.mp4' : 'media/intro.mp4';      // phones are shown thumbs, computers keys
 let open = false, playing = false;
 export const introOpen = () => open;
 
