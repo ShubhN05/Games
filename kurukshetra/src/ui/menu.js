@@ -1,5 +1,6 @@
 /* The start menu and the counter chart window. Buttons are built from the roster, levels and arenas. */
 import { $ } from './dom.js';
+import { showIntro, play } from './intro.js';
 import { CHARACTERS } from '../core/index.js';
 import { ARENAS } from '../content/arenas/index.js';
 import { LEVELS } from '../ai/levels.js';
@@ -29,6 +30,7 @@ export function buildMenu({ onStart, onHelp, onSound, onArena }){
   $('bStart').onclick = () => { $('bStart').blur(); onStart(); };
   $('bHelp').onclick = $('bClose').onclick = e => { e.target.blur(); onHelp(); };
   $('bSound').onclick = e => { e.target.blur(); onSound(); };
+  $('bIntro').onclick = e => { e.target.blur(); showIntro(); play(); };
 }
 export function soundLabel(on){ $('bSound').textContent = 'SOUND: ' + (on ? 'ON' : 'OFF') + ' (M)'; }
 export function showMenu(on){ $('menu').style.display = on ? 'flex' : 'none'; }

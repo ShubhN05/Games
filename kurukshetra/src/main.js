@@ -8,8 +8,10 @@ import { createModel } from './render/archer.js';
 import { init, frame, start, openMenu, match } from './game/session.js';
 import { settings } from './ui/menu.js';
 import { $ } from './ui/dom.js';
+import { initIntro } from './ui/intro.js';
 
 try {
+  initIntro();                       // the film plays while everything below loads
   fitToWindow($('hud'));
   await setArena(getArena(settings.arena));
   await loadClips();

@@ -57,6 +57,18 @@ Hold it sideways. The controls appear by themselves on touch screens.
 The first visit downloads about 30 MB, so use Wi-Fi. To try the phone controls on a computer, add `?touch=1`
 to the address.
 
+## Intro film
+
+The game opens with a 46-second film (**PLAY INTRO** / **SKIP**; **WATCH INTRO** on the menu replays it).
+It is recorded from the game itself, with sound made by script. To record it again after changing a character or
+the battlefield, serve the games folder on port 8010 and run:
+
+```bash
+python kurukshetra/tools/intro/record.py     # needs Google Chrome, and: pip install websockets imageio-ffmpeg numpy
+```
+
+`?intro=0` in the address goes straight to the menu.
+
 ## Run and test locally
 
 ```bash
@@ -86,6 +98,8 @@ src/
 characters/           one folder per character: data, look, bow, design, pictures (see its README)
 lib/three/            the Three.js 3D library
 tests/                rules, touch gesture, content and design-lock checks
+media/                the intro film
+tools/intro/          records the intro film (not loaded by the game)
 ```
 
 This game is self-contained: it loads nothing from the other games.
