@@ -1,4 +1,4 @@
-"""The intro's sound track: the music in music.mp3, with a quiet sound for each thing that happens on screen.
+"""The intro's sound track: the music in music.mp3 and nothing else.
 
 Without music.mp3 a stand-in is made from nothing but sums: a drone, war drums, a plucked tune and a conch."""
 import subprocess
@@ -101,8 +101,6 @@ def add(track, sound, at):
 # SKIP seconds ahead, over a CROSS-second blend. The quiet passage stays at 36-39 s and the ending rings out under
 # the closing title. These three numbers belong to that track; measure again for another one.
 JOIN, SKIP, CROSS = 41.1, 12.05, 0.35
-QUIET = 0.34                      # how loud the screen sounds are against the music
-UNDER_MUSIC = ('bow', 'charge', 'release', 'counter', 'hit', 'boom', 'clash', 'pass')      # the music has its own drums
 
 
 def load(path):
@@ -132,23 +130,16 @@ def save(path, stereo):
         w.writeframes(data.tobytes())
 
 
-def with_music(path, seconds, events, music):
-    track = shortened(load(music), seconds)
-    track *= 0.8 / np.max(np.abs(track))
-    screen = np.zeros(len(track))
-    for at, name in events:
-        if name in UNDER_MUSIC:
-            add(screen, effect(name), at)
-    track += QUIET * screen[:, None]
-    track *= swell(times(seconds), 0.05, 0.9)[:, None]
-    track = np.tanh(track * 0.95)                                 # gentle limiting
-    save(path, track * (0.70 / np.max(np.abs(track))))              # headroom: compression raises the peaks
+def with_music(path, seconds, music):
+    """the music alone: shortened to the film, faded out at the very end, nothing added"""
+    track = shortened(load(music), seconds) * swell(times(seconds), 0.05, 0.9)[:, None]
+    save(path, track * (0.72 / np.max(np.abs(track))))            # headroom: compression raises the peaks
 
 
 def make_sound(path, seconds, events, music=None):
     """events: [(time in seconds, name)] from the recording"""
     if music and music.exists():
-        return with_music(path, seconds, events, music)
+        return with_music(path, seconds, music)
     t = times(seconds)
     track = np.zeros(len(t))
     # drone on D and A, breathing slowly

@@ -61,7 +61,7 @@ to the address.
 
 The game opens with a 46-second film (**PLAY INTRO** / **SKIP**; **WATCH INTRO** on the menu replays it).
 It is recorded from the game itself, with the music *Before the Temple Bell* (kept locally as
-`tools/intro/music.mp3`) and sounds made by script. To record it again after changing a character or the
+`tools/intro/music.mp3`) as its only sound. To record it again after changing a character or the
 battlefield, serve the games folder on port 8010 and run (add `--sound` to change only the sound):
 
 ```bash
