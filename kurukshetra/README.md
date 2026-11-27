@@ -59,7 +59,9 @@ to the address.
 
 ## Intro film
 
-The game opens with a 46-second film (**PLAY INTRO** / **SKIP**; **WATCH INTRO** on the menu replays it). Computers
+Every time the game is opened a 46-second film starts by itself, with **SKIP** always there; where the browser
+refuses sound it plays silently with **TAP FOR SOUND**, which restarts it with sound. **WATCH INTRO** on the menu
+replays it. Computers
 get `media/intro.mp4`; touch screens get `media/intro-phone.mp4`, which shows thumbs on the phone controls.
 It is recorded from the game itself, with the music *Before the Temple Bell* (kept locally as
 `tools/intro/music.mp3`) as its only sound. To record it again after changing a character or the
